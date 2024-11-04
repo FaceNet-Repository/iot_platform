@@ -3,15 +3,15 @@ pipeline {
     stages{
         stage('Build') {
             steps {
-                dir('docker') { 
-                    bat 'git config --global core.autocrlf input'
-                    bat 'mvn clean install -DskipTests -Ddockerfile.skip=false'
+                dir('docker') {
+                    sh 'git config --global core.autocrlf input'
+                    sh 'mvn clean install -DskipTests -Ddockerfile.skip=false'
                 }
             }
         }
         stage('Run docker') {
             steps {
-                bat 'docker compose up -d --build'
+                sh 'docker compose up -d --build'
             }
         }
     }
