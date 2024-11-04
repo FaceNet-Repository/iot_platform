@@ -9,6 +9,9 @@ pipeline {
         }
         stage('Build and Run') {
             steps {
+                bat 'cd docker'
+                bat 'git config --global core.autocrlf input'
+                bat 'mvn clean install -DskipTests -Ddockerfile.skip=false'
                 bat 'docker compose up -d --build'
             }
         }
