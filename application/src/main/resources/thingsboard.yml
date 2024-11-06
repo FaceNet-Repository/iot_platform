@@ -221,7 +221,7 @@ cassandra:
   # Thingsboard keyspace name
   keyspace_name: "${CASSANDRA_KEYSPACE_NAME:thingsboard}"
   # Specify node list
-  url: "${CASSANDRA_URL:127.0.0.1:9042}"
+  url: "${CASSANDRA_URL:192.168.1.24:9042}"
   # Specify the local data center name
   local_datacenter: "${CASSANDRA_LOCAL_DATACENTER:datacenter1}"
   ssl:
