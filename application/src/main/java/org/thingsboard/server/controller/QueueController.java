@@ -64,7 +64,7 @@ public class QueueController extends BaseController {
     @ApiOperation(value = "Get Queues (getTenantQueuesByServiceType)",
             notes = "Returns a page of queues registered in the platform. " +
                     PAGE_DATA_PARAMETERS + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @RequestMapping(value = "/queues", params = {"serviceType", "pageSize", "page"}, method = RequestMethod.GET)
     @ResponseBody
     public PageData<Queue> getTenantQueuesByServiceType(@Parameter(description = QUEUE_SERVICE_TYPE_DESCRIPTION, schema = @Schema(allowableValues = {"TB-RULE-ENGINE", "TB-CORE", "TB-TRANSPORT", "JS-EXECUTOR"}, requiredMode = Schema.RequiredMode.REQUIRED))
@@ -92,7 +92,7 @@ public class QueueController extends BaseController {
 
     @ApiOperation(value = "Get Queue (getQueueById)",
             notes = "Fetch the Queue object based on the provided Queue Id. " + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @RequestMapping(value = "/queues/{queueId}", method = RequestMethod.GET)
     @ResponseBody
     public Queue getQueueById(@Parameter(description = QUEUE_ID_PARAM_DESCRIPTION)
@@ -105,7 +105,7 @@ public class QueueController extends BaseController {
 
     @ApiOperation(value = "Get Queue (getQueueByName)",
             notes = "Fetch the Queue object based on the provided Queue name. " + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @RequestMapping(value = "/queues/name/{queueName}", method = RequestMethod.GET)
     @ResponseBody
     public Queue getQueueByName(@Parameter(description = QUEUE_NAME_PARAM_DESCRIPTION)
@@ -121,7 +121,7 @@ public class QueueController extends BaseController {
                     "\n\nQueue name is unique in the scope of sysadmin. " +
                     "Remove 'id', 'tenantId' from the request body example (below) to create new Queue entity. " +
                     SYSTEM_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN')")
     @RequestMapping(value = "/queues", params = {"serviceType"}, method = RequestMethod.POST)
     @ResponseBody
     public Queue saveQueue(@Parameter(description = "A JSON value representing the queue.")
@@ -146,7 +146,7 @@ public class QueueController extends BaseController {
     }
 
     @ApiOperation(value = "Delete Queue (deleteQueue)", notes = "Deletes the Queue. " + SYSTEM_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN')")
     @RequestMapping(value = "/queues/{queueId}", method = RequestMethod.DELETE)
     @ResponseBody
     public void deleteQueue(@Parameter(description = QUEUE_ID_PARAM_DESCRIPTION)

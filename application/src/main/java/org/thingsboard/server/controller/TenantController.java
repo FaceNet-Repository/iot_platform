@@ -70,7 +70,7 @@ public class TenantController extends BaseController {
 
     @ApiOperation(value = "Get Tenant (getTenantById)",
             notes = "Fetch the Tenant object based on the provided Tenant Id. " + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @RequestMapping(value = "/tenant/{tenantId}", method = RequestMethod.GET)
     @ResponseBody
     public Tenant getTenantById(
@@ -88,7 +88,7 @@ public class TenantController extends BaseController {
     @ApiOperation(value = "Get Tenant Info (getTenantInfoById)",
             notes = "Fetch the Tenant Info object based on the provided Tenant Id. " +
                     TENANT_INFO_DESCRIPTION + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @RequestMapping(value = "/tenant/info/{tenantId}", method = RequestMethod.GET)
     @ResponseBody
     public TenantInfo getTenantInfoById(
@@ -107,7 +107,7 @@ public class TenantController extends BaseController {
                     "Referencing non-existing Tenant Id will cause 'Not Found' error." +
                     "Remove 'id', 'tenantId' from the request body example (below) to create new Tenant entity." +
                     SYSTEM_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    //@PreAuthorize("hasAuthority('SYS_ADMIN')")
     @RequestMapping(value = "/tenant", method = RequestMethod.POST)
     @ResponseBody
     public Tenant saveTenant(@Parameter(description = "A JSON value representing the tenant.")
@@ -118,7 +118,7 @@ public class TenantController extends BaseController {
 
     @ApiOperation(value = "Delete Tenant (deleteTenant)",
             notes = "Deletes the tenant, it's customers, rule chains, devices and all other related entities. Referencing non-existing tenant Id will cause an error." + SYSTEM_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    //@PreAuthorize("hasAuthority('SYS_ADMIN')")
     @RequestMapping(value = "/tenant/{tenantId}", method = RequestMethod.DELETE)
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteTenant(@Parameter(description = TENANT_ID_PARAM_DESCRIPTION)
@@ -130,7 +130,7 @@ public class TenantController extends BaseController {
     }
 
     @ApiOperation(value = "Get Tenants (getTenants)", notes = "Returns a page of tenants registered in the platform. " + PAGE_DATA_PARAMETERS + SYSTEM_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    //@PreAuthorize("hasAuthority('SYS_ADMIN')")
     @RequestMapping(value = "/tenants", params = {"pageSize", "page"}, method = RequestMethod.GET)
     @ResponseBody
     public PageData<Tenant> getTenants(
@@ -150,7 +150,7 @@ public class TenantController extends BaseController {
 
     @ApiOperation(value = "Get Tenants Info (getTenants)", notes = "Returns a page of tenant info objects registered in the platform. "
             + TENANT_INFO_DESCRIPTION + PAGE_DATA_PARAMETERS + SYSTEM_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    //@PreAuthorize("hasAuthority('SYS_ADMIN')")
     @RequestMapping(value = "/tenantInfos", params = {"pageSize", "page"}, method = RequestMethod.GET)
     @ResponseBody
     public PageData<TenantInfo> getTenantInfos(

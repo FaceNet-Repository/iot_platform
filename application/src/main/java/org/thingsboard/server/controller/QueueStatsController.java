@@ -58,7 +58,7 @@ public class QueueStatsController extends BaseController {
     @ApiOperation(value = "Get Queue Stats entities (getTenantQueueStats)",
             notes = "Returns a page of queue stats objects that are designed to collect queue statistics for every service. " +
                     PAGE_DATA_PARAMETERS + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/queueStats", params = {"pageSize", "page"})
     public PageData<QueueStats> getTenantQueueStats(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                                     @RequestParam int pageSize,
@@ -76,7 +76,7 @@ public class QueueStatsController extends BaseController {
 
     @ApiOperation(value = "Get Queue stats entity by id (getQueueStatsById)",
             notes = "Fetch the Queue stats object based on the provided Queue stats id. " + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/queueStats/{queueStatsId}")
     public QueueStats getQueueStatsById(@Parameter(description = QUEUE_STATS_ID_PARAM_DESCRIPTION)
                                         @PathVariable("queueStatsId") String queueStatsIdStr) throws ThingsboardException {
@@ -87,7 +87,7 @@ public class QueueStatsController extends BaseController {
 
     @ApiOperation(value = "Get QueueStats By Ids (getQueueStatsByIds)",
             notes = "Fetch the Queue stats objects based on the provided ids. ")
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/queueStats", params = {"queueStatsIds"})
     public List<QueueStats> getQueueStatsByIds(
             @Parameter(description = "A list of queue stats ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)

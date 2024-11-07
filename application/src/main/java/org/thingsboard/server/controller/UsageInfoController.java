@@ -36,7 +36,7 @@ public class UsageInfoController extends BaseController {
     @Autowired
     private UsageInfoService usageInfoService;
 
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @RequestMapping(value = "/usage", method = RequestMethod.GET)
     @ResponseBody
     public UsageInfo getTenantUsageInfo() throws ThingsboardException {

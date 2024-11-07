@@ -36,7 +36,7 @@ public class UiSettingsController extends BaseController {
     @ApiOperation(value = "Get UI help base url (getHelpBaseUrl)",
             notes = "Get UI help base url used to fetch help assets. " +
                     "The actual value of the base url is configurable in the system configuration file.")
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/uiSettings/helpBaseUrl", method = RequestMethod.GET)
     @ResponseBody
     public String getHelpBaseUrl() throws ThingsboardException {

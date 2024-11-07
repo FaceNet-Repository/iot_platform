@@ -50,7 +50,7 @@ public class OAuth2ConfigTemplateController extends BaseController {
 
     @ApiOperation(value = "Create or update OAuth2 client registration template (saveClientRegistrationTemplate)" + SYSTEM_AUTHORITY_PARAGRAPH,
             notes = OAUTH2_CLIENT_REGISTRATION_TEMPLATE_DEFINITION)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN')")
     @RequestMapping(method = RequestMethod.POST)
     @ResponseStatus(value = HttpStatus.OK)
     public OAuth2ClientRegistrationTemplate saveClientRegistrationTemplate(@RequestBody OAuth2ClientRegistrationTemplate clientRegistrationTemplate) throws ThingsboardException {
@@ -60,7 +60,7 @@ public class OAuth2ConfigTemplateController extends BaseController {
 
     @ApiOperation(value = "Delete OAuth2 client registration template by id (deleteClientRegistrationTemplate)" + SYSTEM_AUTHORITY_PARAGRAPH,
             notes = OAUTH2_CLIENT_REGISTRATION_TEMPLATE_DEFINITION)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN')")
     @RequestMapping(value = "/{clientRegistrationTemplateId}", method = RequestMethod.DELETE)
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteClientRegistrationTemplate(@Parameter(description = "String representation of client registration template id to delete", example = "139b1f81-2f5d-11ec-9dbe-9b627e1a88f4")
@@ -73,7 +73,7 @@ public class OAuth2ConfigTemplateController extends BaseController {
 
     @ApiOperation(value = "Get the list of all OAuth2 client registration templates (getClientRegistrationTemplates)" + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH,
             notes = OAUTH2_CLIENT_REGISTRATION_TEMPLATE_DEFINITION)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
     public List<OAuth2ClientRegistrationTemplate> getClientRegistrationTemplates() throws ThingsboardException {

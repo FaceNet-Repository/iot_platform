@@ -73,7 +73,7 @@ public class TwoFactorAuthController extends BaseController {
                     "Will return a Bad Request error if provider is not configured for usage, " +
                     "and Too Many Requests error if rate limits are exceeded.")
     @PostMapping("/verification/send")
-    @PreAuthorize("hasAuthority('PRE_VERIFICATION_TOKEN')")
+    //@PreAuthorize("hasAuthority('PRE_VERIFICATION_TOKEN')")
     public void requestTwoFaVerificationCode(@RequestParam TwoFaProviderType providerType) throws Exception {
         SecurityUser user = getCurrentUser();
         twoFactorAuthService.prepareVerificationCode(user, providerType, true);
@@ -86,7 +86,7 @@ public class TwoFactorAuthController extends BaseController {
                     "Will return a Bad Request error if provider is not configured for usage, " +
                     "and Too Many Requests error if rate limits are exceeded.")
     @PostMapping("/verification/check")
-    @PreAuthorize("hasAuthority('PRE_VERIFICATION_TOKEN')")
+    //@PreAuthorize("hasAuthority('PRE_VERIFICATION_TOKEN')")
     public JwtPair checkTwoFaVerificationCode(@RequestParam TwoFaProviderType providerType,
                                               @RequestParam String verificationCode, HttpServletRequest servletRequest) throws Exception {
         SecurityUser user = getCurrentUser();
@@ -111,7 +111,7 @@ public class TwoFactorAuthController extends BaseController {
                     "  {\n    \"type\": \"SMS\",\n    \"default\": false,\n    \"contact\": \"+38********12\"\n  }\n" +
                     "]\n```")
     @GetMapping("/providers")
-    @PreAuthorize("hasAuthority('PRE_VERIFICATION_TOKEN')")
+    //@PreAuthorize("hasAuthority('PRE_VERIFICATION_TOKEN')")
     public List<TwoFaProviderInfo> getAvailableTwoFaProviders() throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         Optional<PlatformTwoFaSettings> platformTwoFaSettings = twoFaConfigManager.getPlatformTwoFaSettings(user.getTenantId(), true);

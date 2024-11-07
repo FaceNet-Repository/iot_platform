@@ -109,7 +109,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Is edges support enabled (isEdgesSupportEnabled)",
             notes = "Returns 'true' if edges support enabled on server, 'false' - otherwise.")
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/edges/enabled")
     public boolean isEdgesSupportEnabled() {
         return edgesEnabled;
@@ -117,7 +117,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Get Edge (getEdgeById)",
             notes = "Get the Edge object based on the provided Edge Id. " + EDGE_SECURITY_CHECK + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/edge/{edgeId}")
     public Edge getEdgeById(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                             @PathVariable(EDGE_ID) String strEdgeId) throws ThingsboardException {
@@ -128,7 +128,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Get Edge Info (getEdgeInfoById)",
             notes = "Get the Edge Info object based on the provided Edge Id. " + EDGE_SECURITY_CHECK + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/edge/info/{edgeId}")
     public EdgeInfo getEdgeInfoById(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                                     @PathVariable(EDGE_ID) String strEdgeId) throws ThingsboardException {
@@ -145,7 +145,7 @@ public class EdgeController extends BaseController {
                     "\n\nEdge name is unique in the scope of tenant. Use unique identifiers like MAC or IMEI for the edge names and non-unique 'label' field for user-friendly visualization purposes." +
                     "Remove 'id', 'tenantId' and optionally 'customerId' from the request body example (below) to create new Edge entity. " +
                     TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/edge")
     public Edge saveEdge(@Parameter(description = "A JSON value representing the edge.", required = true)
                          @RequestBody Edge edge) throws Exception {
@@ -170,7 +170,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Delete edge (deleteEdge)",
             notes = "Deletes the edge. Referencing non-existing edge Id will cause an error." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @DeleteMapping(value = "/edge/{edgeId}")
     public void deleteEdge(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                            @PathVariable(EDGE_ID) String strEdgeId) throws ThingsboardException {
@@ -183,7 +183,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Get Tenant Edges (getEdges)",
             notes = "Returns a page of edges owned by tenant. " +
                     PAGE_DATA_PARAMETERS + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/edges", params = {"pageSize", "page"})
     public PageData<Edge> getEdges(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                    @RequestParam int pageSize,
@@ -202,7 +202,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Assign edge to customer (assignEdgeToCustomer)",
             notes = "Creates assignment of the edge to customer. Customer will be able to query edge afterwards." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/customer/{customerId}/edge/{edgeId}")
     public Edge assignEdgeToCustomer(@Parameter(description = CUSTOMER_ID_PARAM_DESCRIPTION, required = true)
                                      @PathVariable("customerId") String strCustomerId,
@@ -219,7 +219,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Unassign edge from customer (unassignEdgeFromCustomer)",
             notes = "Clears assignment of the edge to customer. Customer will not be able to query edge afterwards." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @DeleteMapping(value = "/customer/edge/{edgeId}")
     public Edge unassignEdgeFromCustomer(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                                          @PathVariable(EDGE_ID) String strEdgeId) throws ThingsboardException {
@@ -238,7 +238,7 @@ public class EdgeController extends BaseController {
             notes = "Edge will be available for non-authorized (not logged-in) users. " +
                     "This is useful to create dashboards that you plan to share/embed on a publicly available website. " +
                     "However, users that are logged-in and belong to different tenant will not be able to access the edge." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/customer/public/edge/{edgeId}")
     public Edge assignEdgeToPublicCustomer(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                                            @PathVariable(EDGE_ID) String strEdgeId) throws ThingsboardException {
@@ -251,7 +251,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Get Tenant Edges (getTenantEdges)",
             notes = "Returns a page of edges owned by tenant. " +
                     PAGE_DATA_PARAMETERS + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/tenant/edges", params = {"pageSize", "page"})
     public PageData<Edge> getTenantEdges(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
@@ -278,7 +278,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Get Tenant Edge Infos (getTenantEdgeInfos)",
             notes = "Returns a page of edges info objects owned by tenant. " +
                     PAGE_DATA_PARAMETERS + EDGE_INFO_DESCRIPTION + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/tenant/edgeInfos", params = {"pageSize", "page"})
     public PageData<EdgeInfo> getTenantEdgeInfos(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
@@ -305,7 +305,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Get Tenant Edge (getTenantEdge)",
             notes = "Requested edge must be owned by tenant or customer that the user belongs to. " +
                     "Edge name is an unique property of edge. So it can be used to identify the edge." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/tenant/edges", params = {"edgeName"})
     public Edge getTenantEdge(@Parameter(description = "Unique name of the edge", required = true)
                               @RequestParam String edgeName) throws ThingsboardException {
@@ -316,7 +316,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Set root rule chain for provided edge (setEdgeRootRuleChain)",
             notes = "Change root rule chain of the edge to the new provided rule chain. \n" +
                     "This operation will send a notification to update root rule chain on remote edge service." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/edge/{edgeId}/{ruleChainId}/root")
     public Edge setEdgeRootRuleChain(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                                      @PathVariable(EDGE_ID) String strEdgeId,
@@ -335,7 +335,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Get Customer Edges (getCustomerEdges)",
             notes = "Returns a page of edges objects assigned to customer. " +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/customer/{customerId}/edges", params = {"pageSize", "page"})
     public PageData<Edge> getCustomerEdges(
             @Parameter(description = CUSTOMER_ID_PARAM_DESCRIPTION)
@@ -370,7 +370,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Get Customer Edge Infos (getCustomerEdgeInfos)",
             notes = "Returns a page of edges info objects assigned to customer. " +
                     PAGE_DATA_PARAMETERS + EDGE_INFO_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/customer/{customerId}/edgeInfos", params = {"pageSize", "page"})
     public PageData<EdgeInfo> getCustomerEdgeInfos(
             @Parameter(description = CUSTOMER_ID_PARAM_DESCRIPTION)
@@ -404,7 +404,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Get Edges By Ids (getEdgesByIds)",
             notes = "Requested edges must be owned by tenant or assigned to customer which user is performing the request." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/edges", params = {"edgeIds"})
     public List<Edge> getEdgesByIds(
             @Parameter(description = "A list of edges ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
@@ -431,7 +431,7 @@ public class EdgeController extends BaseController {
             notes = "Returns all edges that are related to the specific entity. " +
                     "The entity id, relation type, edge types, depth of the search, and other query parameters defined using complex 'EdgeSearchQuery' object. " +
                     "See 'Model' tab of the Parameters for more info." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping(value = "/edges")
     public List<Edge> findByQuery(@RequestBody EdgeSearchQuery query) throws ThingsboardException, ExecutionException, InterruptedException {
         checkNotNull(query);
@@ -455,7 +455,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Get Edge Types (getEdgeTypes)",
             notes = "Returns a set of unique edge types based on edges that are either owned by the tenant or assigned to the customer which user is performing the request."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/edge/types")
     public List<EntitySubtype> getEdgeTypes() throws ThingsboardException, ExecutionException, InterruptedException {
         SecurityUser user = getCurrentUser();
@@ -467,7 +467,7 @@ public class EdgeController extends BaseController {
     @ApiOperation(value = "Sync edge (syncEdge)",
             notes = "Starts synchronization process between edge and cloud. \n" +
                     "All entities that are assigned to particular edge are going to be send to remote edge service." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/edge/sync/{edgeId}")
     public DeferredResult<ResponseEntity> syncEdge(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                          @PathVariable("edgeId") String strEdgeId) throws ThingsboardException {
@@ -495,7 +495,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Find missing rule chains (findMissingToRelatedRuleChains)",
             notes = "Returns list of rule chains ids that are not assigned to particular edge, but these rule chains are present in the already assigned rule chains to edge." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/edge/missingToRelatedRuleChains/{edgeId}")
     public String findMissingToRelatedRuleChains(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                                                  @PathVariable("edgeId") String strEdgeId) throws ThingsboardException {
@@ -508,7 +508,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Import the bulk of edges (processEdgesBulkImport)",
             notes = "There's an ability to import the bulk of edges using the only .csv file." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping("/edge/bulk_import")
     public BulkImportResult<Edge> processEdgesBulkImport(@RequestBody BulkImportRequest request) throws Exception {
         SecurityUser user = getCurrentUser();
@@ -522,7 +522,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Get Edge Install Instructions (getEdgeInstallInstructions)",
             notes = "Get an install instructions for provided edge id." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/edge/instructions/install/{edgeId}/{method}")
     public EdgeInstructions getEdgeInstallInstructions(
             @Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
@@ -542,7 +542,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Get Edge Upgrade Instructions (getEdgeUpgradeInstructions)",
             notes = "Get an upgrade instructions for provided edge version." + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/edge/instructions/upgrade/{edgeVersion}/{method}")
     public EdgeInstructions getEdgeUpgradeInstructions(
             @Parameter(description = "Edge version", required = true)
@@ -558,7 +558,7 @@ public class EdgeController extends BaseController {
 
     @ApiOperation(value = "Is edge upgrade enabled (isEdgeUpgradeAvailable)",
             notes = "Returns 'true' if upgrade available for connected edge, 'false' - otherwise.")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/edge/{edgeId}/upgrade/available")
     public boolean isEdgeUpgradeAvailable(
             @Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)

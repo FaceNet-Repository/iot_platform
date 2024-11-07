@@ -78,7 +78,7 @@ import static org.thingsboard.server.controller.ControllerConstants.VERSION_ID_P
 @RestController
 @TbCoreComponent
 @RequestMapping("/api/entities/vc")
-@PreAuthorize("hasAuthority('TENANT_ADMIN')")
+//@PreAuthorize("hasAuthority('TENANT_ADMIN')")
 @RequiredArgsConstructor
 public class EntitiesVersionControlController extends BaseController {
 

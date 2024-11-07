@@ -89,7 +89,7 @@ public class TbResourceController extends BaseController {
     public static final String RESOURCE_ID = "resourceId";
 
     @ApiOperation(value = "Download Resource (downloadResource)", notes = "Download Resource based on the provided Resource Id." + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/resource/{resourceId}/download")
     public ResponseEntity<ByteArrayResource> downloadResource(@Parameter(description = RESOURCE_ID_PARAM_DESCRIPTION)
                                                               @PathVariable(RESOURCE_ID) String strResourceId) throws ThingsboardException {
@@ -107,7 +107,7 @@ public class TbResourceController extends BaseController {
     }
 
     @ApiOperation(value = "Download LWM2M Resource (downloadLwm2mResourceIfChanged)", notes = DOWNLOAD_RESOURCE_IF_NOT_CHANGED + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/resource/lwm2m/{resourceId}/download", produces = "application/xml")
     public ResponseEntity<ByteArrayResource> downloadLwm2mResourceIfChanged(@Parameter(description = RESOURCE_ID_PARAM_DESCRIPTION)
                                                                             @PathVariable(RESOURCE_ID) String strResourceId,
@@ -116,7 +116,7 @@ public class TbResourceController extends BaseController {
     }
 
     @ApiOperation(value = "Download PKCS_12 Resource (downloadPkcs12ResourceIfChanged)", notes = DOWNLOAD_RESOURCE_IF_NOT_CHANGED + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @RequestMapping(value = "/resource/pkcs12/{resourceId}/download", method = RequestMethod.GET, produces = "application/x-pkcs12")
     public ResponseEntity<ByteArrayResource> downloadPkcs12ResourceIfChanged(@Parameter(description = RESOURCE_ID_PARAM_DESCRIPTION)
                                                                              @PathVariable(RESOURCE_ID) String strResourceId,
@@ -126,7 +126,7 @@ public class TbResourceController extends BaseController {
 
     @ApiOperation(value = "Download JKS Resource (downloadJksResourceIfChanged)",
             notes = DOWNLOAD_RESOURCE_IF_NOT_CHANGED + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/resource/jks/{resourceId}/download", produces = "application/x-java-keystore")
     public ResponseEntity<ByteArrayResource> downloadJksResourceIfChanged(@Parameter(description = RESOURCE_ID_PARAM_DESCRIPTION)
                                                                           @PathVariable(RESOURCE_ID) String strResourceId,
@@ -135,7 +135,7 @@ public class TbResourceController extends BaseController {
     }
 
     @ApiOperation(value = "Download JS Resource (downloadJsResourceIfChanged)", notes = DOWNLOAD_RESOURCE_IF_NOT_CHANGED + AVAILABLE_FOR_ANY_AUTHORIZED_USER)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/resource/js/{resourceId}/download", produces = "application/javascript")
     public ResponseEntity<ByteArrayResource> downloadJsResourceIfChanged(@Parameter(description = RESOURCE_ID_PARAM_DESCRIPTION)
                                                                          @PathVariable(RESOURCE_ID) String strResourceId,
@@ -146,7 +146,7 @@ public class TbResourceController extends BaseController {
     @ApiOperation(value = "Get Resource Info (getResourceInfoById)",
             notes = "Fetch the Resource Info object based on the provided Resource Id. " +
                     RESOURCE_INFO_DESCRIPTION + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/resource/info/{resourceId}")
     public TbResourceInfo getResourceInfoById(@Parameter(description = RESOURCE_ID_PARAM_DESCRIPTION)
                                               @PathVariable(RESOURCE_ID) String strResourceId) throws ThingsboardException {
@@ -159,7 +159,7 @@ public class TbResourceController extends BaseController {
             notes = "Fetch the Resource object based on the provided Resource Id. " +
                     RESOURCE_DESCRIPTION + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH, hidden = true)
     @Deprecated  // resource's data should be fetched with a download request
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/resource/{resourceId}")
     public TbResource getResourceById(@Parameter(description = RESOURCE_ID_PARAM_DESCRIPTION)
                                       @PathVariable(RESOURCE_ID) String strResourceId) throws ThingsboardException {
@@ -176,7 +176,7 @@ public class TbResourceController extends BaseController {
                     "\n\nResource combination of the title with the key is unique in the scope of tenant. " +
                     "Remove 'id', 'tenantId' from the request body example (below) to create new Resource entity." +
                     SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @PostMapping(value = "/resource")
     public TbResourceInfo saveResource(@Parameter(description = "A JSON value representing the Resource.")
                                        @RequestBody TbResource resource) throws Exception {
@@ -188,7 +188,7 @@ public class TbResourceController extends BaseController {
     @ApiOperation(value = "Get Resource Infos (getResources)",
             notes = "Returns a page of Resource Info objects owned by tenant or sysadmin. " +
                     PAGE_DATA_PARAMETERS + RESOURCE_INFO_DESCRIPTION + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @GetMapping(value = "/resource")
     public PageData<TbResourceInfo> getResources(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                                  @RequestParam int pageSize,
@@ -223,7 +223,7 @@ public class TbResourceController extends BaseController {
     @ApiOperation(value = "Get All Resource Infos (getAllResources)",
             notes = "Returns a page of Resource Info objects owned by tenant. " +
                     PAGE_DATA_PARAMETERS + RESOURCE_INFO_DESCRIPTION + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/resource/tenant")
     public PageData<TbResourceInfo> getTenantResources(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                                        @RequestParam int pageSize,
@@ -246,7 +246,7 @@ public class TbResourceController extends BaseController {
     @ApiOperation(value = "Get LwM2M Objects (getLwm2mListObjectsPage)",
             notes = "Returns a page of LwM2M objects parsed from Resources with type 'LWM2M_MODEL' owned by tenant or sysadmin. " +
                     PAGE_DATA_PARAMETERS + LWM2M_OBJECT_DESCRIPTION + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/resource/lwm2m/page")
     public List<LwM2mObject> getLwm2mListObjectsPage(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                                      @RequestParam int pageSize,
@@ -265,7 +265,7 @@ public class TbResourceController extends BaseController {
     @ApiOperation(value = "Get LwM2M Objects (getLwm2mListObjects)",
             notes = "Returns a page of LwM2M objects parsed from Resources with type 'LWM2M_MODEL' owned by tenant or sysadmin. " +
                     "You can specify parameters to filter the results. " + LWM2M_OBJECT_DESCRIPTION + TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/resource/lwm2m")
     public List<LwM2mObject> getLwm2mListObjects(@Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}, requiredMode = Schema.RequiredMode.REQUIRED))
                                                  @RequestParam String sortOrder,
@@ -278,7 +278,7 @@ public class TbResourceController extends BaseController {
 
     @ApiOperation(value = "Delete Resource (deleteResource)",
             notes = "Deletes the Resource. Referencing non-existing Resource Id will cause an error." + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @DeleteMapping(value = "/resource/{resourceId}")
     public void deleteResource(@Parameter(description = RESOURCE_ID_PARAM_DESCRIPTION)
                                @PathVariable("resourceId") String strResourceId) throws ThingsboardException {
