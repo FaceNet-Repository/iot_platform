@@ -57,7 +57,7 @@ public class EdgeEventController extends BaseController {
     @ApiOperation(value = "Get Edge Events (getEdgeEvents)",
             notes = "Returns a page of edge events for the requested edge. " +
                     PAGE_DATA_PARAMETERS)
-    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/edge/{edgeId}/events")
     public PageData<EdgeEvent> getEdgeEvents(
             @Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)

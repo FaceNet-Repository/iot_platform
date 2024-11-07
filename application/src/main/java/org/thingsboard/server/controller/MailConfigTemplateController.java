@@ -45,7 +45,7 @@ public class MailConfigTemplateController extends BaseController {
 
     @ApiOperation(value = "Get the list of all OAuth2 client registration templates (getClientRegistrationTemplates)" + SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH,
             notes = MAIL_CONFIG_TEMPLATE_DEFINITION)
-    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
     public JsonNode getClientRegistrationTemplates() throws ThingsboardException, IOException {
