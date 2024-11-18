@@ -246,6 +246,7 @@ public class ModelConstants {
     public static final String ENTITY_ALARM_TABLE_NAME = "entity_alarm";
     public static final String ALARM_TABLE_NAME = "alarm";
     public static final String ALARM_VIEW_NAME = "alarm_info";
+    public static final String ASSET_DEVICE_RELATION_VIEW_NAME = "asset_device_relation_view";
     public static final String ALARM_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
     public static final String ALARM_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
     public static final String ALARM_TYPE_PROPERTY = "type";
