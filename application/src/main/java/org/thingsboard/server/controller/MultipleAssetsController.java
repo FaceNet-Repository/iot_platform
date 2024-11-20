@@ -56,8 +56,8 @@ public class MultipleAssetsController extends BaseController {
     private final AssetDeviceRelationService assetDeviceRelationService;
 
     @GetMapping("/assets/asset-device-relations")
-    public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile) {
-        return assetDeviceRelationService.getAllRelations(rootProfile);
+    public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) {
+        return assetDeviceRelationService.getAllRelations(rootProfile, level);
     }
 
     @RequestMapping(value = "/assets/hierarchy", method = RequestMethod.POST)

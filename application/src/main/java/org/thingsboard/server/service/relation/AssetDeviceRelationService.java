@@ -31,7 +31,7 @@ public class AssetDeviceRelationService {
     @Autowired
     private AssetDeviceRelationRepository assetDeviceRelationRepository;
 
-    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom) {
+    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level) {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
         List<AssetDeviceRelationEntity> parentEntities = assetDeviceRelationRepository.findByAssetProfileFrom(profileFrom);
 
@@ -72,10 +72,10 @@ public class AssetDeviceRelationService {
             }
         }
 
-        // Bước 5: Đệ quy tìm các con cho tất cả các tầng
+        // Bước 5: Đệ quy tìm các con cho tất cả các tầng (giới hạn bởi level)
         for (AssetDeviceRelationDTO dto : relationMap.values()) {
             if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {
-                dto.setChildren(findChildrenRecursively(dto.getChildren()));
+                dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1)); // Truyền level - 1
             }
         }
 
@@ -85,7 +85,11 @@ public class AssetDeviceRelationService {
                 .collect(Collectors.toList());
     }
 
-    private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children) {
+    private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level) {
+        if (level == 0) { // Nếu đạt đến level giới hạn, không tiếp tục đệ quy
+            return children;
+        }
+
         List<AssetDeviceRelationDTO> result = new ArrayList<>();
         for (AssetDeviceRelationDTO child : children) {
             // Tìm các con của "child"
@@ -100,7 +104,7 @@ public class AssetDeviceRelationService {
                     subChildren.add(subChildDTO);
                 }
                 // Đệ quy để tìm tiếp các con của "subChild"
-                child.setChildren(findChildrenRecursively(subChildren));
+                child.setChildren(findChildrenRecursively(subChildren, level - 1)); // Truyền level - 1
             }
             result.add(child);
         }
