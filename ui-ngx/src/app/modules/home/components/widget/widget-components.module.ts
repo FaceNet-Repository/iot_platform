@@ -171,6 +171,9 @@ import {
   ReportStrategyComponent
 } from '@home/components/widget/lib/gateway/connectors-configuration/report-strategy/report-strategy.component';
 import { LatestVersionConfigPipe } from '@home/components/widget/lib/gateway/pipes/latest-version-config.pipe';
+import {
+  EntitiesHierarchyProWidgetComponent
+} from '@home/components/widget/lib/entity/entities-hierarchy-pro-widget.component';
 
 @NgModule({
   declarations: [
@@ -179,6 +182,7 @@ import { LatestVersionConfigPipe } from '@home/components/widget/lib/gateway/pip
     AlarmsTableWidgetComponent,
     TimeseriesTableWidgetComponent,
     EntitiesHierarchyWidgetComponent,
+    EntitiesHierarchyProWidgetComponent,
     EdgesOverviewWidgetComponent,
     DateRangeNavigatorWidgetComponent,
     DateRangeNavigatorPanelComponent,
@@ -276,6 +280,7 @@ import { LatestVersionConfigPipe } from '@home/components/widget/lib/gateway/pip
     AlarmsTableWidgetComponent,
     TimeseriesTableWidgetComponent,
     EntitiesHierarchyWidgetComponent,
+    EntitiesHierarchyProWidgetComponent,
     EdgesOverviewWidgetComponent,
     RpcWidgetsModule,
     HomePageWidgetsModule,
