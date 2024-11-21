@@ -51,8 +51,8 @@ export class HomeComponent extends PageComponent implements AfterViewInit, OnIni
 
   sidenavMode: 'over' | 'push' | 'side' = 'side';
   sidenavOpened = true;
-
-  logo = 'assets/facenet_logo_white.png';
+  
+  logo = 'assets/logo_title_white.png';
 
   @ViewChild('sidenav')
   sidenav: MatSidenav;

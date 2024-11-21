@@ -23,7 +23,7 @@ import { Component } from '@angular/core';
 })
 export class LogoComponent {
 
-  logo = 'assets/facenet_logo_white.png';
+  logo = 'assets/logo_title_white.png';
 
   gotoThingsboard(): void {
     window.open('https://facenet.vn', '_blank');

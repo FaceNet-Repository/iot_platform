@@ -230,10 +230,9 @@ import { CountryAutocompleteComponent } from '@shared/components/country-autocom
 import { CountryData } from '@shared/models/country.models';
 import { SvgXmlComponent } from '@shared/components/svg-xml.component';
 import { DatapointsLimitComponent } from '@shared/components/time/datapoints-limit.component';
+import {MatTreeModule} from '@angular/material/tree';
 
-export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
-  return markedOptionsService;
-}
+export const MarkedOptionsFactory = (markedOptionsService: MarkedOptionsService) => markedOptionsService;
 
 @NgModule({
   providers: [
@@ -567,6 +566,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     FabToolbarComponent,
     WidgetsBundleSelectComponent,
     ValueInputComponent,
+    MatTreeModule,
     MatBadgeModule,
     MatButtonModule,
     MatButtonToggleModule,

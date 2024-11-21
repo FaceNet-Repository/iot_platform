@@ -1,0 +1,70 @@
+<!--
+
+    Copyright © 2016-2024 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<div class="container">
+  <div class="left">
+    <div class="toolbar">
+      <button mat-icon-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <span>Total: {{entityCount}}</span>
+    </div>
+    <table mat-table [dataSource]="tableDataSource" class="mat-elevation-z8 demo-table">
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let element">{{element.name}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let element">{{element.type}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="children">
+        <th mat-header-cell *matHeaderCellDef>Children count</th>
+        <td mat-cell *matCellDef="let element">{{element.relations.length}}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+          mat-row
+          (click)="onRowClick(row)"
+          [class.no-children]="!row.relations.length"
+          *matRowDef="let row; columns: displayedColumns;"
+      ></tr>
+    </table>
+  </div>
+  <div class="right">
+    <mat-card *ngIf="selectedEntity">
+      <mat-card-header>
+        <mat-card-title>{{ selectedEntity.name }}</mat-card-title>
+        <mat-card-subtitle>{{ selectedEntity.type }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content *ngIf="selectedEntity.data">
+        <div class="entity-details">
+          <p><strong>Entity ID:</strong> {{ selectedEntity.data.id.id }}</p>
+          <p><strong>Tenant ID:</strong> {{ selectedEntity.data.tenantId.id }}</p>
+          <p><strong>Customer ID:</strong> {{ selectedEntity.data.customerId.id }}</p>
+          <p><strong>Profile:</strong> {{ selectedEntity.data.type }}</p>
+          <p><strong>Version:</strong> {{ selectedEntity.data.version }}</p>
+          <p><strong>Created Time:</strong> {{ selectedEntity.data.createdTime | date }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
