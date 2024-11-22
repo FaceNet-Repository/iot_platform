@@ -28,6 +28,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
@@ -56,8 +57,9 @@ public class MultipleAssetsController extends BaseController {
     private final AssetDeviceRelationService assetDeviceRelationService;
 
     @GetMapping("/assets/asset-device-relations")
-    public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) {
-        return assetDeviceRelationService.getAllRelations(rootProfile, level);
+    public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) throws ThingsboardException {
+        TenantId tenantId = getCurrentUser().getTenantId();
+        return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId());
     }
 
     @RequestMapping(value = "/assets/hierarchy", method = RequestMethod.POST)

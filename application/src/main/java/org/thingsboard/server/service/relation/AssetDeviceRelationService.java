@@ -18,6 +18,7 @@ package org.thingsboard.server.service.relation;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.model.sql.AssetDeviceRelationEntity;
 import org.thingsboard.server.dao.sql.relation.AssetDeviceRelationRepository;
@@ -31,9 +32,9 @@ public class AssetDeviceRelationService {
     @Autowired
     private AssetDeviceRelationRepository assetDeviceRelationRepository;
 
-    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level) {
+    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId) {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
-        List<AssetDeviceRelationEntity> parentEntities = assetDeviceRelationRepository.findByAssetProfileFrom(profileFrom);
+        List<AssetDeviceRelationEntity> parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantId(profileFrom, tenantId);
 
         // Bước 2: Chuyển tất cả các `parentEntities` thành danh sách DTO ban đầu
         Map<UUID, AssetDeviceRelationDTO> relationMap = new HashMap<>();
@@ -55,6 +56,9 @@ public class AssetDeviceRelationService {
 
         // Bước 4: Chuyển đổi các đối tượng con thành DTO và gán vào cha
         for (AssetDeviceRelationEntity child : childEntities) {
+            if (child == null || child.getToId() == null) {
+                continue; // Bỏ qua các thực thể null hoặc không có to_id
+            }
             AssetDeviceRelationDTO childDTO = relationMap.computeIfAbsent(child.getToId(), id -> {
                 AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
                 dto.setId(child.getToId());
@@ -92,11 +96,17 @@ public class AssetDeviceRelationService {
 
         List<AssetDeviceRelationDTO> result = new ArrayList<>();
         for (AssetDeviceRelationDTO child : children) {
+            if (child == null ) {
+                continue; // Bỏ qua các thực thể null hoặc không có to_id
+            }
             // Tìm các con của "child"
             List<AssetDeviceRelationEntity> childEntities = assetDeviceRelationRepository.findByFromId(child.getId());
             if (!childEntities.isEmpty()) {
                 List<AssetDeviceRelationDTO> subChildren = new ArrayList<>();
                 for (AssetDeviceRelationEntity entity : childEntities) {
+                    if (entity == null || entity.getToId() == null) {
+                        continue;
+                    }
                     AssetDeviceRelationDTO subChildDTO = new AssetDeviceRelationDTO();
                     subChildDTO.setId(entity.getToId());
                     subChildDTO.setName(entity.getToName());

@@ -19,6 +19,7 @@ package org.thingsboard.server.dao.model.sql;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.AssetDeviceRelationEntityId;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.util.mapping.JsonConverter;
@@ -63,11 +64,14 @@ public class AssetDeviceRelationEntity {
     @Column(name = "additional_info")
     private JsonNode additionalInfo;
 
+    @Column(name = "tenant_id")
+    private UUID tenantId;
+
     public AssetDeviceRelationEntity() {}
 
     public AssetDeviceRelationEntity(UUID fromId, UUID toId, String fromType, String assetProfileFrom,
                                      String fromName, String toType, String assetProfileTo, String toName,
-                                     JsonNode additionalInfo) {
+                                     JsonNode additionalInfo, UUID tenantId) {
         this.fromId = fromId;
         this.toId = toId;
         this.fromType = fromType;
@@ -77,5 +81,6 @@ public class AssetDeviceRelationEntity {
         this.assetProfileTo = assetProfileTo;
         this.toName = toName;
         this.additionalInfo = additionalInfo;
+        this.tenantId = tenantId;
     }
 }
