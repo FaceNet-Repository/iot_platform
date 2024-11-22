@@ -39,6 +39,9 @@ public class AssetDeviceRelationService {
         // Bước 2: Chuyển tất cả các `parentEntities` thành danh sách DTO ban đầu
         Map<UUID, AssetDeviceRelationDTO> relationMap = new HashMap<>();
         for (AssetDeviceRelationEntity parent : parentEntities) {
+            if (parent == null ) {
+                continue; // Bỏ qua các đối tượng null
+            }
             AssetDeviceRelationDTO parentDTO = relationMap.computeIfAbsent(parent.getFromId(), id -> {
                 AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
                 dto.setId(parent.getFromId());
@@ -50,6 +53,7 @@ public class AssetDeviceRelationService {
 
         // Bước 3: Tìm tất cả các `to_id` có `from_id` là các `from_id` đã tìm được ở bước 2
         Set<UUID> uniqueFromIds = parentEntities.stream()
+                .filter(parent -> parent != null && parent.getFromId() != null)
                 .map(AssetDeviceRelationEntity::getFromId)
                 .collect(Collectors.toSet());
         List<AssetDeviceRelationEntity> childEntities = assetDeviceRelationRepository.findByFromIdIn(new ArrayList<>(uniqueFromIds));
