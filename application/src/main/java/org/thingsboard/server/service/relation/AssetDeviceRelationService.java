@@ -34,7 +34,7 @@ public class AssetDeviceRelationService {
 
     public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId) {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
-        List<AssetDeviceRelationEntity> parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantId(profileFrom, tenantId);
+        List<AssetDeviceRelationEntity> parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantIdWithNullToId(profileFrom, tenantId);
 
         // Bước 2: Chuyển tất cả các `parentEntities` thành danh sách DTO ban đầu
         Map<UUID, AssetDeviceRelationDTO> relationMap = new HashMap<>();
@@ -47,6 +47,7 @@ public class AssetDeviceRelationService {
                 dto.setId(parent.getFromId());
                 dto.setName(parent.getFromName());
                 dto.setProfile(parent.getAssetProfileFrom());
+                dto.setChildren(new ArrayList<>());
                 return dto;
             });
         }

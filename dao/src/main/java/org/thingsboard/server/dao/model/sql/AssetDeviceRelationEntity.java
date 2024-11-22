@@ -33,13 +33,14 @@ import java.util.UUID;
 @IdClass(AssetDeviceRelationEntityId.class)
 @Table(name = ModelConstants.ASSET_DEVICE_RELATION_VIEW_NAME)
 public class AssetDeviceRelationEntity {
-
     @Id
+    @Column(name = "id")
+    private String id;
+
     @Column(name = "from_id")
     private UUID fromId;
 
-    @Id
-    @Column(name = "to_id")
+    @Column(name = "to_id", nullable = true)
     private UUID toId;
 
     @Column(name = "relation_from")
@@ -69,9 +70,10 @@ public class AssetDeviceRelationEntity {
 
     public AssetDeviceRelationEntity() {}
 
-    public AssetDeviceRelationEntity(UUID fromId, UUID toId, String fromType, String assetProfileFrom,
+    public AssetDeviceRelationEntity(String id, UUID fromId, UUID toId, String fromType, String assetProfileFrom,
                                      String fromName, String toType, String assetProfileTo, String toName,
                                      JsonNode additionalInfo, UUID tenantId) {
+        this.id = id;
         this.fromId = fromId;
         this.toId = toId;
         this.fromType = fromType;
@@ -81,6 +83,86 @@ public class AssetDeviceRelationEntity {
         this.assetProfileTo = assetProfileTo;
         this.toName = toName;
         this.additionalInfo = additionalInfo;
+        this.tenantId = tenantId;
+    }
+
+    public UUID getFromId() {
+        return fromId;
+    }
+
+    public void setFromId(UUID fromId) {
+        this.fromId = fromId;
+    }
+
+    public UUID getToId() {
+        return toId;
+    }
+
+    public void setToId(UUID toId) {
+        this.toId = toId;
+    }
+
+    public String getFromType() {
+        return fromType;
+    }
+
+    public void setFromType(String fromType) {
+        this.fromType = fromType;
+    }
+
+    public String getAssetProfileFrom() {
+        return assetProfileFrom;
+    }
+
+    public void setAssetProfileFrom(String assetProfileFrom) {
+        this.assetProfileFrom = assetProfileFrom;
+    }
+
+    public String getFromName() {
+        return fromName;
+    }
+
+    public void setFromName(String fromName) {
+        this.fromName = fromName;
+    }
+
+    public String getToType() {
+        return toType;
+    }
+
+    public void setToType(String toType) {
+        this.toType = toType;
+    }
+
+    public String getAssetProfileTo() {
+        return assetProfileTo;
+    }
+
+    public void setAssetProfileTo(String assetProfileTo) {
+        this.assetProfileTo = assetProfileTo;
+    }
+
+    public String getToName() {
+        return toName;
+    }
+
+    public void setToName(String toName) {
+        this.toName = toName;
+    }
+
+    public JsonNode getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public void setAdditionalInfo(JsonNode additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
+
+    public UUID getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(UUID tenantId) {
         this.tenantId = tenantId;
     }
 }

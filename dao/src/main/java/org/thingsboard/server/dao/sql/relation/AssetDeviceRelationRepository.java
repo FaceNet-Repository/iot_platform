@@ -17,6 +17,8 @@
 package org.thingsboard.server.dao.sql.relation;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.AssetDeviceRelationEntityId;
@@ -26,7 +28,8 @@ import java.util.UUID;
 
 @Repository
 public interface AssetDeviceRelationRepository extends JpaRepository<AssetDeviceRelationEntity, AssetDeviceRelationEntityId> {
-    List<AssetDeviceRelationEntity> findByAssetProfileFromAndTenantId(String assetProfileFrom, UUID tenantId);
+    @Query("SELECT e FROM AssetDeviceRelationEntity e WHERE e.assetProfileFrom = :profileFrom AND e.tenantId = :tenantId AND (e.toId IS NULL OR e.toId IS NOT NULL)")
+    List<AssetDeviceRelationEntity> findByAssetProfileFromAndTenantIdWithNullToId(@Param("profileFrom") String profileFrom, @Param("tenantId") UUID tenantId);
     List<AssetDeviceRelationEntity> findByFromIdIn(List<UUID> fromIds);
     List<AssetDeviceRelationEntity> findByFromId(UUID fromId);
 }
