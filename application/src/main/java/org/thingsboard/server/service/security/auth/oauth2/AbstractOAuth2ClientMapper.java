@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.DashboardInfo;
@@ -53,6 +54,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -166,6 +168,98 @@ public abstract class AbstractOAuth2ClientMapper {
 
         try {
             SecurityUser securityUser = new SecurityUser(user, true, principal);
+            return (SecurityUser) new UsernamePasswordAuthenticationToken(securityUser, null, securityUser.getAuthorities()).getPrincipal();
+        } catch (Exception e) {
+            log.error("Can't get or create security user from oauth2 user", e);
+            throw new RuntimeException("Can't get or create security user from oauth2 user", e);
+        }
+    }
+
+    protected SecurityUser getOrCreateSecurityUserFromOAuth2UserWithToken(OAuth2User oauth2User, OAuth2Client oAuth2Client, OAuth2AuthenticationToken token) {
+
+        OAuth2MapperConfig config = oAuth2Client.getMapperConfig();
+
+        UserPrincipal principal = new UserPrincipal(UserPrincipal.Type.USER_NAME, oauth2User.getEmail());
+
+        User user = userService.findUserByEmail(TenantId.SYS_TENANT_ID, oauth2User.getEmail());
+
+        if (user == null && !config.isAllowUserCreation()) {
+            throw new UsernameNotFoundException("User not found: " + oauth2User.getEmail());
+        }
+
+        if (user == null) {
+            userCreationLock.lock();
+            try {
+                user = userService.findUserByEmail(TenantId.SYS_TENANT_ID, oauth2User.getEmail());
+                if (user == null) {
+                    user = new User();
+                    user.setAuthority(Authority.CUSTOMER_USER);
+
+                    TenantId tenantId = oauth2User.getTenantId() != null ?
+                            oauth2User.getTenantId() : getTenantId(oauth2User.getTenantName());
+                    user.setTenantId(tenantId);
+                    CustomerId customerId = oauth2User.getCustomerId() != null ?
+                            oauth2User.getCustomerId() : getCustomerId(user.getTenantId(), oauth2User.getCustomerName());
+                    user.setCustomerId(customerId);
+                    user.setEmail(oauth2User.getEmail());
+                    user.setFirstName(oauth2User.getFirstName());
+                    user.setLastName(oauth2User.getLastName());
+
+                    ObjectNode additionalInfo = JacksonUtil.newObjectNode();
+
+                    if (!StringUtils.isEmpty(oauth2User.getDefaultDashboardName())) {
+                        Optional<DashboardId> dashboardIdOpt =
+                                user.getAuthority() == Authority.TENANT_ADMIN ?
+                                        getDashboardId(tenantId, oauth2User.getDefaultDashboardName())
+                                        : getDashboardId(tenantId, customerId, oauth2User.getDefaultDashboardName());
+                        if (dashboardIdOpt.isPresent()) {
+                            additionalInfo.put("defaultDashboardFullscreen", oauth2User.isAlwaysFullScreen());
+                            additionalInfo.put("defaultDashboardId", dashboardIdOpt.get().getId().toString());
+                        }
+                    }
+
+                    if (oAuth2Client.getAdditionalInfo() != null &&
+                            oAuth2Client.getAdditionalInfo().has("providerName")) {
+                        additionalInfo.put("authProviderName", oAuth2Client.getAdditionalInfo().get("providerName").asText());
+                    }
+
+                    user.setAdditionalInfo(additionalInfo);
+
+                    user = tbUserService.save(tenantId, customerId, user, false, null, null);
+                    if (config.isActivateUser()) {
+                        UserCredentials userCredentials = userService.findUserCredentialsByUserId(user.getTenantId(), user.getId());
+                        userService.activateUserCredentials(user.getTenantId(), userCredentials.getActivateToken(), passwordEncoder.encode(""));
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Can't get or create security user from oauth2 user", e);
+                throw new RuntimeException("Can't get or create security user from oauth2 user", e);
+            } finally {
+                userCreationLock.unlock();
+            }
+        }
+
+        try {
+            SecurityUser securityUser = new SecurityUser(user, true, principal);
+            // Lấy giá trị của key 'roles' từ attributes
+            Map<String, Object> attributes = token.getPrincipal().getAttributes();
+            Object rolesObject = attributes.get("roles");
+
+            // Kiểm tra và ép kiểu giá trị của 'roles'
+            if (rolesObject instanceof List<?>) {
+                // Ép kiểu sang List<String>
+                List<String> rolesList = ((List<?>) rolesObject)
+                        .stream()
+                        .filter(role -> role instanceof String) // Chỉ lấy các giá trị kiểu String
+                        .map(Object::toString)                 // Chuyển sang String
+                        .toList();
+
+                // Set vào SecurityUser
+                securityUser.setRoles(rolesList);
+                System.out.println("Roles đã được set: " + rolesList);
+            } else {
+                System.out.println("Key 'roles' không tồn tại hoặc giá trị không đúng kiểu.");
+            }
             return (SecurityUser) new UsernamePasswordAuthenticationToken(securityUser, null, securityUser.getAuthorities()).getPrincipal();
         } catch (Exception e) {
             log.error("Can't get or create security user from oauth2 user", e);

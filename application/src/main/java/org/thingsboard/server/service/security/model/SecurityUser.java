@@ -23,6 +23,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.id.UserId;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,6 +39,8 @@ public class SecurityUser extends User {
     private UserPrincipal userPrincipal;
     @Getter @Setter
     private String sessionId = UUID.randomUUID().toString();
+    @Getter @Setter
+    private List<String> roles;
 
     public SecurityUser() {
         super();
@@ -53,11 +56,25 @@ public class SecurityUser extends User {
         this.userPrincipal = userPrincipal;
     }
 
+//    public Collection<GrantedAuthority> getAuthorities() {
+//        if (authorities == null) {
+//            authorities = Stream.of(SecurityUser.this.getAuthority())
+//                    .map(authority -> new SimpleGrantedAuthority(authority.name()))
+//                    .collect(Collectors.toList());
+//        }
+//        return authorities;
+//    }
+
     public Collection<GrantedAuthority> getAuthorities() {
         if (authorities == null) {
-            authorities = Stream.of(SecurityUser.this.getAuthority())
-                    .map(authority -> new SimpleGrantedAuthority(authority.name()))
-                    .collect(Collectors.toList());
+            // Kết hợp cả `getAuthority()` và danh sách `roles` vào GrantedAuthority
+            authorities = Stream.concat(
+                    Stream.of(SecurityUser.this.getAuthority())
+                            .map(authority -> new SimpleGrantedAuthority(authority.name())),
+                    roles != null ? roles.stream()
+                            .map(role -> new SimpleGrantedAuthority("ROLE_" + role)) // Thêm prefix "ROLE_" vào role
+                            : Stream.empty()
+            ).collect(Collectors.toList());
         }
         return authorities;
     }

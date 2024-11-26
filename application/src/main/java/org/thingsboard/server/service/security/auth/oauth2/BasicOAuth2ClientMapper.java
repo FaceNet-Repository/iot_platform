@@ -39,6 +39,6 @@ public class BasicOAuth2ClientMapper extends AbstractOAuth2ClientMapper implemen
         String email = BasicMapperUtils.getStringAttributeByKey(attributes, config.getBasic().getEmailAttributeKey());
         OAuth2User oauth2User = BasicMapperUtils.getOAuth2User(email, attributes, config);
 
-        return getOrCreateSecurityUserFromOAuth2User(oauth2User, oAuth2Client);
+        return getOrCreateSecurityUserFromOAuth2UserWithToken(oauth2User, oAuth2Client,token);
     }
 }
