@@ -84,7 +84,7 @@ public class AssetDeviceRelationService {
                 dto.setId(child.getToId());
                 dto.setName(child.getToName());
                 dto.setProfile(child.getAssetProfileTo());
-                if (child.getAssetProfileTo().equals("DEVICE")){
+                if ("DEVICE".equals(child.getAssetProfileTo())){
                     dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.SERVER_SCOPE));
                 } else {
                     dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
@@ -136,7 +136,7 @@ public class AssetDeviceRelationService {
                     subChildDTO.setId(entity.getToId());
                     subChildDTO.setName(entity.getToName());
                     subChildDTO.setProfile(entity.getAssetProfileTo());
-                    if (entity.getAssetProfileTo().equals("DEVICE")){
+                    if ("DEVICE".equals(entity.getAssetProfileTo())){
                         subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.SERVER_SCOPE));
                     } else {
                         subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
