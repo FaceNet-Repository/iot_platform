@@ -16,6 +16,7 @@
 
 package org.thingsboard.server.dao.dto;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,5 +29,6 @@ public class AssetDeviceRelationDTO {
     private UUID id;
     private String name;
     private String profile;
+    private JsonNode attributes;
     private List<AssetDeviceRelationDTO> children;
 }

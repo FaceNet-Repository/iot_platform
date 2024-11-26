@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.controller;
 
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -87,7 +88,7 @@ public class MultipleAssetsController extends BaseController {
 
         // Thiết lập các thông tin cần thiết cho asset
         asset.setTenantId(getTenantId());
-        asset.setName(assetRequest.getName());
+        asset.setName(assetRequest.getName() + " " + Uuids.timeBased());
         asset.setType(assetRequest.getType());
         asset.setLabel(assetRequest.getLabel());
         asset.setVersion(1L);
@@ -121,7 +122,7 @@ public class MultipleAssetsController extends BaseController {
 
         // Thiết lập các thông tin cho tài sản con
         childAsset.setTenantId(getTenantId());
-        childAsset.setName(childRequest.getName());
+        childAsset.setName(childRequest.getName() + " " + Uuids.timeBased());
         childAsset.setType(childRequest.getType());
         childAsset.setLabel(childRequest.getLabel());
         childAsset.setVersion(1L);

@@ -16,9 +16,17 @@
 
 package org.thingsboard.server.service.relation;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.AttributeScope;
+import org.thingsboard.server.common.data.id.AssetId;
+import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.kv.AttributeKvEntry;
+import org.thingsboard.server.dao.attributes.AttributesDao;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.model.sql.AssetDeviceRelationEntity;
 import org.thingsboard.server.dao.sql.relation.AssetDeviceRelationRepository;
@@ -31,6 +39,12 @@ public class AssetDeviceRelationService {
 
     @Autowired
     private AssetDeviceRelationRepository assetDeviceRelationRepository;
+
+    @Autowired
+    private AttributesDao attributesDao;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId) {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
@@ -47,6 +61,7 @@ public class AssetDeviceRelationService {
                 dto.setId(parent.getFromId());
                 dto.setName(parent.getFromName());
                 dto.setProfile(parent.getAssetProfileFrom());
+                dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(parent.getFromId()), AttributeScope.SERVER_SCOPE));
                 dto.setChildren(new ArrayList<>());
                 return dto;
             });
@@ -69,6 +84,11 @@ public class AssetDeviceRelationService {
                 dto.setId(child.getToId());
                 dto.setName(child.getToName());
                 dto.setProfile(child.getAssetProfileTo());
+                if (child.getAssetProfileTo().equals("DEVICE")){
+                    dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.SERVER_SCOPE));
+                } else {
+                    dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
+                }
                 return dto;
             });
 
@@ -84,17 +104,17 @@ public class AssetDeviceRelationService {
         // Bước 5: Đệ quy tìm các con cho tất cả các tầng (giới hạn bởi level)
         for (AssetDeviceRelationDTO dto : relationMap.values()) {
             if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {
-                dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1)); // Truyền level - 1
+                dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1, tenantId)); // Truyền level - 1
             }
         }
 
         // Bước 6: Trả về danh sách các Building (loại bỏ các bản sao)
         return relationMap.values().stream()
-                .filter(dto -> profileFrom.equals(dto.getProfile())) // Lọc đúng "Building"
+                .filter(dto -> profileFrom.equals(dto.getProfile()))
                 .collect(Collectors.toList());
     }
 
-    private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level) {
+    private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level, UUID tenantId) {
         if (level == 0) { // Nếu đạt đến level giới hạn, không tiếp tục đệ quy
             return children;
         }
@@ -116,14 +136,56 @@ public class AssetDeviceRelationService {
                     subChildDTO.setId(entity.getToId());
                     subChildDTO.setName(entity.getToName());
                     subChildDTO.setProfile(entity.getAssetProfileTo());
+                    if (entity.getAssetProfileTo().equals("DEVICE")){
+                        subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.SERVER_SCOPE));
+                    } else {
+                        subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
+                    }
                     subChildren.add(subChildDTO);
                 }
                 // Đệ quy để tìm tiếp các con của "subChild"
-                child.setChildren(findChildrenRecursively(subChildren, level - 1)); // Truyền level - 1
+                child.setChildren(findChildrenRecursively(subChildren, level - 1, tenantId)); // Truyền level - 1
             }
             result.add(child);
         }
         return result;
+    }
+
+    public JsonNode getAttributesAsJson(TenantId tenantId, EntityId entityId, AttributeScope attributeScope) {
+        // Gọi findAll để lấy danh sách AttributeKvEntry
+        List<AttributeKvEntry> attributeKvEntries = attributesDao.findAll(tenantId, entityId, attributeScope);
+
+        // Tạo một Map để lưu trữ key-value
+        Map<String, Object> resultMap = new HashMap<>();
+
+        // Chuyển các AttributeKvEntry thành key-value
+        for (AttributeKvEntry attributeKvEntry : attributeKvEntries) {
+            String key = attributeKvEntry.getKey();
+            Object value = getAttributeValue(attributeKvEntry);
+
+            resultMap.put(key, value);
+        }
+
+        // Chuyển Map thành JsonNode
+        return objectMapper.valueToTree(resultMap);
+    }
+
+    /**
+     * Lấy giá trị từ AttributeKvEntry.
+     */
+    private Object getAttributeValue(AttributeKvEntry attributeKvEntry) {
+        if (attributeKvEntry.getStrValue() != null) {
+            return attributeKvEntry.getStrValue();
+        } else if (attributeKvEntry.getBooleanValue() != null) {
+            return attributeKvEntry.getBooleanValue();
+        } else if (attributeKvEntry.getDoubleValue() != null) {
+            return attributeKvEntry.getDoubleValue();
+        } else if (attributeKvEntry.getLongValue() != null) {
+            return attributeKvEntry.getLongValue();
+        } else if (attributeKvEntry.getJsonValue() != null) {
+            return attributeKvEntry.getJsonValue();
+        }
+        return null;
     }
 
 
