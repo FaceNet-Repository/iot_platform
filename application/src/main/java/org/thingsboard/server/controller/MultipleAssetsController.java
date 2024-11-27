@@ -61,7 +61,7 @@ public class MultipleAssetsController extends BaseController {
     private final AssetDeviceRelationService assetDeviceRelationService;
 
     @GetMapping("/assets/asset-device-relations")
-    @PreAuthorize("hasAnyAuthority('CREATE_ASSET')")
+    //@PreAuthorize("hasAnyAuthority('CREATE_ASSET')")
     public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
         return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId());
