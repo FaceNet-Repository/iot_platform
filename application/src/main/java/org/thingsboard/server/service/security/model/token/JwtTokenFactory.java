@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -105,19 +106,69 @@ public class JwtTokenFactory {
         return new AccessJwtToken(token);
     }
 
+//    public SecurityUser parseAccessJwtToken(String token) {
+//        Jws<Claims> jwsClaims = parseTokenClaims(token);
+//        Claims claims = jwsClaims.getPayload();
+//        String subject = claims.getSubject();
+//        @SuppressWarnings("unchecked")
+//        List<String> scopes = claims.get(SCOPES, List.class);
+//        if (scopes == null || scopes.isEmpty()) {
+//            throw new IllegalArgumentException("JWT Token doesn't have any scopes");
+//        }
+//
+//        SecurityUser securityUser = new SecurityUser(new UserId(UUID.fromString(claims.get(USER_ID, String.class))));
+//        securityUser.setEmail(subject);
+//        securityUser.setAuthority(Authority.parse(scopes.get(0)));
+//        String tenantId = claims.get(TENANT_ID, String.class);
+//        if (tenantId != null) {
+//            securityUser.setTenantId(TenantId.fromUUID(UUID.fromString(tenantId)));
+//        } else if (securityUser.getAuthority() == Authority.SYS_ADMIN) {
+//            securityUser.setTenantId(TenantId.SYS_TENANT_ID);
+//        }
+//        String customerId = claims.get(CUSTOMER_ID, String.class);
+//        if (customerId != null) {
+//            securityUser.setCustomerId(new CustomerId(UUID.fromString(customerId)));
+//        }
+//        if (claims.get(SESSION_ID, String.class) != null) {
+//            securityUser.setSessionId(claims.get(SESSION_ID, String.class));
+//        }
+//
+//        UserPrincipal principal;
+//        if (securityUser.getAuthority() != Authority.PRE_VERIFICATION_TOKEN) {
+//            securityUser.setFirstName(claims.get(FIRST_NAME, String.class));
+//            securityUser.setLastName(claims.get(LAST_NAME, String.class));
+//            securityUser.setEnabled(claims.get(ENABLED, Boolean.class));
+//            boolean isPublic = claims.get(IS_PUBLIC, Boolean.class);
+//            principal = new UserPrincipal(isPublic ? UserPrincipal.Type.PUBLIC_ID : UserPrincipal.Type.USER_NAME, subject);
+//        } else {
+//            principal = new UserPrincipal(UserPrincipal.Type.USER_NAME, subject);
+//        }
+//        securityUser.setUserPrincipal(principal);
+//
+//        return securityUser;
+//    }
+
     public SecurityUser parseAccessJwtToken(String token) {
         Jws<Claims> jwsClaims = parseTokenClaims(token);
         Claims claims = jwsClaims.getPayload();
         String subject = claims.getSubject();
+
+        // Lấy quyền từ "scopes" trong token
         @SuppressWarnings("unchecked")
         List<String> scopes = claims.get(SCOPES, List.class);
         if (scopes == null || scopes.isEmpty()) {
             throw new IllegalArgumentException("JWT Token doesn't have any scopes");
         }
 
+        // Ánh xạ scopes thành các GrantedAuthority
+        List<GrantedAuthority> authorities = scopes.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+
         SecurityUser securityUser = new SecurityUser(new UserId(UUID.fromString(claims.get(USER_ID, String.class))));
         securityUser.setEmail(subject);
-        securityUser.setAuthority(Authority.parse(scopes.get(0)));
+        securityUser.setAuthorities(authorities);  // Thiết lập authorities vào SecurityUser
+
         String tenantId = claims.get(TENANT_ID, String.class);
         if (tenantId != null) {
             securityUser.setTenantId(TenantId.fromUUID(UUID.fromString(tenantId)));
@@ -146,6 +197,7 @@ public class JwtTokenFactory {
 
         return securityUser;
     }
+
 
     public JwtToken createRefreshToken(SecurityUser securityUser) {
         UserPrincipal principal = securityUser.getUserPrincipal();

@@ -64,7 +64,9 @@ public class SecurityUser extends User {
 //        }
 //        return authorities;
 //    }
-
+    public void setAuthorities(Collection<GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
     public Collection<GrantedAuthority> getAuthorities() {
         if (authorities == null) {
             // Kết hợp cả `getAuthority()` và danh sách `roles` vào GrantedAuthority
@@ -72,7 +74,7 @@ public class SecurityUser extends User {
                     Stream.of(SecurityUser.this.getAuthority())
                             .map(authority -> new SimpleGrantedAuthority(authority.name())),
                     roles != null ? roles.stream()
-                            .map(role -> new SimpleGrantedAuthority("ROLE_" + role)) // Thêm prefix "ROLE_" vào role
+                            .map(SimpleGrantedAuthority::new)
                             : Stream.empty()
             ).collect(Collectors.toList());
         }

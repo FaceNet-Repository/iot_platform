@@ -21,6 +21,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
@@ -58,6 +61,7 @@ public class MultipleAssetsController extends BaseController {
     private final AssetDeviceRelationService assetDeviceRelationService;
 
     @GetMapping("/assets/asset-device-relations")
+    @PreAuthorize("hasAnyAuthority('CREATE_ASSET')")
     public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
         return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId());
