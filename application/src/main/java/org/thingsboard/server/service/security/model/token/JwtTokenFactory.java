@@ -167,6 +167,7 @@ public class JwtTokenFactory {
 
         SecurityUser securityUser = new SecurityUser(new UserId(UUID.fromString(claims.get(USER_ID, String.class))));
         securityUser.setEmail(subject);
+        securityUser.setAuthority(Authority.parse(scopes.get(0)));
         securityUser.setAuthorities(authorities);  // Thiết lập authorities vào SecurityUser
 
         String tenantId = claims.get(TENANT_ID, String.class);

@@ -256,9 +256,8 @@ public abstract class AbstractOAuth2ClientMapper {
 
                 // Set vào SecurityUser
                 securityUser.setRoles(rolesList);
-                System.out.println("Roles đã được set: " + rolesList);
             } else {
-                System.out.println("Key 'roles' không tồn tại hoặc giá trị không đúng kiểu.");
+                log.error("Key 'roles' is not exist");
             }
             return (SecurityUser) new UsernamePasswordAuthenticationToken(securityUser, null, securityUser.getAuthorities()).getPrincipal();
         } catch (Exception e) {
