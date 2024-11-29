@@ -2406,6 +2406,9 @@
         "owner-name": "Owner name",
         "owner-type": "Owner type"
     },
+    "entity-management": {
+        "entity-management": "Entity management"
+    },
     "entity-view": {
         "entity-view": "Entity view",
         "entity-view-required": "Entity view is required.",
