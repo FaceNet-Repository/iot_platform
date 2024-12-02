@@ -19,6 +19,7 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +35,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
+import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.dto.AssetHierarchyRequest;
@@ -42,12 +44,17 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.asset.TbAssetService;
 import org.thingsboard.server.service.entitiy.entity.relation.TbEntityRelationService;
 import org.thingsboard.server.service.relation.AssetDeviceRelationService;
+import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
+import static org.thingsboard.server.controller.ControllerConstants.*;
 
 @RestController
 @TbCoreComponent
@@ -59,12 +66,32 @@ public class MultipleAssetsController extends BaseController {
     private final TbEntityRelationService tbEntityRelationService;
     private final TbAssetService tbAssetService;
     private final AssetDeviceRelationService assetDeviceRelationService;
+    public static final String FROM_ID = "fromId";
+    public static final String FROM_TYPE = "fromType";
 
     @GetMapping("/assets/asset-device-relations")
     //@PreAuthorize("hasAnyAuthority('CREATE_ASSET')")
     public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
         return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId());
+    }
+
+    @RequestMapping(value = "/assets/relations/info", method = RequestMethod.GET, params = {FROM_ID, FROM_TYPE})
+    @ResponseBody
+    public List<EntityRelationInfo> findInfoByFrom(@Parameter(description = ENTITY_ID_PARAM_DESCRIPTION, required = true) @RequestParam(FROM_ID) String strFromId,
+                                                   @Parameter(description = ENTITY_TYPE_PARAM_DESCRIPTION, required = true) @RequestParam(FROM_TYPE) String strFromType,
+                                                   @Parameter(description = RELATION_TYPE_GROUP_PARAM_DESCRIPTION)
+                                                   @RequestParam(value = "relationTypeGroup", required = false) String strRelationTypeGroup) throws ThingsboardException, ExecutionException, InterruptedException {
+        checkParameter(FROM_ID, strFromId);
+        checkParameter(FROM_TYPE, strFromType);
+        EntityId entityId = EntityIdFactory.getByTypeAndId(strFromType, strFromId);
+        checkEntityId(entityId, Operation.READ);
+        RelationTypeGroup typeGroup = parseRelationTypeGroup(strRelationTypeGroup, RelationTypeGroup.COMMON);
+        List<EntityRelationInfo> entityRelationInfos = checkNotNull(filterRelationsByReadPermission(relationService.findInfoByFrom(getTenantId(), entityId, typeGroup).get()));
+        for (EntityRelationInfo entityRelationInfo : entityRelationInfos){
+            entityRelationInfo.setAttributes(assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE));
+        }
+        return entityRelationInfos;
     }
 
     @RequestMapping(value = "/assets/hierarchy", method = RequestMethod.POST)
@@ -168,5 +195,32 @@ public class MultipleAssetsController extends BaseController {
         AttributeScope scope = AttributeScope.SERVER_SCOPE;
         telemetryController.saveAttributes(getTenantId(), entityId, scope, attributes);
 
+    }
+
+    private <T extends EntityRelation> List<T> filterRelationsByReadPermission(List<T> relationsByQuery) {
+        return relationsByQuery.stream().filter(relationByQuery -> {
+            try {
+                checkEntityId(relationByQuery.getTo(), Operation.READ);
+            } catch (ThingsboardException e) {
+                return false;
+            }
+            try {
+                checkEntityId(relationByQuery.getFrom(), Operation.READ);
+            } catch (ThingsboardException e) {
+                return false;
+            }
+            return true;
+        }).collect(Collectors.toList());
+    }
+
+    private RelationTypeGroup parseRelationTypeGroup(String strRelationTypeGroup, RelationTypeGroup defaultValue) {
+        RelationTypeGroup result = defaultValue;
+        if (strRelationTypeGroup != null && strRelationTypeGroup.trim().length() > 0) {
+            try {
+                result = RelationTypeGroup.valueOf(strRelationTypeGroup);
+            } catch (IllegalArgumentException e) {
+            }
+        }
+        return result;
     }
 }

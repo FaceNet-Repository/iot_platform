@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.common.data.relation;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class EntityRelationInfo extends EntityRelation {
@@ -23,6 +24,7 @@ public class EntityRelationInfo extends EntityRelation {
 
     private String fromName;
     private String toName;
+    private JsonNode attributes;
 
     public EntityRelationInfo() {
         super();
@@ -48,6 +50,14 @@ public class EntityRelationInfo extends EntityRelation {
 
     public void setToName(String toName) {
         this.toName = toName;
+    }
+
+    public JsonNode getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(JsonNode attributes) {
+        this.attributes = attributes;
     }
 
     @Override
