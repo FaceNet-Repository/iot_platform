@@ -100,8 +100,7 @@ export enum MenuId {
   features = 'features',
   otaUpdates = 'otaUpdates',
   version_control = 'version_control',
-  api_usage = 'api_usage',
-  entity_management = 'entity_management',
+  api_usage = 'api_usage'
 }
 
 declare type MenuFilter = (authState: AuthState) => boolean;
@@ -641,17 +640,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       path: '/usage',
       icon: 'insert_chart'
     }
-  ],
-  [
-    MenuId.entity_management,
-    {
-      id: MenuId.entity_management,
-      name: 'entity-management.entity-management',
-      type: 'link',
-      path: '/entity-management',
-      icon: 'app_registration'
-    }
-  ],
+  ]
 ]);
 
 const menuFilters = new Map<MenuId, MenuFilter>([
@@ -731,7 +720,6 @@ const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
       {id: MenuId.home},
       {id: MenuId.alarms},
       {id: MenuId.dashboards},
-      {id: MenuId.entity_management},
       {
         id: MenuId.entities,
         pages: [
@@ -925,9 +913,6 @@ const defaultHomeSectionMap = new Map<Authority, HomeSectionReference[]>([
 
 export const buildUserMenu = (authState: AuthState): Array<MenuSection> => {
   const references = defaultUserMenuMap.get(authState.authUser.authority);
-  console.log('buildUserMenu references', references);
-  const result = (references || []).map(ref => referenceToMenuSection(authState, ref)).filter(section => !!section);
-  console.log('buildUserMenu result', result);
   return (references || []).map(ref => referenceToMenuSection(authState, ref)).filter(section => !!section);
 };
 
@@ -938,11 +923,8 @@ export const buildUserHome = (authState: AuthState, availableMenuSections: MenuS
 };
 
 const referenceToMenuSection = (authState: AuthState, reference: MenuReference): MenuSection | undefined => {
-  console.log('Current reference', reference);
-  console.log('Current reference condition checking', filterMenuReference(authState, reference));
   if (filterMenuReference(authState, reference)) {
     const section = menuSectionMap.get(reference.id);
-    console.log('Section from menu section map', section);
     if (section) {
       const result = deepClone(section);
       if (reference.pages?.length) {

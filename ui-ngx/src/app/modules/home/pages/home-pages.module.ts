@@ -44,7 +44,6 @@ import { FeaturesModule } from '@home/pages/features/features.module';
 import { NotificationModule } from '@home/pages/notification/notification.module';
 import { AccountModule } from '@home/pages/account/account.module';
 import { ScadaSymbolModule } from '@home/pages/scada-symbol/scada-symbol.module';
-import { EntityManagementModule } from './entity-management/entity-management.module';
 
 @NgModule({
   exports: [
@@ -58,7 +57,6 @@ import { EntityManagementModule } from './entity-management/entity-management.mo
     AssetProfileModule,
     ProfilesModule,
     EntitiesModule,
-    EntityManagementModule,
     FeaturesModule,
     NotificationModule,
     DeviceModule,
