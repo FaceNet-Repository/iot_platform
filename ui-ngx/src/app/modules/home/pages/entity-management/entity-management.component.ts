@@ -17,11 +17,11 @@
 import {AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewChild,} from '@angular/core';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTableDataSource} from '@angular/material/table';
-import {DeviceService, isNotEmptyStr, TelemetryWebsocketService} from '@app/core/public-api';
+import {AssetService, DeviceService, isNotEmptyStr, TelemetryWebsocketService} from '@app/core/public-api';
 import {
-  AttributeScope, BaseData,
+  AttributeScope,
   Direction,
-  EntityId, HasId,
+  EntityId,
   LatestTelemetry,
   PageLink,
   SubscriptionData,
@@ -32,11 +32,13 @@ import * as XLSX from 'xlsx';
 import {Subject} from 'rxjs';
 import {FormBuilder} from '@angular/forms';
 import {debounceTime, distinctUntilChanged, takeUntil} from 'rxjs/operators';
-import {EntitiesDataSource} from '@home/models/datasource/entity-datasource';
+import {ActivatedRoute} from '@angular/router';
+import {EntityManagementConfig} from '@home/pages/entity-management/entity-management-config.model';
 
 type TableDataSourceItem = {
   // device information
   id?: EntityId;
+  createdAt: number;
   name: string;
   // server scope attribute
   active?: boolean;
@@ -47,7 +49,6 @@ type TableDataSourceItem = {
   // telemetry
   ip: string;
   version: string;
-  createdAt: number;
 };
 
 @Component({
@@ -58,20 +59,8 @@ type TableDataSourceItem = {
 export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoading = false;
 
-  displayedColumns: string[] = [
-    'index',
-    'createdAt',
-    'name',
-    'status',
-    'version',
-    'ip',
-    'inactivityAlarmTime',
-    'lastConnectTime',
-    'lastDisconnectTime',
-    'lastActivityTime',
-    'actions',
-  ];
-  // dataSource: EntitiesDataSource<BaseData<HasId>>;
+  entityConfig!: EntityManagementConfig;
+
   dataSource = new MatTableDataSource<TableDataSourceItem>([]);
   currentEntity: TableDataSourceItem | null = null;
 
@@ -94,7 +83,9 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
   deviceIds: EntityId[];
 
   constructor(
+    private route: ActivatedRoute,
     private deviceService: DeviceService,
+    private assetService: AssetService,
     private telemetryWebsocketService: TelemetryWebsocketService,
     private fb: FormBuilder,
     private ngZone: NgZone,
@@ -102,6 +93,8 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   ngOnInit(): void {
+    this.entityConfig = this.route.snapshot.data.entityConfig;
+    console.log('resolvedData', this.entityConfig);
     this.loadOnlineOfflineStatistic();
     this.pageLink = new PageLink(10, 0, null, {
       property: 'createdTime',
@@ -178,7 +171,7 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
 
   private loadOnlineOfflineStatistic() {
     const pageLink = new PageLink(1024);
-    this.deviceService.getTenantDeviceInfos(pageLink, 'HCP').subscribe({
+    this.deviceService.getTenantDeviceInfos(pageLink, this.entityConfig.entityProfileType).subscribe({
       next: (pageData) => {
         const statistic = pageData.data.reduce((onlineOfflineStatistic, deviceInfo) => {
           if (deviceInfo.active) {
@@ -200,45 +193,88 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
     });
   }
 
-  async deleteDevice(deviceId: EntityId) {
-    this.deviceService.deleteDevice(deviceId.id).subscribe({
+  async deleteRow(entityId: EntityId) {
+    const handler = {
       next: () => {
         this.loadData();
       },
-      error: (e) => {
+      error: (e: any) => {
         console.error(e);
       }
-    });
+    };
+    if (this.entityConfig.entityType === 'DEVICE') {
+      this.deviceService.deleteDevice(entityId.id).subscribe(handler);
+    }
+    else if (this.entityConfig.entityType === 'ASSET') {
+      this.assetService.deleteAsset(entityId.id).subscribe(handler);
+    }
   }
 
   private loadData() {
     this.pageLink.page = this.paginator.pageIndex;
     this.pageLink.pageSize = this.paginator.pageSize;
-    this.deviceService.getTenantDeviceInfos(this.pageLink, 'HCP').subscribe({
-      next: (pageData) => {
-        this.totalItems = pageData.totalElements;
-
-        this.clearTelemetrySubscriptions();
-
-        const tableDataSource: TableDataSourceItem[] = pageData.data.map((item) => ({
-          ...this.emptyTableEntry(),
-          id: item.id,
-          name: item.name,
-          createdAt: item.createdTime,
-        }));
-        for (const entry of tableDataSource) {
-          this.subscribeToDeviceTelemetry(entry, LatestTelemetry.LATEST_TELEMETRY, ['ip', 'version']);
-          this.subscribeToDeviceTelemetry(
-            entry,
-            AttributeScope.SERVER_SCOPE,
-            ['active', 'inactivityAlarmTime', 'lastActivityTime', 'lastConnectTime', 'lastDisconnectTime']);
+    if (this.entityConfig.entityType === 'DEVICE') {
+      this.deviceService.getTenantDeviceInfos(this.pageLink, this.entityConfig.entityProfileType).subscribe({
+        next: (pageData) => {
+          this.totalItems = pageData.totalElements;
+          this.dataSource.data = pageData.data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            createdAt: item.createdTime,
+          })) as TableDataSourceItem[];
+          this.loadTelemetry();
+        },
+        error: (e) => {
+          console.error(e);
         }
-        this.dataSource.data = tableDataSource;
-      },
-      error: (e) => {
-        console.error(e);
+      });
+    }
+    else if (this.entityConfig.entityType === 'ASSET') {
+      this.assetService.getTenantAssetInfos(this.pageLink, this.entityConfig.entityProfileType).subscribe({
+        next: (pageData) => {
+          this.totalItems = pageData.totalElements;
+          this.dataSource.data = pageData.data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            createdAt: item.createdTime,
+          })) as TableDataSourceItem[];
+          this.loadTelemetry();
+        },
+        error: (e) => {
+          console.error(e);
+        }
+      });
+    }
+  }
+
+  private loadTelemetry() {
+    this.clearTelemetrySubscriptions();
+    for (const entry of this.dataSource.data) {
+      if (this.entityConfig.latestTelemetries.length) {
+        this.subscribeToDeviceTelemetry(
+          entry,
+          LatestTelemetry.LATEST_TELEMETRY,
+          this.entityConfig.latestTelemetries);
       }
-    });
+      if (this.entityConfig.serverScopeAttributes.length) {
+        this.subscribeToDeviceTelemetry(
+          entry,
+          AttributeScope.SERVER_SCOPE,
+          this.entityConfig.serverScopeAttributes);
+      }
+      if (this.entityConfig.clientScopeAttributes.length) {
+        this.subscribeToDeviceTelemetry(
+          entry,
+          AttributeScope.CLIENT_SCOPE,
+          this.entityConfig.clientScopeAttributes);
+      }
+      if (this.entityConfig.sharedScopeAttributes.length) {
+        this.subscribeToDeviceTelemetry(
+          entry,
+          AttributeScope.SHARED_SCOPE,
+          this.entityConfig.sharedScopeAttributes);
+      }
+    }
   }
 
   private subscribeToDeviceTelemetry(
