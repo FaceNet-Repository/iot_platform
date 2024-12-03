@@ -13,14 +13,15 @@
 /// See the License for the specific language governing permissions and
 /// limitations under the License.
 ///
+
 import {AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewChild,} from '@angular/core';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTableDataSource} from '@angular/material/table';
 import {DeviceService, isNotEmptyStr, TelemetryWebsocketService} from '@app/core/public-api';
 import {
-  AttributeScope,
+  AttributeScope, BaseData,
   Direction,
-  EntityId,
+  EntityId, HasId,
   LatestTelemetry,
   PageLink,
   SubscriptionData,
@@ -31,6 +32,7 @@ import * as XLSX from 'xlsx';
 import {Subject} from 'rxjs';
 import {FormBuilder} from '@angular/forms';
 import {debounceTime, distinctUntilChanged, takeUntil} from 'rxjs/operators';
+import {EntitiesDataSource} from '@home/models/datasource/entity-datasource';
 
 type TableDataSourceItem = {
   // device information
@@ -69,7 +71,9 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
     'lastActivityTime',
     'actions',
   ];
+  // dataSource: EntitiesDataSource<BaseData<HasId>>;
   dataSource = new MatTableDataSource<TableDataSourceItem>([]);
+  currentEntity: TableDataSourceItem | null = null;
 
   defaultPageSize = 10;
   pageSizeOptions: number[] = [5, 10, 15, 20, 50];
@@ -81,6 +85,8 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
   textSearchMode = false;
   textSearch = this.fb.control('', {nonNullable: true});
   private telemetrySubscribers: TelemetrySubscriber[] = [];
+
+  isDetailsOpen = false;
 
   private destroy$ = new Subject<void>();
 
@@ -155,6 +161,20 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
       console.log('Something wrong while exporting');
     }
   }
+
+  onRowClick($event: Event, entity) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.isDetailsOpen = !this.isDetailsOpen;
+    this.currentEntity = this.isDetailsOpen ? entity : null;
+  }
+
+  onCloseDetails() {
+    this.isDetailsOpen = false;
+    this.currentEntity = null;
+  }
+
 
   private loadOnlineOfflineStatistic() {
     const pageLink = new PageLink(1024);

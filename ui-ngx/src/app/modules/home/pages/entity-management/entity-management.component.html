@@ -15,13 +15,38 @@
     limitations under the License.
 
 -->
+<pre>{{currentEntity |json}}</pre>
 <mat-drawer-container hasBackdrop="false" class="tb-absolute-fill">
   <mat-drawer class="tb-details-drawer mat-elevation-z4"
               #drawer
               mode="over"
               position="end"
-              [opened]="false">
-    Drawer here
+              [opened]="isDetailsOpen">
+    <tb-details-panel
+      *ngIf="currentEntity"
+      [headerTitle]="currentEntity.name"
+      [headerSubtitle]="currentEntity.id.id"
+      (closeDetails)="onCloseDetails()"
+      [isEdit]="false">
+      <div class="details-panel-body">
+        <h2 class="mat-h2">Thông tin HCP</h2>
+        <div class="information-grid">
+          <span>IP:</span>
+          <span>192.168.1.1</span>
+          <span>MAC:</span>
+          <span>00:1A:2B:3B:4C:5C</span>
+          <span>Firmware version:</span>
+          <span>2.9.1</span>
+          <span>Status:</span>
+          <span class="badge green">Online</span>
+        </div>
+        <fn-hcp-children-table *ngIf="currentEntity" [hcpId]="currentEntity.id"/>
+        <div class="button-group">
+          <button mat-raised-button>Checklog</button>
+          <button mat-raised-button color="primary">Remote control</button>
+        </div>
+      </div>
+    </tb-details-panel>
   </mat-drawer>
   <mat-drawer-content>
     <div class="mat-padding tb-entity-table tb-absolute-fill">
@@ -173,16 +198,8 @@
                 </div>
               </mat-cell>
             </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            <tr class="mat-row" *matNoDataRow>
-              <td class="mat-cell" colspan="11">
-                <div class="mat-padding no-data-message" *ngIf="!isLoading">
-                  Không có dữ liệu
-                </div>
-              </td>
-            </tr>
+            <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+            <mat-row *matRowDef="let entity; columns: displayedColumns;" (click)="onRowClick($event, entity)"></mat-row>
           </table>
         </div>
         <mat-divider></mat-divider>
