@@ -17,18 +17,44 @@
 -->
 
 
-<mat-toolbar class="mat-mdc-table-toolbar">
+<mat-toolbar [fxShow]="!assignMode" class="mat-mdc-table-toolbar">
   <div class="mat-toolbar-tools">
     <div class="statistic">
       <span>Danh sách thiết bị </span> <span class="badge neutral">{{totalItems}}</span> <span class="badge green">{{totalOnline}}</span> <span class="badge red">{{totalOffline}}</span>
     </div>
     <span fxFlex></span>
-    <div fxShow>
+    <div >
+      <button mat-icon-button
+              matTooltip="Gán thiết bị"
+              matTooltipPosition="above"
+              (click)="toggleAssignMode()">
+        <mat-icon>add_link</mat-icon>
+      </button>
       <button mat-icon-button
               matTooltip="Xuất dữ liệu"
               matTooltipPosition="above"
               (click)="exportData()">
         <mat-icon>file_download</mat-icon>
+      </button>
+    </div>
+  </div>
+</mat-toolbar>
+<mat-toolbar [fxShow]="assignMode" class="mat-mdc-table-toolbar">
+  <div class="mat-toolbar-tools">
+    <fn-device-select [excludingIds]="excludingIds" [(select)]="selectDeviceIds"/>
+    <span fxFlex></span>
+    <div>
+      <button mat-icon-button
+              matTooltip="Xác nhận gán"
+              matTooltipPosition="above"
+              (click)="confirmAssignment()">
+        <mat-icon>check</mat-icon>
+      </button>
+      <button mat-icon-button
+              matTooltip="Hủy bỏ gán"
+              matTooltipPosition="above"
+              (click)="cancelAssignment()">
+        <mat-icon>close</mat-icon>
       </button>
     </div>
   </div>

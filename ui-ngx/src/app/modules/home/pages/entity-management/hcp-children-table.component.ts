@@ -17,17 +17,23 @@
 import {AfterViewInit, Component, Input, NgZone, OnDestroy, OnInit, ViewChild,} from '@angular/core';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTableDataSource} from '@angular/material/table';
-import {DeviceService, EntityRelationService, TelemetryWebsocketService} from '@app/core/public-api';
+import {
+  DeviceProfileService,
+  DeviceService,
+  EntityRelationService,
+  TelemetryWebsocketService
+} from '@app/core/public-api';
 import {
   AttributeScope,
-  EntityId,
+  Device, DeviceProfile,
+  EntityId, EntityInfoData, EntityRelation,
   LatestTelemetry,
-  PageLink,
+  PageLink, RelationTypeGroup,
   SubscriptionData,
   TelemetrySubscriber,
   TelemetryType
 } from '@app/shared/public-api';
-import {Subject} from 'rxjs';
+import {forkJoin, Subject} from 'rxjs';
 import {FormBuilder} from '@angular/forms';
 import * as XLSX from 'xlsx';
 
@@ -53,6 +59,10 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
   @Input() hcpId: EntityId;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   isLoading = false;
+
+  assignMode = false;
+  selectDeviceIds: EntityId[] = [];
+  excludingIds: EntityId[] = [];
 
   displayedColumns: string[] = [
     'createdAt',
@@ -84,6 +94,7 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
 
   constructor(
     private deviceService: DeviceService,
+    private deviceProfileService: DeviceProfileService,
     private relationService: EntityRelationService,
     private telemetryWebsocketService: TelemetryWebsocketService,
     private fb: FormBuilder,
@@ -103,6 +114,34 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
     this.clearTelemetrySubscriptions();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  toggleAssignMode() {
+    this.assignMode = !this.assignMode;
+  }
+
+  confirmAssignment() {
+    this.toggleAssignMode();
+    const saveRelations$ = this.selectDeviceIds.map(deviceId => ({
+      from: this.hcpId,
+      to: deviceId,
+      type: 'Created',
+      typeGroup: RelationTypeGroup.COMMON
+    })).map(relation => this.relationService.saveRelation(relation));
+    forkJoin(saveRelations$).subscribe({
+      next: () => {
+        console.log('All relations have been saved successfully');
+        this.getChildDevices();
+      },
+      error: (err) => {
+        console.error('Error saving relations:', err);
+      }
+    });
+  }
+
+  cancelAssignment() {
+    this.toggleAssignMode();
+    this.selectDeviceIds = [];
   }
 
   exportData(): void {
@@ -127,17 +166,14 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
 
   async copyToClipboard(content: string) {
     await navigator.clipboard.writeText(content);
-
   }
 
   private getChildDevices() {
     this.relationService.findByFrom(this.hcpId).subscribe({
       next: (relations) => {
-        this.totalItems = relations.length;
-        this.totalOffline = this.totalItems;
         const childDeviceIds = relations
           .filter(relation =>
-            relation.type === 'Contains' &&
+            relation.type === 'Created' &&
             relation.to.entityType === 'DEVICE'
           )
           .map(relation => relation.to.id);
@@ -158,6 +194,7 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
               lastConnectTime: '',
               lastDisconnectTime: '',
             }));
+            this.excludingIds = this.dataSource.data.map(device => device.id);
             this.dataSource.data.forEach((entry) => {
               this.subscribeToDeviceTelemetry(
                 entry,
@@ -177,7 +214,7 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   detachDevice(deviceId: EntityId) {
-    this.relationService.deleteRelation(this.hcpId, 'Contains', deviceId).subscribe({
+    this.relationService.deleteRelation(this.hcpId, 'Created', deviceId).subscribe({
       next: () => {
         this.getChildDevices();
       },
@@ -226,10 +263,12 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
 
   private updateOnlineOfflineStatistic() {
     if (!this.dataSource.data) {
+      this.totalItems = 0;
       this.totalOnline = 0;
       this.totalOffline = 0;
       return;
     }
+    this.totalItems = this.dataSource.data.length;
     this.totalOnline = this.dataSource.data.filter(item => item.active === 'true').length;
     this.totalOffline = this.dataSource.data.filter(item => item.active === 'false').length;
   }
