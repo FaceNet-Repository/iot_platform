@@ -102,6 +102,9 @@ export enum MenuId {
   version_control = 'version_control',
   api_usage = 'api_usage',
   entity_management = 'entity_management',
+  hcp_management = 'hcp_management',
+  home_management = 'home_management',
+  room_management = 'room_management',
 }
 
 declare type MenuFilter = (authState: AuthState) => boolean;
@@ -647,11 +650,41 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     {
       id: MenuId.entity_management,
       name: 'entity-management.entity-management',
-      type: 'link',
+      type: 'toggle',
       path: '/entity-management',
       icon: 'app_registration'
     }
   ],
+  [
+    MenuId.hcp_management,
+    {
+      id: MenuId.hcp_management,
+      name: 'entity-management.hcp-management',
+      type: 'link',
+      path: '/entity-management/hcp',
+      icon: 'devices_other'
+    }
+  ],
+  [
+    MenuId.home_management,
+    {
+      id: MenuId.home_management,
+      name: 'entity-management.home-management',
+      type: 'link',
+      path: '/entity-management/home',
+      icon: 'domain'
+    }
+  ],
+  [
+    MenuId.room_management,
+    {
+      id: MenuId.room_management,
+      name: 'entity-management.room-management',
+      type: 'link',
+      path: '/entity-management/room',
+      icon: 'view_quilt'
+    }
+  ]
 ]);
 
 const menuFilters = new Map<MenuId, MenuFilter>([
@@ -731,7 +764,14 @@ const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
       {id: MenuId.home},
       {id: MenuId.alarms},
       {id: MenuId.dashboards},
-      {id: MenuId.entity_management},
+      {
+        id: MenuId.entity_management,
+        pages: [
+          {id: MenuId.hcp_management},
+          {id: MenuId.home_management},
+          {id: MenuId.room_management}
+        ]
+      },
       {
         id: MenuId.entities,
         pages: [
