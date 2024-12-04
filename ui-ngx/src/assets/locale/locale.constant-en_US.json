@@ -2407,7 +2407,10 @@
         "owner-type": "Owner type"
     },
     "entity-management": {
-        "entity-management": "Entity management"
+        "entity-management": "Entity management",
+        "hcp-management": "HCP",
+        "home-management": "Home",
+        "room-management": "Room"
     },
     "entity-view": {
         "entity-view": "Entity view",

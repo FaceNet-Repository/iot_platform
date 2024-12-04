@@ -17,7 +17,7 @@
 import {AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewChild,} from '@angular/core';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTableDataSource} from '@angular/material/table';
-import {DeviceService, isNotEmptyStr, TelemetryWebsocketService} from '@app/core/public-api';
+import {AssetService, DeviceService, isNotEmptyStr, TelemetryWebsocketService} from '@app/core/public-api';
 import {
   AttributeScope,
   Direction,
@@ -29,13 +29,16 @@ import {
   TelemetryType
 } from '@app/shared/public-api';
 import * as XLSX from 'xlsx';
-import {Subject} from 'rxjs';
+import {forkJoin, Subject} from 'rxjs';
 import {FormBuilder} from '@angular/forms';
-import {debounceTime, distinctUntilChanged, takeUntil} from 'rxjs/operators';
+import {debounceTime, distinctUntilChanged, finalize, first, map, takeUntil} from 'rxjs/operators';
+import {ActivatedRoute} from '@angular/router';
+import {EntityManagementConfig} from '@home/pages/entity-management/entity-management-config.model';
 
 type TableDataSourceItem = {
   // device information
   id?: EntityId;
+  createdAt: number;
   name: string;
   // server scope attribute
   active?: boolean;
@@ -46,7 +49,6 @@ type TableDataSourceItem = {
   // telemetry
   ip: string;
   version: string;
-  createdAt: number;
 };
 
 @Component({
@@ -57,24 +59,14 @@ type TableDataSourceItem = {
 export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoading = false;
 
-  displayedColumns: string[] = [
-    'index',
-    'createdAt',
-    'name',
-    'status',
-    'version',
-    'ip',
-    'inactivityAlarmTime',
-    'lastConnectTime',
-    'lastDisconnectTime',
-    'lastActivityTime',
-    'actions',
-  ];
+  entityConfig!: EntityManagementConfig;
+
   dataSource = new MatTableDataSource<TableDataSourceItem>([]);
+  currentEntity: TableDataSourceItem | null = null;
 
   defaultPageSize = 10;
   pageSizeOptions: number[] = [5, 10, 15, 20, 50];
-  pageLink: PageLink;
+  pageLink: PageLink = new PageLink(10);
   totalItems = 0;
   totalOnline = 0;
   totalOffline = 0;
@@ -83,13 +75,17 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
   textSearch = this.fb.control('', {nonNullable: true});
   private telemetrySubscribers: TelemetrySubscriber[] = [];
 
+  isDetailsOpen = false;
+
   private destroy$ = new Subject<void>();
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   deviceIds: EntityId[];
 
   constructor(
+    private route: ActivatedRoute,
     private deviceService: DeviceService,
+    private assetService: AssetService,
     private telemetryWebsocketService: TelemetryWebsocketService,
     private fb: FormBuilder,
     private ngZone: NgZone,
@@ -97,12 +93,13 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   ngOnInit(): void {
-    this.loadOnlineOfflineStatistic();
+    this.entityConfig = this.route.snapshot.data.entityConfig;
     this.pageLink = new PageLink(10, 0, null, {
       property: 'createdTime',
       direction: Direction.DESC,
     });
     this.pageLink.pageSize = this.defaultPageSize;
+    this.updateStatistic();
   }
 
   ngAfterViewInit(): void {
@@ -157,23 +154,66 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
     }
   }
 
-  private loadOnlineOfflineStatistic() {
+  onRowClick($event: Event, entity) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    this.isDetailsOpen = !this.isDetailsOpen;
+    this.currentEntity = this.isDetailsOpen ? entity : null;
+  }
+
+  onCloseDetails() {
+    this.isDetailsOpen = false;
+    this.currentEntity = null;
+  }
+
+
+  private updateStatistic() {
+    const subscriberList: TelemetrySubscriber[] = [];
     const pageLink = new PageLink(1024);
-    this.deviceService.getTenantDeviceInfos(pageLink, 'HCP').subscribe({
+    this.deviceService.getTenantDeviceInfos(pageLink, this.entityConfig.entityProfileType).subscribe({
       next: (pageData) => {
-        const statistic = pageData.data.reduce((onlineOfflineStatistic, deviceInfo) => {
-          if (deviceInfo.active) {
-            onlineOfflineStatistic.online += 1;
-          } else {
-            onlineOfflineStatistic.offline += 1;
-          }
-          return onlineOfflineStatistic;
-        }, {
-          online: 0,
-          offline: 0,
+        const data = pageData.data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          createdAt: item.createdTime,
+        })) as TableDataSourceItem[];
+        const telemetryObservables = data.map(entry => {
+          const subscriber = TelemetrySubscriber.createEntityAttributesSubscription(
+            this.telemetryWebsocketService,
+            entry.id,
+            LatestTelemetry.LATEST_TELEMETRY,
+            this.ngZone,
+            ['status']
+          );
+          const result$ = subscriber.data$.pipe(
+            first(),
+            map((message) => message.data.status),
+            finalize(() => {
+              subscriber.unsubscribe();
+            })
+          );
+          subscriber.subscribe();
+          subscriberList.push(subscriber);
+          return result$;
         });
-        this.totalOnline = statistic.online;
-        this.totalOffline = statistic.offline;
+        forkJoin(telemetryObservables).subscribe({
+          next: (results) => {
+            this.totalItems = results.length;
+            try {
+              this.totalOnline = results.filter(r => r[0][1] === '1').length;
+              this.totalOffline = results.filter(r => r[0][1] === '0').length;
+            } catch (e) {
+              console.error(e);
+              this.totalOnline = -1;
+              this.totalOffline = -1;
+            }
+            subscriberList.forEach(subscriber => subscriber.unsubscribe());
+          },
+          error: (err) => {
+            console.error('Error fetching telemetry data', err);
+          }
+        });
       },
       error: (e) => {
         console.error(e);
@@ -181,45 +221,88 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
     });
   }
 
-  async deleteDevice(deviceId: EntityId) {
-    this.deviceService.deleteDevice(deviceId.id).subscribe({
+  async deleteRow(entityId: EntityId) {
+    const handler = {
       next: () => {
         this.loadData();
       },
-      error: (e) => {
+      error: (e: any) => {
         console.error(e);
       }
-    });
+    };
+    if (this.entityConfig.entityType === 'DEVICE') {
+      this.deviceService.deleteDevice(entityId.id).subscribe(handler);
+    }
+    else if (this.entityConfig.entityType === 'ASSET') {
+      this.assetService.deleteAsset(entityId.id).subscribe(handler);
+    }
   }
 
   private loadData() {
     this.pageLink.page = this.paginator.pageIndex;
     this.pageLink.pageSize = this.paginator.pageSize;
-    this.deviceService.getTenantDeviceInfos(this.pageLink, 'HCP').subscribe({
-      next: (pageData) => {
-        this.totalItems = pageData.totalElements;
-
-        this.clearTelemetrySubscriptions();
-
-        const tableDataSource: TableDataSourceItem[] = pageData.data.map((item) => ({
-          ...this.emptyTableEntry(),
-          id: item.id,
-          name: item.name,
-          createdAt: item.createdTime,
-        }));
-        for (const entry of tableDataSource) {
-          this.subscribeToDeviceTelemetry(entry, LatestTelemetry.LATEST_TELEMETRY, ['ip', 'version']);
-          this.subscribeToDeviceTelemetry(
-            entry,
-            AttributeScope.SERVER_SCOPE,
-            ['active', 'inactivityAlarmTime', 'lastActivityTime', 'lastConnectTime', 'lastDisconnectTime']);
+    if (this.entityConfig.entityType === 'DEVICE') {
+      this.deviceService.getTenantDeviceInfos(this.pageLink, this.entityConfig.entityProfileType).subscribe({
+        next: (pageData) => {
+          this.totalItems = pageData.totalElements;
+          this.dataSource.data = pageData.data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            createdAt: item.createdTime,
+          })) as TableDataSourceItem[];
+          this.loadTelemetry();
+        },
+        error: (e) => {
+          console.error(e);
         }
-        this.dataSource.data = tableDataSource;
-      },
-      error: (e) => {
-        console.error(e);
+      });
+    }
+    else if (this.entityConfig.entityType === 'ASSET') {
+      this.assetService.getTenantAssetInfos(this.pageLink, this.entityConfig.entityProfileType).subscribe({
+        next: (pageData) => {
+          this.totalItems = pageData.totalElements;
+          this.dataSource.data = pageData.data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            createdAt: item.createdTime,
+          })) as TableDataSourceItem[];
+          this.loadTelemetry();
+        },
+        error: (e) => {
+          console.error(e);
+        }
+      });
+    }
+  }
+
+  private loadTelemetry() {
+    this.clearTelemetrySubscriptions();
+    for (const entry of this.dataSource.data) {
+      if (this.entityConfig.latestTelemetries.length) {
+        this.subscribeToDeviceTelemetry(
+          entry,
+          LatestTelemetry.LATEST_TELEMETRY,
+          this.entityConfig.latestTelemetries);
       }
-    });
+      if (this.entityConfig.serverScopeAttributes.length) {
+        this.subscribeToDeviceTelemetry(
+          entry,
+          AttributeScope.SERVER_SCOPE,
+          this.entityConfig.serverScopeAttributes);
+      }
+      if (this.entityConfig.clientScopeAttributes.length) {
+        this.subscribeToDeviceTelemetry(
+          entry,
+          AttributeScope.CLIENT_SCOPE,
+          this.entityConfig.clientScopeAttributes);
+      }
+      if (this.entityConfig.sharedScopeAttributes.length) {
+        this.subscribeToDeviceTelemetry(
+          entry,
+          AttributeScope.SHARED_SCOPE,
+          this.entityConfig.sharedScopeAttributes);
+      }
+    }
   }
 
   private subscribeToDeviceTelemetry(
@@ -254,19 +337,5 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
         console.log(e);
       }
     });
-  }
-
-  private emptyTableEntry(): TableDataSourceItem {
-    return {
-      name: '',
-      active: false,
-      inactivityAlarmTime: '',
-      lastActivityTime: '',
-      lastConnectTime: '',
-      lastDisconnectTime: '',
-      ip: '',
-      version: '',
-      createdAt: 0,
-    };
   }
 }

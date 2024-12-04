@@ -17,11 +17,35 @@
 import {RouterModule, Routes} from '@angular/router';
 import {NgModule} from '@angular/core';
 import {EntityManagementComponent} from './entity-management.component';
+import {HcpResolver} from '@home/pages/entity-management/resolver/hcp.resolver';
+import {HomeResolver} from '@home/pages/entity-management/resolver/home.resolver';
+import {RoomResolver} from '@home/pages/entity-management/resolver/room.resolver';
 
 const routes: Routes = [
   {
     path: 'entity-management',
+    redirectTo: 'entity-management/hcp'
+  },
+  {
+    path: 'entity-management/hcp',
     component: EntityManagementComponent,
+    resolve: {
+      entityConfig: HcpResolver
+    }
+  },
+  {
+    path: 'entity-management/home',
+    component: EntityManagementComponent,
+    resolve: {
+      entityConfig: HomeResolver
+    }
+  },
+  {
+    path: 'entity-management/room',
+    component: EntityManagementComponent,
+    resolve: {
+      entityConfig: RoomResolver
+    }
   }
 ];
 

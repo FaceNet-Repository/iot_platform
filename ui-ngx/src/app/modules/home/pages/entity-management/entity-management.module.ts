@@ -20,10 +20,14 @@ import {SharedModule} from '@shared/shared.module';
 import {EntityManagementComponent} from './entity-management.component';
 import {EntityManagementRoutingModule} from './entity-management-routing.module';
 import {HomeComponentsModule} from '@home/components/home-components.module';
+import {HcpChildrenTableComponent} from '@home/pages/entity-management/hcp-children-table.component';
+import {DeviceSelectComponent} from '@home/pages/entity-management/input/device-select.component';
 
 @NgModule({
   declarations: [
-    EntityManagementComponent
+    EntityManagementComponent,
+    HcpChildrenTableComponent,
+    DeviceSelectComponent,
   ],
     imports: [
         CommonModule,
