@@ -1,42 +1,74 @@
+///
+/// Copyright © 2016-2024 The Thingsboard Authors
+///
+/// Licensed under the Apache License, Version 2.0 (the "License");
+/// you may not use this file except in compliance with the License.
+/// You may obtain a copy of the License at
+///
+///     http://www.apache.org/licenses/LICENSE-2.0
+///
+/// Unless required by applicable law or agreed to in writing, software
+/// distributed under the License is distributed on an "AS IS" BASIS,
+/// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+/// See the License for the specific language governing permissions and
+/// limitations under the License.
+///
+
 import {Injectable} from '@angular/core';
-import {ActivatedRouteSnapshot, Resolve, RouterStateSnapshot} from '@angular/router';
+import {Resolve} from '@angular/router';
 import {EntityManagementConfig} from '@home/pages/entity-management/entity-management-config.model';
+import {DefaultResolver} from '@home/pages/entity-management/resolver/default.resolver';
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class HomeResolver implements Resolve<EntityManagementConfig> {
+export class HomeResolver extends DefaultResolver implements Resolve<EntityManagementConfig> {
 
-  resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): EntityManagementConfig {
-    const columns: EntityManagementConfig['tableConfig']['columns'] = [
-      { key: 'index', label: 'STT', cellType: 'index' },
+  constructor() {
+    super();
+    this.title = 'Danh sách Nhà';
+    this.entityType = 'ASSET';
+    this.entityProfileType = 'HOME';
+    this.latestTelemetries = ['address'];
+    this.serverScopeAttributes = ['active', 'inactivityAlarmTime', 'lastActivityTime', 'lastConnectTime', 'lastDisconnectTime'];
+    this.columns = [
+      { key: 'index', label: 'STT', cellType: 'index', sticky: true },
       { key: 'createdAt', label: 'Ngày thêm', cellType: 'datetime' },
-      { key: 'name', label: 'Tên', cellType: 'text' },
+      { key: 'name', label: 'Tên HCP', cellType: 'text' },
       { key: 'status', label: 'Trạng thái', cellType: 'badge' },
-      { key: 'ip', label: 'IP', cellType: 'text' },
+      { key: 'address', label: 'Địa chỉ', cellType: 'text' },
+      { key: 'active', label: 'Kết nối', cellType: 'badge' },
       { key: 'inactivityAlarmTime', label: 'Thời gian cảnh báo', cellType: 'datetime' },
       { key: 'lastConnectTime', label: 'Kết nối lần cuối', cellType: 'datetime' },
       { key: 'lastDisconnectTime', label: 'Mất kết nối lần cuối', cellType: 'datetime' },
       { key: 'lastActivityTime', label: 'Cập nhật gần nhất', cellType: 'datetime' },
-      { key: 'actions', label: 'Thao tác', cellType: 'actions' },
+      { key: 'actions', label: 'Thao tác', cellType: 'actions', stickyEnd: true },
     ];
-
-    const displayedColumns: EntityManagementConfig['tableConfig']['displayedColumns'] = columns.map(col => col.key);
-
-    return {
-      title: 'Danh sách Nhà',
-      entityType: 'ASSET',
-      entityProfileType: 'HOME',
-      latestTelemetries: ['ip', 'version'],
-      serverScopeAttributes: ['active', 'inactivityAlarmTime', 'lastActivityTime', 'lastConnectTime', 'lastDisconnectTime'],
-      clientScopeAttributes: [],
-      sharedScopeAttributes: [],
-      displayedColumns,
-      tableConfig: {
-        displayedColumns,
-        columns,
-      }
+    this.detailConfig = {
+      title: 'Thông tin Nhà',
+      fields: [
+        {
+          key: 'createdAt',
+          label: 'Ngày thêm',
+          fieldType: 'text'
+        },
+        {
+          key: 'address',
+          label: 'Địa chỉ',
+          fieldType: 'text'
+        },
+        {
+          key: 'status',
+          label: 'Trạng thái',
+          fieldType: 'badge'
+        }
+      ]
+    };
+    this.statisticConfig = {
+      key: 'status',
+      onlineValue: '1',
+      offlineValue: '0',
     };
   }
 }

@@ -29,16 +29,17 @@
       (closeDetails)="onCloseDetails()"
       [isEdit]="false">
       <div class="details-panel-body">
-        <h2 class="mat-h2">Thông tin HCP</h2>
+        <mat-toolbar class="mat-mdc-table-toolbar">
+          <div class="mat-toolbar-tools">
+            {{ entityConfig.detailConfig.title }}
+          </div>
+          <span fxFlex></span>
+        </mat-toolbar>
         <div class="information-grid">
-          <span>IP:</span>
-          <span>192.168.1.1</span>
-          <span>MAC:</span>
-          <span>00:1A:2B:3B:4C:5C</span>
-          <span>Firmware version:</span>
-          <span>2.9.1</span>
-          <span>Status:</span>
-          <span class="badge green">Online</span>
+          <ng-container *ngFor="let field of entityConfig.detailConfig.fields">
+            <span>{{ field.label }}</span>
+            <span>{{ currentEntity[field.key] }}</span>
+          </ng-container>
         </div>
         <fn-hcp-children-table *ngIf="currentEntity" [hcpId]="currentEntity.id"/>
         <div class="button-group">
@@ -55,7 +56,7 @@
           <div class="mat-toolbar-tools">
             <div fxLayout="row" fxLayoutAlign="start center" fxLayout.xs="column" fxLayoutAlign.xs="center start"
                  class="title-container">
-              <span class="tb-entity-table-title">{{ entityConfig.title }}</span>
+              <span class="tb-entity-table-title">{{ entityConfig?.title }}</span>
               <div style="display: flex; gap: 0.6rem; justify-content: space-between; align-items: center">
                 <span class="tb-entity-table-title badge neutral"
                       matTooltip="Tổng số lượng HCP"
@@ -115,8 +116,8 @@
         </mat-toolbar>
         <div *ngIf="entityConfig" fxFlex class="table-container">
           <table mat-table [dataSource]="dataSource" matSort matSortDisableClear>
-            <ng-container *ngFor="let column of entityConfig.tableConfig.columns">
-              <ng-container [matColumnDef]="column.key" sticky>
+            <ng-container *ngFor="let column of entityConfig.columns">
+              <ng-container [matColumnDef]="column.key" [sticky]="column.sticky" [stickyEnd]="column.stickyEnd">
                 <mat-header-cell *matHeaderCellDef> {{ column.label }}</mat-header-cell>
                 <ng-container [ngSwitch]="column.cellType">
                   <ng-container [ngSwitch]="column.cellType">
@@ -134,14 +135,29 @@
                     </ng-container>
                     <ng-container *ngSwitchCase="'badge'">
                       <mat-cell *matCellDef="let element">
-                        <div *ngIf="element[column.key] === 'true'; else inactiveTemplate" class="badge green">
-                          {{ "device.active" | translate }}
-                        </div>
-                        <ng-template #inactiveTemplate>
-                          <div class="badge red">
-                            {{ "device.inactive" | translate }}
-                          </div>
-                        </ng-template>
+                        <ng-container [ngSwitch]="column.key">
+                          <ng-container *ngSwitchCase="'active'">
+                            <div *ngIf="element[column.key] === 'true'; else inactiveTemplate" class="badge green">
+                              {{ "device.active" | translate }}
+                            </div>
+                            <ng-template #inactiveTemplate>
+                              <div class="badge red">
+                                {{ "device.inactive" | translate }}
+                              </div>
+                            </ng-template>
+                          </ng-container>
+                          <ng-container *ngSwitchCase="'status'">
+                            <div *ngIf="element[column.key] === '1'; else inactiveTemplate" class="badge green">
+                              Online
+                            </div>
+                            <ng-template #inactiveTemplate>
+                              <div class="badge red">
+                                Offline
+                              </div>
+                            </ng-template>
+                          </ng-container>
+                        </ng-container>
+
                       </mat-cell>
                     </ng-container>
                     <ng-container *ngSwitchCase="'actions'">

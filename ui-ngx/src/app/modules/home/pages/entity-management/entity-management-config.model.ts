@@ -7,12 +7,24 @@ export type EntityManagementConfig = {
   clientScopeAttributes: string[];
   sharedScopeAttributes: string[];
   displayedColumns: string[];
-  tableConfig: {
-    displayedColumns: string[];
-    columns: {
+  columns: {
+    key: string;
+    label: string;
+    cellType: 'index' | 'text' | 'datetime' | 'badge' | 'actions';
+    sticky?: boolean;
+    stickyEnd?: boolean;
+  }[];
+  detailConfig: {
+    title: string;
+    fields: {
       key: string;
       label: string;
-      cellType: 'index' | 'text' | 'datetime' | 'badge' | 'actions';
+      fieldType: 'index' | 'text' | 'datetime' | 'badge';
     }[];
+  };
+  statisticConfig: {
+    key: string;
+    onlineValue: any;
+    offlineValue: any;
   };
 };
