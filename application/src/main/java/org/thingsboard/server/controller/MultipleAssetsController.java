@@ -27,13 +27,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.thingsboard.server.common.data.AttributeScope;
+import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.AssetId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.EntityIdFactory;
-import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.*;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
@@ -81,6 +80,7 @@ public class MultipleAssetsController extends BaseController {
     public List<EntityRelationInfo> findInfoByFrom(@Parameter(description = ENTITY_ID_PARAM_DESCRIPTION, required = true) @RequestParam(FROM_ID) String strFromId,
                                                    @Parameter(description = ENTITY_TYPE_PARAM_DESCRIPTION, required = true) @RequestParam(FROM_TYPE) String strFromType,
                                                    @Parameter(description = RELATION_TYPE_GROUP_PARAM_DESCRIPTION)
+                                                   @RequestParam(value = "profileName", required = false) String profileName,
                                                    @RequestParam(value = "relationTypeGroup", required = false) String strRelationTypeGroup) throws ThingsboardException, ExecutionException, InterruptedException {
         checkParameter(FROM_ID, strFromId);
         checkParameter(FROM_TYPE, strFromType);
@@ -88,10 +88,19 @@ public class MultipleAssetsController extends BaseController {
         checkEntityId(entityId, Operation.READ);
         RelationTypeGroup typeGroup = parseRelationTypeGroup(strRelationTypeGroup, RelationTypeGroup.COMMON);
         List<EntityRelationInfo> entityRelationInfos = checkNotNull(filterRelationsByReadPermission(relationService.findInfoByFrom(getTenantId(), entityId, typeGroup).get()));
+        List<EntityRelationInfo> result = new ArrayList<>();
         for (EntityRelationInfo entityRelationInfo : entityRelationInfos){
-            entityRelationInfo.setAttributes(assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE));
+            if(profileName.isEmpty()){
+                entityRelationInfo.setAttributes(assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE));
+                result.add(entityRelationInfo);
+            } else {
+                if(assetDeviceRelationService.checkTypeAssetDevice(entityRelationInfo.getTo().getId(), entityRelationInfo.getTo().getEntityType(), profileName)){
+                    entityRelationInfo.setAttributes(assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE));
+                    result.add(entityRelationInfo);
+                }
+            }
         }
-        return entityRelationInfos;
+        return result;
     }
 
     @RequestMapping(value = "/assets/hierarchy", method = RequestMethod.POST)
@@ -113,6 +122,31 @@ public class MultipleAssetsController extends BaseController {
 
         return savedAssets;
     }
+
+    @PostMapping(value = "/assets/relation/hcp")
+    public void createRelationForHomeAndMac(
+            @RequestParam("mac") String mac,
+            @RequestParam("homeId") String homeId) throws ThingsboardException {
+        checkParameter("mac", mac);
+        checkParameter("homeId", homeId);
+        // Tìm entityId dựa trên MAC
+        UUID entityIdUuid = assetDeviceRelationService.getIdHCPByMac(mac).get(0);
+        if (entityIdUuid == null) {
+            throw new ThingsboardException("No entity found for the given MAC address!", ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        
+        DeviceId hcpId = new DeviceId(entityIdUuid);
+        AssetId homeAssetId = new AssetId(UUID.fromString(homeId));
+
+        // Thiết lập quan hệ giữa nhà và MAC
+        EntityRelation relation = new EntityRelation();
+        relation.setFrom(homeAssetId); // Thực thể cha
+        relation.setTo(hcpId);    // Thực thể con
+        relation.setType(EntityRelation.CONTAINS_TYPE); // Thiết lập loại quan hệ là "Contains"
+        relation.setTypeGroup(RelationTypeGroup.COMMON); // Nhóm loại quan hệ
+        tbEntityRelationService.save(getTenantId(), getCurrentUser().getCustomerId(), relation, getCurrentUser());
+    }
+
 
     private void saveAssetRecursively(AssetHierarchyRequest assetRequest, List<Asset> savedAssets, AssetId parentAssetId) throws Exception {
         Asset asset = new Asset();
@@ -177,7 +211,7 @@ public class MultipleAssetsController extends BaseController {
         }
     }
 
-    public void setParentRelation(AssetId parentId, AssetId childId, JsonNode additionalInfo) throws ThingsboardException {
+    private void setParentRelation(AssetId parentId, AssetId childId, JsonNode additionalInfo) throws ThingsboardException {
         // Tạo đối tượng EntityRelation với thông tin quan hệ cha-con
         EntityRelation relation = new EntityRelation();
         relation.setFrom(parentId); // Thực thể cha

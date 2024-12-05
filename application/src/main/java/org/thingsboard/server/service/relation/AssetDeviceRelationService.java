@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.AttributeScope;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -29,6 +30,11 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.dao.attributes.AttributesDao;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.model.sql.AssetDeviceRelationEntity;
+import org.thingsboard.server.dao.model.sql.AssetInfoEntity;
+import org.thingsboard.server.dao.model.sql.DeviceInfoEntity;
+import org.thingsboard.server.dao.sql.asset.AssetRepository;
+import org.thingsboard.server.dao.sql.attributes.AttributeKvRepository;
+import org.thingsboard.server.dao.sql.device.DeviceRepository;
 import org.thingsboard.server.dao.sql.relation.AssetDeviceRelationRepository;
 
 import java.util.*;
@@ -45,6 +51,15 @@ public class AssetDeviceRelationService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AttributeKvRepository attributeKvRepository;
+
+    @Autowired
+    private DeviceRepository deviceRepository;
+
+    @Autowired
+    private AssetRepository assetRepository;
 
     public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId) {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
@@ -137,7 +152,7 @@ public class AssetDeviceRelationService {
                     subChildDTO.setName(entity.getToName());
                     subChildDTO.setProfile(entity.getAssetProfileTo());
                     if ("DEVICE".equals(entity.getAssetProfileTo())){
-                        subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.SERVER_SCOPE));
+                        subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.CLIENT_SCOPE));
                     } else {
                         subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
                     }
@@ -149,6 +164,23 @@ public class AssetDeviceRelationService {
             result.add(child);
         }
         return result;
+    }
+
+    public List<UUID> getIdHCPByMac(String mac){
+        return attributeKvRepository.findEntityIdsByStrValue(mac);
+    }
+
+    public boolean checkTypeAssetDevice(UUID id, EntityType entityType, String type){
+        if(entityType == EntityType.DEVICE){
+            DeviceInfoEntity deviceInfoEntity = deviceRepository.findDeviceInfoById(id);
+            if(deviceInfoEntity == null) return false;
+            return deviceInfoEntity.getType().equalsIgnoreCase(type);
+        } else if (entityType == EntityType.ASSET){
+            AssetInfoEntity assetInfoEntity = assetRepository.findAssetInfoById(id);
+            if(assetInfoEntity == null) return false;
+            return assetInfoEntity.getType().equalsIgnoreCase(type);
+        }
+        return false;
     }
 
     public JsonNode getAttributesAsJson(TenantId tenantId, EntityId entityId, AttributeScope attributeScope) {
