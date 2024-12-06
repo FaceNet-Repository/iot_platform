@@ -17,15 +17,22 @@ package org.thingsboard.server.controller;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
@@ -38,6 +45,7 @@ import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.dto.AssetHierarchyRequest;
+import org.thingsboard.server.dao.dto.RpcAssignHPC;
 import org.thingsboard.server.dao.model.sql.AssetDeviceRelationEntity;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.asset.TbAssetService;
@@ -126,7 +134,8 @@ public class MultipleAssetsController extends BaseController {
     @PostMapping(value = "/assets/relation/hcp")
     public void createRelationForHomeAndMac(
             @RequestParam("mac") String mac,
-            @RequestParam("homeId") String homeId) throws ThingsboardException {
+            @RequestParam("homeId") String homeId,
+            @RequestBody RpcAssignHPC rpcAssignHPC) throws ThingsboardException {
         checkParameter("mac", mac);
         checkParameter("homeId", homeId);
         // Tìm entityId dựa trên MAC
@@ -137,6 +146,22 @@ public class MultipleAssetsController extends BaseController {
         
         DeviceId hcpId = new DeviceId(entityIdUuid);
         AssetId homeAssetId = new AssetId(UUID.fromString(homeId));
+
+        JsonNode attributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), hcpId, AttributeScope.SERVER_SCOPE);
+        if (attributes == null || !attributes.has("pairMode")) {
+            throw new ThingsboardException("Device attributes are invalid or missing!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+
+        boolean pairMode = attributes.get("pairMode").asBoolean();
+        if (!pairMode) {
+            throw new ThingsboardException("Pairing failed! Device is not in pair mode.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+
+        // Gửi bản tin xác nhận Pair Cloud <-> HC
+        boolean pairSuccess = sendPairingRequest(hcpId, rpcAssignHPC);
+        if (!pairSuccess) {
+            throw new ThingsboardException("Failed to pair Cloud with HC!", ThingsboardErrorCode.GENERAL);
+        }
 
         // Thiết lập quan hệ giữa nhà và MAC
         EntityRelation relation = new EntityRelation();
@@ -256,5 +281,35 @@ public class MultipleAssetsController extends BaseController {
             }
         }
         return result;
+    }
+
+    private boolean sendPairingRequest(DeviceId hcpId, RpcAssignHPC rpcAssignHPC) {
+        try {
+            String rpcUrl = String.format("/api/rpc/twoway/%s", hcpId.getId().toString());
+
+            // Dữ liệu RPC
+//            ObjectNode params = new ObjectMapper().createObjectNode();
+//            params.put("mac", mac);
+//            params.put("dormitory", homeId);
+
+            ObjectNode rpcRequest = new ObjectMapper().createObjectNode();
+            rpcRequest.put("method", "registerHC");
+            rpcRequest.set("params", rpcAssignHPC.getParams());
+            rpcRequest.put("persistent", rpcAssignHPC.getPersistent());
+            rpcRequest.put("timeout", rpcAssignHPC.getTimeout());
+
+            // Gửi RPC bằng HTTP
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> request = new HttpEntity<>(rpcRequest.toString(), headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(rpcUrl, request, String.class);
+
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false; // Gửi RPC thất bại
+        }
     }
 }

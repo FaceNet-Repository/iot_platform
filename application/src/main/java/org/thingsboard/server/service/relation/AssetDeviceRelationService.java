@@ -205,17 +205,21 @@ public class AssetDeviceRelationService {
     /**
      * Lấy giá trị từ AttributeKvEntry.
      */
-    private Object getAttributeValue(AttributeKvEntry attributeKvEntry) {
-        if (attributeKvEntry.getStrValue() != null) {
-            return attributeKvEntry.getStrValue();
-        } else if (attributeKvEntry.getBooleanValue() != null) {
-            return attributeKvEntry.getBooleanValue();
-        } else if (attributeKvEntry.getDoubleValue() != null) {
-            return attributeKvEntry.getDoubleValue();
-        } else if (attributeKvEntry.getLongValue() != null) {
-            return attributeKvEntry.getLongValue();
-        } else if (attributeKvEntry.getJsonValue() != null) {
-            return attributeKvEntry.getJsonValue();
+    private Object getAttributeValue(AttributeKvEntry kvEntry) {
+        if (kvEntry.getStrValue().isPresent()) {
+            return kvEntry.getStrValue().get();
+        }
+        if (kvEntry.getBooleanValue().isPresent()) {
+            return kvEntry.getBooleanValue().get();
+        }
+        if (kvEntry.getDoubleValue().isPresent()) {
+            return kvEntry.getDoubleValue().get();
+        }
+        if (kvEntry.getLongValue().isPresent()) {
+            return kvEntry.getLongValue().get();
+        }
+        if (kvEntry.getJsonValue().isPresent()) {
+            return kvEntry.getJsonValue().get();
         }
         return null;
     }
