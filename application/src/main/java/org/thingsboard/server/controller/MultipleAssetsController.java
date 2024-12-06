@@ -147,7 +147,7 @@ public class MultipleAssetsController extends BaseController {
         DeviceId hcpId = new DeviceId(entityIdUuid);
         AssetId homeAssetId = new AssetId(UUID.fromString(homeId));
 
-        JsonNode attributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), hcpId, AttributeScope.SERVER_SCOPE);
+        JsonNode attributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), hcpId, AttributeScope.CLIENT_SCOPE);
         if (attributes == null || !attributes.has("pairMode")) {
             throw new ThingsboardException("Device attributes are invalid or missing!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
