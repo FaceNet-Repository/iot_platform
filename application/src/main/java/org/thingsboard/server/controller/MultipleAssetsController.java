@@ -22,7 +22,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +35,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
@@ -51,6 +56,7 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.asset.TbAssetService;
 import org.thingsboard.server.service.entitiy.entity.relation.TbEntityRelationService;
 import org.thingsboard.server.service.relation.AssetDeviceRelationService;
+import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
 
@@ -285,8 +291,9 @@ public class MultipleAssetsController extends BaseController {
 
     private boolean sendPairingRequest(DeviceId hcpId, RpcAssignHPC rpcAssignHPC) {
         try {
-            String rpcUrl = String.format("/api/rpc/twoway/%s", hcpId.getId().toString());
-
+            String baseUrl = getBaseUrl();
+            String rpcUrl = String.format("%s/api/rpc/twoway/%s", baseUrl, hcpId.getId().toString());
+            log.info(rpcUrl);
             // Dữ liệu RPC
 //            ObjectNode params = new ObjectMapper().createObjectNode();
 //            params.put("mac", mac);
@@ -303,6 +310,12 @@ public class MultipleAssetsController extends BaseController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
+            String jwtToken = getCurrentUserToken();
+            if (jwtToken == null) {
+                throw new IllegalStateException("User is not authenticated or token is missing!");
+            }
+            headers.set("Authorization", "Bearer " + jwtToken);
+            log.info(headers.toString());
             HttpEntity<String> request = new HttpEntity<>(rpcRequest.toString(), headers);
             ResponseEntity<String> response = restTemplate.postForEntity(rpcUrl, request, String.class);
 
@@ -311,5 +324,41 @@ public class MultipleAssetsController extends BaseController {
             e.printStackTrace();
             return false; // Gửi RPC thất bại
         }
+    }
+
+    private String getBaseUrl() {
+        // Lấy HttpServletRequest hiện tại
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            throw new IllegalStateException("No request context available");
+        }
+
+        HttpServletRequest request = attributes.getRequest();
+
+        // Lấy thông tin protocol, domain và port
+        String scheme = request.getScheme(); // http hoặc https
+        String serverName = request.getServerName(); // domain (localhost hoặc tên miền)
+        int serverPort = request.getServerPort();
+
+        // Xây dựng Base URL
+        if ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443)) {
+            // Nếu là cổng mặc định thì không cần thêm vào URL
+            return String.format("%s://%s", scheme, serverName);
+        } else {
+            return String.format("%s://%s:%d", scheme, serverName, serverPort);
+        }
+    }
+
+    private String getCurrentUserToken() {
+        // Lấy HTTP Request hiện tại
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null) {
+            HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
+            String authorizationHeader = request.getHeader("Authorization");
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                return authorizationHeader.substring(7); // Cắt chuỗi "Bearer "
+            }
+        }
+        return null; // Không tìm thấy token
     }
 }
