@@ -896,3 +896,12 @@ CREATE TABLE IF NOT EXISTS mobile_app_settings (
     qr_code_config VARCHAR(100000),
     CONSTRAINT mobile_app_settings_tenant_id_unq_key UNIQUE (tenant_id)
 );
+
+CREATE TABLE IF NOT EXISTS tb_roles (
+    id BIGINT NOT NULL,
+    user_id UUID NULL DEFAULT NULL,
+    action VARCHAR(255) NULL DEFAULT NULL,
+    entity_id UUID NULL DEFAULT NULL,
+    created_time BIGINT NULL DEFAULT NULL,
+    PRIMARY KEY ("id")
+);
