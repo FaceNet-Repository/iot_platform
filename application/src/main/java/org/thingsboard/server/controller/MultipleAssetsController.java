@@ -193,6 +193,8 @@ public class MultipleAssetsController extends BaseController {
         // Lưu asset và nhận về asset đã được gán id
         checkEntity(asset.getId(), asset, Resource.ASSET);
         Asset savedAsset = tbAssetService.save(asset, getCurrentUser());
+        savedAsset.setName(savedAsset.getId().toString());
+        savedAsset = tbAssetService.save(savedAsset, getCurrentUser());
         savedAssets.add(savedAsset);
 
         // Nếu có `parentAssetId`, thiết lập quan hệ cha-con
@@ -227,6 +229,8 @@ public class MultipleAssetsController extends BaseController {
         // Lưu tài sản con và nhận về asset đã được gán id
         checkEntity(childAsset.getId(), childAsset, Resource.ASSET);
         Asset savedChildAsset = tbAssetService.save(childAsset, getCurrentUser());
+        savedChildAsset.setName(savedChildAsset.getId().toString());
+        savedChildAsset = tbAssetService.save(savedChildAsset, getCurrentUser());
         savedAssets.add(savedChildAsset);
 
         // Tạo quan hệ cha-con (Contains) giữa asset cha và asset con
