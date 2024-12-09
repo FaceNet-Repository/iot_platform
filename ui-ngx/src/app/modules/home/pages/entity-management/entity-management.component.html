@@ -32,6 +32,12 @@
         <mat-toolbar class="mat-mdc-table-toolbar">
           <div class="mat-toolbar-tools">
             {{ entityConfig.detailConfig.title }}
+            <button mat-icon-button
+                    matTooltip="Xuất dữ liệu"
+                    matTooltipPosition="above"
+                    (click)="navigate()">
+              <mat-icon>output</mat-icon>
+            </button>
           </div>
           <span fxFlex></span>
         </mat-toolbar>
@@ -41,7 +47,7 @@
             <span>{{ currentEntity[field.key] }}</span>
           </ng-container>
         </div>
-        <fn-hcp-children-table *ngIf="currentEntity" [hcpId]="currentEntity.id"/>
+        <fn-hcp-children-table *ngIf="currentEntity" [entity]="currentEntity"/>
         <div class="button-group">
           <button mat-raised-button>Checklog</button>
           <button mat-raised-button color="primary">Remote control</button>
@@ -67,10 +73,22 @@
                 <span class="tb-entity-table-title badge red"
                       matTooltip="Số lượng HCP đang offline"
                       matTooltipPosition="above">{{ totalOffline }}</span>
+                <button mat-icon-button
+                        matTooltip="Cập nhật dữ liệu thống kê"
+                        matTooltipPosition="above"
+                        (click)="updateStatistic()">
+                  <mat-icon>sync</mat-icon>
+                </button>
               </div>
             </div>
             <span fxFlex></span>
             <div fxShow>
+              <button mat-icon-button
+                      matTooltip="Cấu hình cột"
+                      matTooltipPosition="above"
+                      (click)="openTableConfigDialog()">
+                <mat-icon>settings</mat-icon>
+              </button>
               <button mat-icon-button
                       matTooltip="Xuất dữ liệu"
                       matTooltipPosition="above"
@@ -116,68 +134,55 @@
         </mat-toolbar>
         <div *ngIf="entityConfig" fxFlex class="table-container">
           <table mat-table [dataSource]="dataSource" matSort matSortDisableClear>
-            <ng-container *ngFor="let column of entityConfig.columns">
+            <ng-container matColumnDef="index" sticky>
+              <mat-header-cell *matHeaderCellDef> STT </mat-header-cell>
+              <mat-cell *matCellDef="let element; let i = index">
+                {{ pageLink.page * pageLink.pageSize + i + 1 }}
+              </mat-cell>
+            </ng-container >
+
+            <ng-container *ngFor="let column of entityConfig.columns; trackBy: trackByFn">
               <ng-container [matColumnDef]="column.key" [sticky]="column.sticky" [stickyEnd]="column.stickyEnd">
                 <mat-header-cell *matHeaderCellDef> {{ column.label }}</mat-header-cell>
-                <ng-container [ngSwitch]="column.cellType">
-                  <ng-container [ngSwitch]="column.cellType">
-                    <ng-container *ngSwitchCase="'index'">
-                      <mat-cell *matCellDef="let element; let i = index"> {{ pageLink.page * pageLink.pageSize + i + 1 }}
-                      </mat-cell>
-                    </ng-container>
-                    <ng-container *ngSwitchCase="'text'">
-                      <mat-cell *matCellDef="let element" style="min-width: 6rem"> {{ element[column.key] }}</mat-cell>
-                    </ng-container>
-                    <ng-container *ngSwitchCase="'datetime'">
-                      <mat-cell *matCellDef="let element"
-                                style="text-wrap: nowrap"> {{ element[column.key] | date: "dd/MM/YYYY hh:mm:ss" }}
-                      </mat-cell>
-                    </ng-container>
-                    <ng-container *ngSwitchCase="'badge'">
-                      <mat-cell *matCellDef="let element">
-                        <ng-container [ngSwitch]="column.key">
-                          <ng-container *ngSwitchCase="'active'">
-                            <div *ngIf="element[column.key] === 'true'; else inactiveTemplate" class="badge green">
-                              {{ "device.active" | translate }}
-                            </div>
-                            <ng-template #inactiveTemplate>
-                              <div class="badge red">
-                                {{ "device.inactive" | translate }}
-                              </div>
-                            </ng-template>
-                          </ng-container>
-                          <ng-container *ngSwitchCase="'status'">
-                            <div *ngIf="element[column.key] === '1'; else inactiveTemplate" class="badge green">
-                              Online
-                            </div>
-                            <ng-template #inactiveTemplate>
-                              <div class="badge red">
-                                Offline
-                              </div>
-                            </ng-template>
-                          </ng-container>
-                        </ng-container>
+                <ng-container [ngSwitch]="column.dataDisplayType">
 
+                  <ng-container *ngSwitchCase="'text'">
+                    <mat-cell *matCellDef="let element" style="min-width: 6rem">
+                      {{ element[column.key] }}
+                    </mat-cell>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="'datetime'">
+                    <mat-cell *matCellDef="let element" style="text-wrap: nowrap">
+                      {{ element[column.key] | date: "dd/MM/YYYY hh:mm:ss" }}
+                    </mat-cell>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="'map'" [ngSwitch]="column.key">
+                    <ng-container *ngSwitchCase="'active'">
+                      <mat-cell *matCellDef="let element" style="text-wrap: nowrap">
+                        <span *ngIf="element[column.key] === 'true'" class="badge green">Active</span>
+                        <span *ngIf="element[column.key] === 'false'" class="badge red">Inactive</span>
                       </mat-cell>
                     </ng-container>
-                    <ng-container *ngSwitchCase="'actions'">
-                      <mat-cell *matCellDef="let element">
-                        <div fxShow>
-                          <button mat-icon-button
-                                  matTooltip="Xoá dữ liệu"
-                                  matTooltipPosition="above"
-                                  (click)="deleteRow(element.id)">
-                            <tb-icon>delete</tb-icon>
-                          </button>
-                        </div>
+                    <ng-container *ngSwitchCase="'status'">
+                      <mat-cell *matCellDef="let element" style="text-wrap: nowrap">
+                        <span *ngIf="element[column.key] === '1'" class="badge green">Online</span>
+                        <span *ngIf="element[column.key] === '0'" class="badge red">Offline</span>
+                      </mat-cell>
+                    </ng-container>
+                    <ng-container *ngSwitchDefault>
+                      <mat-cell *matCellDef="let element" style="text-wrap: nowrap">
+                          <span *ngIf="element[column.key] === 'true'" class="badge green">Active</span>
+                          <span *ngIf="element[column.key] === 'false'" class="badge red">Inactive</span>
                       </mat-cell>
                     </ng-container>
                   </ng-container>
-                  <mat-cell *matCellDef="let element; let i = index"> {{ pageLink.page * pageLink.pageSize + i + 1 }}
-                  </mat-cell>
+
                 </ng-container>
               </ng-container>
             </ng-container>
+
             <mat-header-row *matHeaderRowDef="entityConfig.displayedColumns; sticky: true"></mat-header-row>
             <mat-row *matRowDef="let entity; columns: entityConfig.displayedColumns;" (click)="onRowClick($event, entity)"></mat-row>
           </table>

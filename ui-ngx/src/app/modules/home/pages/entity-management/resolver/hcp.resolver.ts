@@ -29,22 +29,67 @@ export class HcpResolver extends DefaultResolver implements Resolve<EntityManage
     super();
     this.title = 'Danh sách HCP';
     this.entityProfileType = 'HCP';
-    this.latestTelemetries = ['ip', 'mac', 'version', 'status'];
-    this.serverScopeAttributes = ['active', 'inactivityAlarmTime', 'lastActivityTime', 'lastConnectTime', 'lastDisconnectTime'];
     this.columns = [
-      { key: 'index', label: 'STT', cellType: 'index', sticky: true },
-      { key: 'createdAt', label: 'Ngày thêm', cellType: 'datetime' },
-      { key: 'name', label: 'Tên HCP', cellType: 'text' },
-      { key: 'status', label: 'Trạng thái', cellType: 'badge' },
-      { key: 'version', label: 'Firmware version', cellType: 'text' },
-      { key: 'mac', label: 'Địa chỉ MAC', cellType: 'text' },
-      { key: 'ip', label: 'Địa chỉ IP', cellType: 'text' },
-      { key: 'active', label: 'Kết nối', cellType: 'badge' },
-      { key: 'inactivityAlarmTime', label: 'Thời gian cảnh báo', cellType: 'datetime' },
-      { key: 'lastConnectTime', label: 'Kết nối lần cuối', cellType: 'datetime' },
-      { key: 'lastDisconnectTime', label: 'Mất kết nối lần cuối', cellType: 'datetime' },
-      { key: 'lastActivityTime', label: 'Cập nhật gần nhất', cellType: 'datetime' },
-      { key: 'actions', label: 'Thao tác', cellType: 'actions', stickyEnd: true },
+      {
+        key: 'createdTime',
+        label: 'Ngày tạo',
+        dataType: 'static',
+        dataDisplayType: 'datetime',
+      },
+      {
+        key: 'name',
+        label: 'Tên',
+        dataType: 'static',
+        dataDisplayType: 'text',
+      },
+      {
+        key: 'ip',
+        label: 'Địa chỉ IP',
+        dataType: 'client_attribute',
+        dataDisplayType: 'text',
+      },
+      {
+        key: 'MAC',
+        label: 'Địa chỉ MAC',
+        dataType: 'server_attribute',
+        dataDisplayType: 'text',
+      },
+      {
+        key: 'version',
+        label: 'Phiên bản',
+        dataType: 'client_attribute',
+        dataDisplayType: 'text',
+      },
+      {
+        key: 'active',
+        label: 'Hoạt động',
+        dataType: 'server_attribute',
+        dataDisplayType: 'map',
+      },
+      {
+        key: 'inactivityAlarmTime',
+        label: 'Ngừng hoạt động lúc',
+        dataType: 'server_attribute',
+        dataDisplayType: 'datetime',
+      },
+      {
+        key: 'lastActivityTime',
+        label: 'Hoạt động gần nhất',
+        dataType: 'server_attribute',
+        dataDisplayType: 'datetime',
+      },
+      {
+        key: 'lastConnectTime',
+        label: 'Kết nối gần nhất',
+        dataType: 'server_attribute',
+        dataDisplayType: 'datetime',
+      },
+      {
+        key: 'lastDisconnectTime',
+        label: 'Mất kết nối gần nhất',
+        dataType: 'server_attribute',
+        dataDisplayType: 'datetime',
+      }
     ];
     this.detailConfig = {
       title: 'Thông tin HCP',

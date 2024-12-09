@@ -32,24 +32,14 @@ import * as XLSX from 'xlsx';
 import {forkJoin, Subject} from 'rxjs';
 import {FormBuilder} from '@angular/forms';
 import {debounceTime, distinctUntilChanged, finalize, first, map, takeUntil} from 'rxjs/operators';
-import {ActivatedRoute} from '@angular/router';
-import {EntityManagementConfig} from '@home/pages/entity-management/entity-management-config.model';
-
-type TableDataSourceItem = {
-  // device information
-  id?: EntityId;
-  createdAt: number;
-  name: string;
-  // server scope attribute
-  active?: boolean;
-  inactivityAlarmTime?: string;
-  lastActivityTime?: string;
-  lastConnectTime?: string;
-  lastDisconnectTime?: string;
-  // telemetry
-  ip: string;
-  version: string;
-};
+import {ActivatedRoute, Router} from '@angular/router';
+import {
+  ColumnConfig,
+  EntityManagementConfig,
+  TableDataSourceItem
+} from '@home/pages/entity-management/entity-management-config.model';
+import {MatDialog} from '@angular/material/dialog';
+import {TableConfigModalComponent} from '@home/pages/entity-management/components/table-config-modal.conmponent';
 
 @Component({
   selector: 'tb-entity-management',
@@ -83,7 +73,9 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
   deviceIds: EntityId[];
 
   constructor(
+    private router: Router,
     private route: ActivatedRoute,
+    private dialog: MatDialog,
     private deviceService: DeviceService,
     private assetService: AssetService,
     private telemetryWebsocketService: TelemetryWebsocketService,
@@ -92,8 +84,17 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
   ) {
   }
 
+  get storageKey() {
+    return `fn-entity-config_${this.router.url}`;
+  }
+
   ngOnInit(): void {
     this.entityConfig = this.route.snapshot.data.entityConfig;
+    const savedColumnConfig = localStorage.getItem(this.storageKey);
+    if (savedColumnConfig) {
+      this.entityConfig.columns = JSON.parse(savedColumnConfig);
+      this.entityConfig.displayedColumns = ['index', ...this.entityConfig.columns.map(item => item.key)];
+    }
     this.pageLink = new PageLink(10, 0, null, {
       property: 'createdTime',
       direction: Direction.DESC,
@@ -154,6 +155,52 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
     }
   }
 
+  openTableConfigDialog() {
+    const dialogRef = this.dialog.open(TableConfigModalComponent, {
+      height: '80%',
+      data: {
+        columnConfig: this.entityConfig.columns,
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: ColumnConfig[] | undefined) => {
+      if (result) {
+        const tempConfig = this.entityConfig;
+        this.entityConfig = undefined;
+        setTimeout(() => {
+          this.entityConfig = tempConfig;
+          this.entityConfig.columns = result;
+          this.entityConfig.displayedColumns = ['index', ...result.map(item => item.key)];
+        }, 0);
+      } else {
+        console.log('Dialog was closed without saving.');
+      }
+    });
+  }
+
+  async navigate() {
+    const entityType = this.currentEntity.id.entityType;
+    if (entityType === 'DEVICE') {
+      await this.router.navigate(['/entities/devices'], {
+        queryParams: { textSearch: this.currentEntity.name },
+        state: {
+          autoOpenFirstRow: true
+        }
+      });
+    } else if (entityType === 'ASSET') {
+      await this.router.navigate(['/entities/assets'], {
+        queryParams: { textSearch: this.currentEntity.name },
+        state: {
+          autoOpenFirstRow: true
+        }
+      });
+    }
+  }
+
+  trackByFn(index: number, item: ColumnConfig): any {
+    return item.key || index;
+  }
+
   onRowClick($event: Event, entity) {
     if ($event) {
       $event.stopPropagation();
@@ -167,8 +214,7 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
     this.currentEntity = null;
   }
 
-
-  private updateStatistic() {
+  updateStatistic() {
     const subscriberList: TelemetrySubscriber[] = [];
     const pageLink = new PageLink(1024);
     this.deviceService.getTenantDeviceInfos(pageLink, this.entityConfig.entityProfileType).subscribe({
@@ -245,11 +291,16 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
       this.deviceService.getTenantDeviceInfos(this.pageLink, this.entityConfig.entityProfileType).subscribe({
         next: (pageData) => {
           this.totalItems = pageData.totalElements;
-          this.dataSource.data = pageData.data.map((item) => ({
-            id: item.id,
-            name: item.name,
-            createdAt: item.createdTime,
-          })) as TableDataSourceItem[];
+          this.dataSource.data = pageData.data.map((item) => {
+            const staticAttributes: any = {};
+            this.entityConfig.columns.filter(col => col.dataType === 'static').map(col => col.key).forEach(key => {
+              staticAttributes[key] = item[key];
+            });
+            return {
+              id: item.id,
+              ...staticAttributes
+            };
+          }) as TableDataSourceItem[];
           this.loadTelemetry();
         },
         error: (e) => {
@@ -332,7 +383,9 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
   private handleTelemetryUpdate(entry: TableDataSourceItem, data: SubscriptionData) {
     Object.entries(data).forEach(([key, value]) => {
       try {
-        entry[key] = value[0][1];
+        if (value.length && value[0].length) {
+          entry[key] = value[0][1];
+        }
       } catch (e) {
         console.log(e);
       }

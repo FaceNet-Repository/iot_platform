@@ -14,22 +14,19 @@
 /// limitations under the License.
 ///
 
+import {EntityId} from '@shared/models/id/entity-id';
+
 export type EntityManagementConfig = {
   title: string;
   entityType: 'DEVICE' | 'ASSET';
   entityProfileType: string;
   latestTelemetries: string[];
+  staticAttributes: string[];
   serverScopeAttributes: string[];
   clientScopeAttributes: string[];
   sharedScopeAttributes: string[];
   displayedColumns: string[];
-  columns: {
-    key: string;
-    label: string;
-    cellType: 'index' | 'text' | 'datetime' | 'badge' | 'actions';
-    sticky?: boolean;
-    stickyEnd?: boolean;
-  }[];
+  columns: ColumnConfig[];
   detailConfig: {
     title: string;
     fields: {
@@ -43,4 +40,20 @@ export type EntityManagementConfig = {
     onlineValue: any;
     offlineValue: any;
   };
+};
+
+export type TableDataSourceItem = {
+  id?: EntityId;
+  createdAt: number;
+  name: string;
+  [key: string]: any;
+};
+
+export type ColumnConfig = {
+  key: string;
+  label: string;
+  dataType: 'static' | 'server_attribute' | 'client_attribute' | 'shared_attribute' | 'latest_telemetry';
+  dataDisplayType: 'text' | 'datetime' | 'map';
+  sticky?: boolean;
+  stickyEnd?: boolean;
 };

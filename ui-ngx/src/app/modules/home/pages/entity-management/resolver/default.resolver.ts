@@ -24,6 +24,7 @@ export class DefaultResolver implements Resolve<EntityManagementConfig> {
   private _columns: EntityManagementConfig['columns'] = [];
   private _displayedColumns: EntityManagementConfig['displayedColumns'] = [];
   private _latestTelemetries: EntityManagementConfig['latestTelemetries'] = [];
+  private _staticAttributes: EntityManagementConfig['staticAttributes'] = [];
   private _serverScopeAttributes: EntityManagementConfig['serverScopeAttributes'] = [];
   private _clientScopeAttributes: EntityManagementConfig['clientScopeAttributes'] = [];
   private _sharedScopeAttributes: EntityManagementConfig['sharedScopeAttributes'] = [];
@@ -64,6 +65,12 @@ export class DefaultResolver implements Resolve<EntityManagementConfig> {
   protected set columns(value: EntityManagementConfig['columns']) {
     this._columns = value;
     this._displayedColumns = this.columns.map(col => col.key);
+    this._latestTelemetries = value.filter(item => item.dataType === 'latest_telemetry').map(item => item.key);
+    this._staticAttributes = value.filter(item => item.dataType === 'static').map(item => item.key);
+    this._serverScopeAttributes = value.filter(item => item.dataType === 'server_attribute').map(item => item.key);
+    this._clientScopeAttributes = value.filter(item => item.dataType === 'client_attribute').map(item => item.key);
+    this._sharedScopeAttributes = value.filter(item => item.dataType === 'shared_attribute').map(item => item.key);
+    this._displayedColumns = ['index', ...value.map(item => item.key)];
   }
 
   protected get columns() {
@@ -76,6 +83,14 @@ export class DefaultResolver implements Resolve<EntityManagementConfig> {
 
   protected get statisticConfig() {
     return this._statisticConfig;
+  }
+
+  protected set staticAttributes(value: EntityManagementConfig['staticAttributes']) {
+    this._staticAttributes = value;
+  }
+
+  protected get staticAttributes(): string[] {
+    return this._staticAttributes;
   }
 
   protected set latestTelemetries(value: EntityManagementConfig['latestTelemetries']) {
@@ -128,6 +143,7 @@ export class DefaultResolver implements Resolve<EntityManagementConfig> {
       entityType: this.entityType,
       entityProfileType: this.entityProfileType,
       latestTelemetries: this.latestTelemetries,
+      staticAttributes: this.staticAttributes,
       serverScopeAttributes: this.serverScopeAttributes,
       clientScopeAttributes: this.clientScopeAttributes,
       sharedScopeAttributes: this.sharedScopeAttributes,
