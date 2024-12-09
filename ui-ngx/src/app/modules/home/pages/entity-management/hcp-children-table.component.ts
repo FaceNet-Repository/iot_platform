@@ -17,18 +17,13 @@
 import {AfterViewInit, Component, Input, NgZone, OnDestroy, OnInit, ViewChild,} from '@angular/core';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTableDataSource} from '@angular/material/table';
-import {
-  DeviceProfileService,
-  DeviceService,
-  EntityRelationService,
-  TelemetryWebsocketService
-} from '@app/core/public-api';
+import {DeviceService, EntityRelationService, TelemetryWebsocketService} from '@app/core/public-api';
 import {
   AttributeScope,
-  Device, DeviceProfile,
-  EntityId, EntityInfoData, EntityRelation,
+  EntityId,
   LatestTelemetry,
-  PageLink, RelationTypeGroup,
+  PageLink,
+  RelationTypeGroup,
   SubscriptionData,
   TelemetrySubscriber,
   TelemetryType
@@ -36,19 +31,8 @@ import {
 import {forkJoin, Subject} from 'rxjs';
 import {FormBuilder} from '@angular/forms';
 import * as XLSX from 'xlsx';
-
-type TableDataSourceItem = {
-  // device information
-  id?: EntityId;
-  name: string;
-  type: string;
-  // server scope attribute
-  active?: string;
-  inactivityAlarmTime?: string;
-  lastActivityTime?: string;
-  lastConnectTime?: string;
-  lastDisconnectTime?: string;
-};
+import {Router} from '@angular/router';
+import {TableDataSourceItem} from '@home/pages/entity-management/entity-management-config.model';
 
 @Component({
   selector: 'fn-hcp-children-table',
@@ -56,7 +40,7 @@ type TableDataSourceItem = {
   styleUrls: ['./hcp-children-table.component.scss'],
 })
 export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() hcpId: EntityId;
+  @Input() entity: TableDataSourceItem;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   isLoading = false;
 
@@ -93,8 +77,8 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
   deviceIds: EntityId[];
 
   constructor(
+    private router: Router,
     private deviceService: DeviceService,
-    private deviceProfileService: DeviceProfileService,
     private relationService: EntityRelationService,
     private telemetryWebsocketService: TelemetryWebsocketService,
     private fb: FormBuilder,
@@ -123,7 +107,7 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
   confirmAssignment() {
     this.toggleAssignMode();
     const saveRelations$ = this.selectDeviceIds.map(deviceId => ({
-      from: this.hcpId,
+      from: this.entity.id,
       to: deviceId,
       type: 'Created',
       typeGroup: RelationTypeGroup.COMMON
@@ -168,8 +152,30 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
     await navigator.clipboard.writeText(content);
   }
 
+  async onRowClick($event: Event, entity) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    const entityType = this.entity.id.entityType;
+    if (entityType === 'DEVICE') {
+      await this.router.navigate(['/entities/devices'], {
+        queryParams: { textSearch: entity.name },
+        state: {
+          autoOpenFirstRow: true
+        }
+      });
+    } else if (entityType === 'ASSET') {
+      await this.router.navigate(['/entities/assets'], {
+        queryParams: { textSearch: entity.name },
+        state: {
+          autoOpenFirstRow: true
+        }
+      });
+    }
+  }
+
   private getChildDevices() {
-    this.relationService.findByFrom(this.hcpId).subscribe({
+    this.relationService.findByFrom(this.entity.id).subscribe({
       next: (relations) => {
         const childDeviceIds = relations
           .filter(relation =>
@@ -214,7 +220,7 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   detachDevice(deviceId: EntityId) {
-    this.relationService.deleteRelation(this.hcpId, 'Created', deviceId).subscribe({
+    this.relationService.deleteRelation(this.entity.id, 'Created', deviceId).subscribe({
       next: () => {
         this.getChildDevices();
       },
@@ -254,7 +260,9 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
         if (key === 'active') {
           this.updateOnlineOfflineStatistic();
         }
-        entry[key] = value[0][1];
+        if (value.length && value[0].length) {
+          entry[key] = value[0][1];
+        }
       } catch (e) {
         console.log(e);
       }

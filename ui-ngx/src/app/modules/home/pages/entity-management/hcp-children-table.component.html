@@ -23,7 +23,7 @@
       <span>Danh sách thiết bị </span> <span class="badge neutral">{{totalItems}}</span> <span class="badge green">{{totalOnline}}</span> <span class="badge red">{{totalOffline}}</span>
     </div>
     <span fxFlex></span>
-    <div >
+    <div>
       <button mat-icon-button
               matTooltip="Gán thiết bị"
               matTooltipPosition="above"
@@ -125,7 +125,7 @@
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-  <mat-row *matRowDef="let entity; columns: displayedColumns;"></mat-row>
+  <mat-row *matRowDef="let entity; columns: displayedColumns;" (click)="onRowClick($event, entity)"></mat-row>
 </table>
 
 <mat-divider></mat-divider>
