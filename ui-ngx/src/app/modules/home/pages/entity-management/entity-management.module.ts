@@ -21,13 +21,15 @@ import {EntityManagementComponent} from './entity-management.component';
 import {EntityManagementRoutingModule} from './entity-management-routing.module';
 import {HomeComponentsModule} from '@home/components/home-components.module';
 import {HcpChildrenTableComponent} from '@home/pages/entity-management/hcp-children-table.component';
-import {DeviceSelectComponent} from '@home/pages/entity-management/input/device-select.component';
+import {DeviceSelectComponent} from '@home/pages/entity-management/components/device-select.component';
+import {TableConfigModalComponent} from '@home/pages/entity-management/components/table-config-modal.conmponent';
 
 @NgModule({
   declarations: [
     EntityManagementComponent,
     HcpChildrenTableComponent,
     DeviceSelectComponent,
+    TableConfigModalComponent,
   ],
     imports: [
         CommonModule,
