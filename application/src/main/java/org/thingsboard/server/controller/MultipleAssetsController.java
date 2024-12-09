@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.*;
+import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
@@ -60,10 +61,8 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -153,14 +152,38 @@ public class MultipleAssetsController extends BaseController {
         DeviceId hcpId = new DeviceId(entityIdUuid);
         AssetId homeAssetId = new AssetId(UUID.fromString(homeId));
 
-        JsonNode attributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), hcpId, AttributeScope.CLIENT_SCOPE);
-        if (attributes == null || !attributes.has("pairMode")) {
-            throw new ThingsboardException("Device attributes are invalid or missing!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        List<AttributeKvEntry> attributeKvEntries = assetDeviceRelationService.getAllAtributes(getTenantId(), hcpId, AttributeScope.CLIENT_SCOPE);
+        // Kiểm tra xem attribute "pairMode" có tồn tại không
+        Optional<AttributeKvEntry> pairModeEntry = attributeKvEntries.stream()
+                .filter(entry -> "pairMode".equals(entry.getKey()))
+                .findFirst();
+
+        if (!pairModeEntry.isPresent()) {
+            throw new ThingsboardException("Device attributes are invalid or missing 'pairMode'!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
 
-        boolean pairMode = attributes.get("pairMode").asBoolean();
+        // Lấy giá trị của pairMode
+        boolean pairMode = Boolean.parseBoolean(pairModeEntry.get().getValue().toString());
+
+        // Lấy giá trị lastUpdateTs
+        long lastUpdateTimestamp = 0;
+        if (pairModeEntry.isPresent()) {
+            lastUpdateTimestamp = pairModeEntry.get().getLastUpdateTs();
+        } else {
+            throw new ThingsboardException("Attribute update timestamp ('lastUpdateTs') is missing!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+
+        // Kiểm tra nếu thời gian cập nhật cách hiện tại ít nhất 2 phút
+        long currentTimestamp = Instant.now().toEpochMilli();
+        long twoMinutesInMillis = 2 * 60 * 1000;
+
+        // Kiểm tra chế độ Pairing
         if (!pairMode) {
             throw new ThingsboardException("Pairing failed! Device is not in pair mode.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+
+        if ((currentTimestamp - lastUpdateTimestamp) > twoMinutesInMillis) {
+            throw new ThingsboardException("Pairing failed! Attribute was updated more than 2 minutes ago.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
 
         // Gửi bản tin xác nhận Pair Cloud <-> HC

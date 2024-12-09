@@ -202,6 +202,11 @@ public class AssetDeviceRelationService {
         return objectMapper.valueToTree(resultMap);
     }
 
+    public List<AttributeKvEntry> getAllAtributes(TenantId tenantId, EntityId entityId, AttributeScope attributeScope){
+        return attributesDao.findAll(tenantId, entityId, attributeScope);
+    }
+
+
     /**
      * Lấy giá trị từ AttributeKvEntry.
      */
