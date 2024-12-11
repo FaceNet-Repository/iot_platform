@@ -72,6 +72,97 @@ u.first_name as assignee_first_name, u.last_name as assignee_last_name, u.email 
 FROM alarm a
 LEFT JOIN tb_user u ON u.id = a.assignee_id;
 
+DROP VIEW IF EXISTS asset_device_relation_view CASCADE;
+CREATE OR REPLACE VIEW asset_device_relation_view AS
+SELECT
+    COALESCE(r.from_type, 'ASSET') AS relation_from,
+    ap.name AS asset_profile_from,
+    a.id AS from_id,
+    a.name AS from_name,
+    r.to_type AS relation_to,
+    CASE
+        WHEN r.to_type = 'ASSET' THEN ap_to.name
+        WHEN r.to_type = 'DEVICE' THEN NULL
+        END AS asset_profile_to,
+    CASE
+        WHEN r.to_type = 'ASSET' THEN a_to.id
+        WHEN r.to_type = 'DEVICE' THEN d_to.id
+        END AS to_id,
+    CASE
+        WHEN r.to_type = 'ASSET' THEN a_to.name
+        WHEN r.to_type = 'DEVICE' THEN d_to.name
+        END AS to_name,
+    a.tenant_id AS tenant_id,
+    r.additional_info,
+    CONCAT(
+            a.id::TEXT,
+            '_',
+            CASE
+                WHEN r.to_type = 'ASSET' THEN a_to.id::TEXT
+                WHEN r.to_type = 'DEVICE' THEN d_to.id::TEXT
+                ELSE 'NULL'
+                END
+    ) AS id
+
+FROM
+    asset a
+        LEFT JOIN
+    relation r ON (r.from_id = a.id AND r.from_type = 'ASSET')
+        LEFT JOIN
+    asset a_to ON r.to_id = a_to.id AND r.to_type = 'ASSET'
+        LEFT JOIN
+    device d_to ON r.to_id = d_to.id AND r.to_type = 'DEVICE'
+        LEFT JOIN
+    asset_profile ap ON a.asset_profile_id = ap.id
+        LEFT JOIN
+    asset_profile ap_to ON a_to.asset_profile_id = ap_to.id
+
+UNION
+
+SELECT
+    COALESCE(r.from_type, 'DEVICE') AS relation_from,
+    d.name AS asset_profile_from,
+    d.id AS from_id,
+    d.name AS from_name,
+    r.to_type AS relation_to,
+    CASE
+        WHEN r.to_type = 'ASSET' THEN ap_to.name
+        WHEN r.to_type = 'DEVICE' THEN NULL
+        END AS asset_profile_to,
+    CASE
+        WHEN r.to_type = 'ASSET' THEN a_to.id
+        WHEN r.to_type = 'DEVICE' THEN d_to.id
+        END AS to_id,
+    CASE
+        WHEN r.to_type = 'ASSET' THEN a_to.name
+        WHEN r.to_type = 'DEVICE' THEN d_to.name
+        END AS to_name,
+
+    d.tenant_id AS tenant_id,
+    r.additional_info,
+    CONCAT(
+            d.id::TEXT,
+            '_',
+            CASE
+                WHEN r.to_type = 'ASSET' THEN a_to.id::TEXT
+                WHEN r.to_type = 'DEVICE' THEN d_to.id::TEXT
+                ELSE 'NULL'
+                END
+    ) AS id
+
+FROM
+    device d
+        LEFT JOIN
+    relation r ON (r.from_id = d.id AND r.from_type = 'ASSET')
+        LEFT JOIN
+    asset a_to ON r.to_id = a_to.id AND r.to_type = 'ASSET'
+        LEFT JOIN
+    device d_to ON r.to_id = d_to.id AND r.to_type = 'DEVICE'
+        LEFT JOIN
+    asset_profile ap_to ON a_to.asset_profile_id = ap_to.id;
+
+
+
 CREATE OR REPLACE FUNCTION create_or_update_active_alarm(
                                         t_id uuid, c_id uuid, a_id uuid, a_created_ts bigint,
                                         a_o_id uuid, a_o_type integer, a_type varchar,

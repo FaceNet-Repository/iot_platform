@@ -72,6 +72,17 @@ public class ModelConstants {
     public static final String USER_ADDITIONAL_INFO_PROPERTY = ADDITIONAL_INFO_PROPERTY;
 
     /**
+     * Roles constants.
+     */
+    public static final String USER_ROLES = "tb_roles";
+    public static final String ROLES_ID = "id";
+    public static final String USER_ID = USER_ID_PROPERTY;
+    public static final String ACTION = "action";
+    public static final String ENTITY_ID = ENTITY_ID_COLUMN;
+    public static final String CREATED_TIME = CREATED_TIME_PROPERTY;
+    public static final String ENTITY_TYPE = "entity_type";
+
+    /**
      * User_credentials constants.
      */
     public static final String USER_CREDENTIALS_TABLE_NAME = "user_credentials";

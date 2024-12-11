@@ -137,7 +137,7 @@ public class MultipleAssetsController extends BaseController {
     }
 
     @PostMapping(value = "/assets/relation/hcp")
-    public void createRelationForHomeAndMac(
+    public ResponseEntity<String> createRelationForHomeAndMac(
             @RequestParam("mac") String mac,
             @RequestParam("homeId") String homeId,
             @RequestBody RpcAssignHPC rpcAssignHPC) throws ThingsboardException {
@@ -166,12 +166,7 @@ public class MultipleAssetsController extends BaseController {
         boolean pairMode = Boolean.parseBoolean(pairModeEntry.get().getValue().toString());
 
         // Lấy giá trị lastUpdateTs
-        long lastUpdateTimestamp = 0;
-        if (pairModeEntry.isPresent()) {
-            lastUpdateTimestamp = pairModeEntry.get().getLastUpdateTs();
-        } else {
-            throw new ThingsboardException("Attribute update timestamp ('lastUpdateTs') is missing!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
-        }
+        long lastUpdateTimestamp = pairModeEntry.get().getLastUpdateTs();
 
         // Kiểm tra nếu thời gian cập nhật cách hiện tại ít nhất 2 phút
         long currentTimestamp = Instant.now().toEpochMilli();
@@ -198,7 +193,12 @@ public class MultipleAssetsController extends BaseController {
         relation.setTo(hcpId);    // Thực thể con
         relation.setType(EntityRelation.CONTAINS_TYPE); // Thiết lập loại quan hệ là "Contains"
         relation.setTypeGroup(RelationTypeGroup.COMMON); // Nhóm loại quan hệ
-        tbEntityRelationService.save(getTenantId(), getCurrentUser().getCustomerId(), relation, getCurrentUser());
+        try {
+            tbEntityRelationService.save(getTenantId(), getCurrentUser().getCustomerId(), relation, getCurrentUser());
+            return ResponseEntity.ok("Relation created successfully between home and device.");
+        } catch (Exception e) {
+            throw new ThingsboardException("Failed to save the relation!", ThingsboardErrorCode.GENERAL);
+        }
     }
 
 

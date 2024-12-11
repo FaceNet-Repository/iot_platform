@@ -28,5 +28,6 @@ import java.util.UUID;
 public interface AssetDeviceRelationRepository extends JpaRepository<AssetDeviceRelationEntity, AssetDeviceRelationEntityId> {
     List<AssetDeviceRelationEntity> findByAssetProfileFromAndTenantId(String assetProfileFrom, UUID tenantId);
     List<AssetDeviceRelationEntity> findByFromIdIn(List<UUID> fromIds);
+    List<AssetDeviceRelationEntity> findByAssetProfileFromAndFromIdIn(String assetProfileFrom, List<UUID> fromIds);
     List<AssetDeviceRelationEntity> findByFromId(UUID fromId);
 }
