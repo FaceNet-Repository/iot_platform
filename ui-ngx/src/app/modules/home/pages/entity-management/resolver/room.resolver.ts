@@ -80,15 +80,23 @@ export class RoomResolver extends DefaultResolver implements Resolve<EntityManag
       title: 'Thông tin Phòng',
       fields: [
         {
-          key: 'createdAt',
+          key: 'createdTime',
           label: 'Ngày thêm',
-          fieldType: 'text'
+          dataType: 'static',
+          dataDisplayType: 'text',
         },
         {
-          key: 'status',
-          label: 'Trạng thái',
-          fieldType: 'badge'
-        }
+          key: 'deletedTime',
+          label: 'Ngày xóa',
+          dataType: 'server_attribute',
+          dataDisplayType: 'text',
+        },
+        {
+          key: 'owner',
+          label: 'Chủ phòng',
+          dataType: 'server_attribute',
+          dataDisplayType: 'text',
+        },
       ]
     };
     this.statisticConfig = {

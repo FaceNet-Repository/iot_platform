@@ -80,20 +80,23 @@ export class HomeResolver extends DefaultResolver implements Resolve<EntityManag
       title: 'Thông tin Nhà',
       fields: [
         {
-          key: 'createdAt',
+          key: 'createdTime',
           label: 'Ngày thêm',
-          fieldType: 'text'
+          dataType: 'static',
+          dataDisplayType: 'text',
         },
         {
-          key: 'address',
-          label: 'Địa chỉ',
-          fieldType: 'text'
+          key: 'deletedTime',
+          label: 'Ngày xóa',
+          dataType: 'server_attribute',
+          dataDisplayType: 'text',
         },
         {
-          key: 'status',
-          label: 'Trạng thái',
-          fieldType: 'badge'
-        }
+          key: 'owner',
+          label: 'Chủ nhà',
+          dataType: 'server_attribute',
+          dataDisplayType: 'text',
+        },
       ]
     };
     this.statisticConfig = {

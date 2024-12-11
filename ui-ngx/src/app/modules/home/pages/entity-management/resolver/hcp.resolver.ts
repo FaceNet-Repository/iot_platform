@@ -96,23 +96,27 @@ export class HcpResolver extends DefaultResolver implements Resolve<EntityManage
       fields: [
         {
           key: 'ip',
-          label: 'IP',
-          fieldType: 'text'
+          label: 'Địa chỉ IP',
+          dataType: 'client_attribute',
+          dataDisplayType: 'text',
         },
         {
-          key: 'mac',
-          label: 'MAC',
-          fieldType: 'text'
+          key: 'MAC',
+          label: 'Địa chỉ MAC',
+          dataType: 'server_attribute',
+          dataDisplayType: 'text',
         },
         {
           key: 'version',
-          label: 'Firmware version',
-          fieldType: 'text'
+          label: 'Phiên bản',
+          dataType: 'client_attribute',
+          dataDisplayType: 'text',
         },
         {
           key: 'status',
           label: 'Trạng thái',
-          fieldType: 'badge'
+          dataType: 'client_attribute',
+          dataDisplayType: 'text',
         }
       ]
     };

@@ -20,6 +20,7 @@ import {EntityManagementComponent} from './entity-management.component';
 import {HcpResolver} from '@home/pages/entity-management/resolver/hcp.resolver';
 import {HomeResolver} from '@home/pages/entity-management/resolver/home.resolver';
 import {RoomResolver} from '@home/pages/entity-management/resolver/room.resolver';
+import {EntityHierarchyTreeComponent} from '@home/pages/entity-management/entity-hierarchy-tree.component';
 
 const routes: Routes = [
   {
@@ -46,7 +47,11 @@ const routes: Routes = [
     resolve: {
       entityConfig: RoomResolver
     }
-  }
+  },
+  {
+    path: 'entity-hierarchy-tree',
+    component: EntityHierarchyTreeComponent,
+  },
 ];
 
 @NgModule({
