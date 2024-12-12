@@ -61,9 +61,14 @@ public class AssetDeviceRelationService {
     @Autowired
     private AssetRepository assetRepository;
 
-    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId) {
+    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId, UUID assetId) {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
-        List<AssetDeviceRelationEntity> parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantId(profileFrom, tenantId);
+        List<AssetDeviceRelationEntity> parentEntities = new ArrayList<>();
+        if(assetId == null) {
+            parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantId(profileFrom, tenantId);
+        } else {
+            parentEntities = assetDeviceRelationRepository.findByFromId(assetId);
+        }
 
         // Bước 2: Chuyển tất cả các `parentEntities` thành danh sách DTO ban đầu
         Map<UUID, AssetDeviceRelationDTO> relationMap = new HashMap<>();
@@ -100,7 +105,7 @@ public class AssetDeviceRelationService {
                 dto.setName(child.getToName());
                 dto.setProfile(child.getAssetProfileTo());
                 if ("DEVICE".equals(child.getAssetProfileTo())){
-                    dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.SERVER_SCOPE));
+                    dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.CLIENT_SCOPE));
                 } else {
                     dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
                 }
@@ -166,8 +171,8 @@ public class AssetDeviceRelationService {
         return result;
     }
 
-    public List<UUID> getIdHCPByMac(String mac){
-        return attributeKvRepository.findEntityIdsByStrValue(mac);
+    public List<UUID> getIdHCPByMac(String mac, int type){
+        return attributeKvRepository.findEntityIdsByStrValue(mac, type);
     }
 
     public boolean checkTypeAssetDevice(UUID id, EntityType entityType, String type){
@@ -229,5 +234,17 @@ public class AssetDeviceRelationService {
         return null;
     }
 
-
+    public void filter(List <AssetDeviceRelationDTO> source, List <AssetDeviceRelationDTO> result, String type) {
+        if (source == null || source.isEmpty()) {
+            return;
+        }
+        for (AssetDeviceRelationDTO dto: source) {
+            if (type.equals(dto.getProfile())) {
+                result.add(dto);
+            }
+            if (dto.getChildren() != null) {
+                filter(dto.getChildren(), result, type);
+            }
+        }
+    }
 }
