@@ -15,7 +15,7 @@
 ///
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {SharedModule} from '@shared/shared.module';
 import {EntityManagementComponent} from './entity-management.component';
 import {EntityManagementRoutingModule} from './entity-management-routing.module';
@@ -23,19 +23,24 @@ import {HomeComponentsModule} from '@home/components/home-components.module';
 import {HcpChildrenTableComponent} from '@home/pages/entity-management/hcp-children-table.component';
 import {DeviceSelectComponent} from '@home/pages/entity-management/components/device-select.component';
 import {TableConfigModalComponent} from '@home/pages/entity-management/components/table-config-modal.conmponent';
+import {EntityHierarchyTreeComponent} from '@home/pages/entity-management/entity-hierarchy-tree.component';
+import {EntityDetailsComponent} from '@home/pages/entity-management/components/entity-details.component';
 
 @NgModule({
   declarations: [
     EntityManagementComponent,
     HcpChildrenTableComponent,
+    EntityHierarchyTreeComponent,
+    EntityDetailsComponent,
     DeviceSelectComponent,
     TableConfigModalComponent,
   ],
-    imports: [
-        CommonModule,
-        SharedModule,
-        EntityManagementRoutingModule,
-        HomeComponentsModule
-    ]
+  imports: [
+    CommonModule,
+    SharedModule,
+    EntityManagementRoutingModule,
+    HomeComponentsModule,
+    NgOptimizedImage
+  ]
 })
 export class EntityManagementModule { }

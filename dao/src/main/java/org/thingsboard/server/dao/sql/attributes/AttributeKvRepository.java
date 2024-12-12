@@ -19,7 +19,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.core.parameters.P;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.dao.model.sql.AttributeKvCompositeKey;
 import org.thingsboard.server.dao.model.sql.AttributeKvEntity;
 
@@ -60,7 +62,7 @@ public interface AttributeKvRepository extends JpaRepository<AttributeKvEntity, 
     List<Integer> findAllKeysByEntityIdsAndAttributeType(@Param("entityIds") List<UUID> entityIds,
                                                          @Param("attributeType") int attributeType);
 
-    @Query("SELECT a.id.entityId FROM AttributeKvEntity a WHERE a.strValue = :strValue")
-    List<UUID> findEntityIdsByStrValue(@Param("strValue") String strValue);
+    @Query("SELECT a.id.entityId FROM AttributeKvEntity a WHERE a.strValue = :strValue AND a.id.attributeType = :type")
+    List<UUID> findEntityIdsByStrValue(@Param("strValue") String strValue, @Param("type") int type);
 
 }

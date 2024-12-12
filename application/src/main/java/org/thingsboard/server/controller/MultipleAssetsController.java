@@ -85,7 +85,16 @@ public class MultipleAssetsController extends BaseController {
     //@PreAuthorize("hasAnyAuthority('CREATE_ASSET')")
     public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
-        return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId());
+        return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId(), null);
+    }
+
+    @GetMapping("/assets/filter")
+    public List<AssetDeviceRelationDTO> getAllFilter(@RequestParam String rootProfile, @RequestParam String assetId, @RequestParam String profileName) throws ThingsboardException {
+        TenantId tenantId = getCurrentUser().getTenantId();
+        List<AssetDeviceRelationDTO> result = new ArrayList<>();
+        List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(rootProfile, 0, tenantId.getId(), UUID.fromString(assetId));
+        assetDeviceRelationService.filter(assetDeviceRelationDTOS, result, profileName);
+        return result;
     }
 
     @RequestMapping(value = "/assets/relations/info", method = RequestMethod.GET, params = {FROM_ID, FROM_TYPE})
@@ -143,8 +152,19 @@ public class MultipleAssetsController extends BaseController {
             @RequestBody RpcAssignHPC rpcAssignHPC) throws ThingsboardException {
         checkParameter("mac", mac);
         checkParameter("homeId", homeId);
-        // Tìm entityId dựa trên MAC
-        UUID entityIdUuid = assetDeviceRelationService.getIdHCPByMac(mac).get(0);
+        // Tìm danh sách entityId dựa trên MAC
+        List<UUID> entityIdList = assetDeviceRelationService.getIdHCPByMac(mac, AttributeScope.CLIENT_SCOPE.getId());
+
+        // Kiểm tra xem danh sách entityId
+        if (entityIdList.isEmpty()) {
+            throw new ThingsboardException("No entity found for the given MAC address!", ThingsboardErrorCode.ITEM_NOT_FOUND);
+        } else if (entityIdList.size() > 1) {
+            throw new ThingsboardException("Multiple devices found with the same MAC address. MAC conflict detected!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+
+        // Nếu danh sách hợp lệ, lấy UUID duy nhất
+        UUID entityIdUuid = entityIdList.get(0);
+
         if (entityIdUuid == null) {
             throw new ThingsboardException("No entity found for the given MAC address!", ThingsboardErrorCode.ITEM_NOT_FOUND);
         }

@@ -82,7 +82,7 @@ SELECT
     r.to_type AS relation_to,
     CASE
         WHEN r.to_type = 'ASSET' THEN ap_to.name
-        WHEN r.to_type = 'DEVICE' THEN NULL
+        WHEN r.to_type = 'DEVICE' THEN dp_to.name
         END AS asset_profile_to,
     CASE
         WHEN r.to_type = 'ASSET' THEN a_to.id
@@ -116,18 +116,20 @@ FROM
     asset_profile ap ON a.asset_profile_id = ap.id
         LEFT JOIN
     asset_profile ap_to ON a_to.asset_profile_id = ap_to.id
+        LEFT JOIN
+    device_profile dp_to ON dp_to.id = d_to.device_profile_id
 
 UNION
 
 SELECT
     COALESCE(r.from_type, 'DEVICE') AS relation_from,
-    d.name AS asset_profile_from,
+    dp.name AS asset_profile_from,
     d.id AS from_id,
     d.name AS from_name,
     r.to_type AS relation_to,
     CASE
         WHEN r.to_type = 'ASSET' THEN ap_to.name
-        WHEN r.to_type = 'DEVICE' THEN NULL
+        WHEN r.to_type = 'DEVICE' THEN dp_to.name
         END AS asset_profile_to,
     CASE
         WHEN r.to_type = 'ASSET' THEN a_to.id
@@ -153,15 +155,17 @@ SELECT
 FROM
     device d
         LEFT JOIN
-    relation r ON (r.from_id = d.id AND r.from_type = 'ASSET')
+    relation r ON (r.from_id = d.id AND r.from_type = 'DEVICE')
         LEFT JOIN
     asset a_to ON r.to_id = a_to.id AND r.to_type = 'ASSET'
         LEFT JOIN
     device d_to ON r.to_id = d_to.id AND r.to_type = 'DEVICE'
         LEFT JOIN
-    asset_profile ap_to ON a_to.asset_profile_id = ap_to.id;
-
-
+    asset_profile ap_to ON a_to.asset_profile_id = ap_to.id
+        LEFT JOIN
+    device_profile dp_to ON dp_to.id = d_to.device_profile_id
+        LEFT JOIN
+    device_profile dp ON dp.id = d.device_profile_id;
 
 CREATE OR REPLACE FUNCTION create_or_update_active_alarm(
                                         t_id uuid, c_id uuid, a_id uuid, a_created_ts bigint,
