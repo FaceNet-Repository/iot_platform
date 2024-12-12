@@ -105,6 +105,7 @@ export enum MenuId {
   hcp_management = 'hcp_management',
   home_management = 'home_management',
   room_management = 'room_management',
+  entity_hierarchy_tree = 'entity_hierarchy_tree',
 }
 
 declare type MenuFilter = (authState: AuthState) => boolean;
@@ -684,7 +685,17 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       path: '/entity-management/room',
       icon: 'view_quilt'
     }
-  ]
+  ],
+  [
+    MenuId.entity_hierarchy_tree,
+    {
+      id: MenuId.entity_hierarchy_tree,
+      name: 'entity-management.entity-hierarchy-tree',
+      type: 'link',
+      path: '/entity-hierarchy-tree',
+      icon: 'domain'
+    }
+  ],
 ]);
 
 const menuFilters = new Map<MenuId, MenuFilter>([
@@ -769,7 +780,8 @@ const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         pages: [
           {id: MenuId.hcp_management},
           {id: MenuId.home_management},
-          {id: MenuId.room_management}
+          {id: MenuId.room_management},
+          {id: MenuId.entity_hierarchy_tree},
         ]
       },
       {

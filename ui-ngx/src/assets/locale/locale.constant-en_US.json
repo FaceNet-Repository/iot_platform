@@ -2410,7 +2410,8 @@
         "entity-management": "Entity management",
         "hcp-management": "HCP",
         "home-management": "Home",
-        "room-management": "Room"
+        "room-management": "Room",
+        "entity-hierarchy-tree": "Hierarchy"
     },
     "entity-view": {
         "entity-view": "Entity view",

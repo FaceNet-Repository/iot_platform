@@ -25,7 +25,7 @@
     <tb-details-panel
       *ngIf="currentEntity"
       [headerTitle]="currentEntity.name"
-      [headerSubtitle]="currentEntity.id.id"
+      [headerSubtitle]="currentEntity.id.entityType"
       (closeDetails)="onCloseDetails()"
       [isEdit]="false">
       <div class="details-panel-body">
@@ -33,7 +33,7 @@
           <div class="mat-toolbar-tools">
             {{ entityConfig.detailConfig.title }}
             <button mat-icon-button
-                    matTooltip="Xuất dữ liệu"
+                    matTooltip="Đến trang chi tiết"
                     matTooltipPosition="above"
                     (click)="navigate()">
               <mat-icon>output</mat-icon>

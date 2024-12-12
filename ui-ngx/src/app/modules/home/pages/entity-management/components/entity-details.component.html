@@ -1,0 +1,68 @@
+<!--
+
+    Copyright © 2016-2024 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<mat-card *ngIf="entity; else noEntityCard">
+  <mat-card-header>
+    <mat-card-title>
+      {{ generalInformation.name ?? entity.name }}
+      <div fxLayout="row" fxFlexAlign="end center">
+        <mat-icon (click)="refresh()">refresh</mat-icon>
+        <mat-icon (click)="navigate()">output</mat-icon>
+      </div>
+    </mat-card-title>
+    <mat-card-subtitle>{{ entity.type }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="general-information-grid">
+      <ng-container [fxShow]="entity.type === 'HOME'">
+        <div class="id-row">ID: {{ entity.id.id }} <mat-icon (click)="copyToClipboard(entity.id.id)">content_copy</mat-icon></div>
+        <div>Địa chỉ: {{ generalInformation.address }}</div>
+        <div>Chủ nhân: {{ generalInformation.owner }}</div>
+        <div>Kinh độ: {{ generalInformation.longitude }}</div>
+        <div>Vĩ độ: {{ generalInformation.latitude }}</div>
+        <div>Ngày thêm: {{ entity.createdTime | date: "dd/MM/YY" }}</div>
+        <div>Ngày xóa: {{ generalInformation.deletedTime | date: "dd/MM/YY" }}</div>
+      </ng-container>
+    </div>
+    <div class="table-container">
+      <p class="table-title">Danh sách thiết bị</p>
+      <table mat-table [dataSource]="childrenDevices">
+        <ng-container matColumnDef="name">
+          <mat-header-cell *matHeaderCellDef> Tên </mat-header-cell>
+          <mat-cell *matCellDef="let device"> {{ device.name }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="type">
+          <mat-header-cell *matHeaderCellDef> Loại </mat-header-cell>
+          <mat-cell *matCellDef="let device"> {{ device.type }} </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="onRowClick($event, row)"></mat-row>
+      </table>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<ng-template #noEntityCard>
+  <mat-card class="no-entity-card">
+    <mat-card-content>
+      <div class="no-entity-content">
+        <img src="assets/logo_facenet.jpg" alt="Logo" class="no-entity-image">
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-template>

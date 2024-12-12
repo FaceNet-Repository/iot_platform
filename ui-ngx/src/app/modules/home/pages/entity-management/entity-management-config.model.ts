@@ -29,11 +29,7 @@ export type EntityManagementConfig = {
   columns: ColumnConfig[];
   detailConfig: {
     title: string;
-    fields: {
-      key: string;
-      label: string;
-      fieldType: 'index' | 'text' | 'datetime' | 'badge';
-    }[];
+    fields: FieldConfig[];
   };
   statisticConfig: {
     key: string;
@@ -56,4 +52,11 @@ export type ColumnConfig = {
   dataDisplayType: 'text' | 'datetime' | 'map';
   sticky?: boolean;
   stickyEnd?: boolean;
+};
+
+export type FieldConfig = {
+  key: string;
+  label: string;
+  dataType: 'static' | 'server_attribute' | 'client_attribute' | 'shared_attribute' | 'latest_telemetry';
+  dataDisplayType: 'text' | 'datetime' | 'map';
 };
