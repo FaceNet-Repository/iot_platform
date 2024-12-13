@@ -102,6 +102,7 @@ public class AssetDeviceRelationService {
             AssetDeviceRelationDTO childDTO = relationMap.computeIfAbsent(child.getToId(), id -> {
                 AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
                 dto.setId(child.getToId());
+                dto.setParentRelationId(child.getFromId());
                 dto.setName(child.getToName());
                 dto.setProfile(child.getAssetProfileTo());
                 if ("DEVICE".equals(child.getAssetProfileTo())){
@@ -154,6 +155,7 @@ public class AssetDeviceRelationService {
                     }
                     AssetDeviceRelationDTO subChildDTO = new AssetDeviceRelationDTO();
                     subChildDTO.setId(entity.getToId());
+                    subChildDTO.setParentRelationId(entity.getFromId());
                     subChildDTO.setName(entity.getToName());
                     subChildDTO.setProfile(entity.getAssetProfileTo());
                     if ("DEVICE".equals(entity.getAssetProfileTo())){
