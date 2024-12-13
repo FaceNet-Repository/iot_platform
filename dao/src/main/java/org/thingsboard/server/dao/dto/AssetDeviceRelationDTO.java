@@ -27,6 +27,7 @@ import java.util.UUID;
 @Setter
 public class AssetDeviceRelationDTO {
     private UUID id;
+    private UUID parentRelationId;
     private String name;
     private String profile;
     private JsonNode attributes;
