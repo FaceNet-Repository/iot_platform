@@ -1,0 +1,72 @@
+<!--
+
+    Copyright © 2016-2024 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<div *ngIf="entity; else noEntityCard" class="container" fxLayout="column" fxLayoutGap="1rem">
+  <div class="header" fxLayout="column" fxLayoutGap="0.5rem">
+    <div class="title" fxLayout="row" fxLayoutAlign="space-between center">
+      <span style="font-size: 1.5rem; font-weight: 500">{{ generalInformation.name ?? entity.name }}</span>
+      <div fxLayout="row" fxFlexAlign="end center" fxLayoutGap="0.5rem">
+        <mat-icon class="icon-button" (click)="refresh()">refresh</mat-icon>
+        <mat-icon class="icon-button" (click)="navigate()">output</mat-icon>
+      </div>
+    </div>
+    <div class="subtitle">
+      <span style="font-size: 1rem; font-weight: 500; color: slategrey">{{ entity['type'] }}</span>
+    </div>
+  </div>
+  <mat-divider></mat-divider>
+  <div class="content" fxFlex fxLayout="column" fxLayoutGap="0.5rem">
+    <div class="general-information-container" fxLayout="row wrap" fxLayoutGap="5%">
+      <span style="font-size: 1rem; font-weight: 500" fxFlex="100%">Thuộc tính</span>
+      <ng-container [fxShow]="entity['type'] === 'HOME'">
+        <div class="id-row" fxFlex="100%">ID: {{ entity.id.id }} <mat-icon class="icon-button" (click)="copyToClipboard(entity.id.id)">content_copy</mat-icon></div>
+        <div fxFlex="45%">Địa chỉ: {{ generalInformation.address }}</div>
+        <div fxFlex="45%">Chủ nhân: {{ generalInformation.owner }}</div>
+        <div fxFlex="45%">Kinh độ: {{ generalInformation.longitude }}</div>
+        <div fxFlex="45%">Vĩ độ: {{ generalInformation.latitude }}</div>
+        <div fxFlex="45%">Ngày thêm: {{ entity.createdTime | date: "dd/MM/YY" }}</div>
+        <div fxFlex="45%">Ngày xóa: {{ generalInformation.deletedTime | date: "dd/MM/YY" }}</div>
+      </ng-container>
+    </div>
+    <div class="table-container">
+      <span style="font-size: 1rem; font-weight: 500">Danh sách thiết bị</span>
+      <table mat-table [dataSource]="childrenDevices">
+        <ng-container matColumnDef="name">
+          <mat-header-cell *matHeaderCellDef> Tên </mat-header-cell>
+          <mat-cell *matCellDef="let device"> {{ device.name }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="type">
+          <mat-header-cell *matHeaderCellDef> Loại </mat-header-cell>
+          <mat-cell *matCellDef="let device"> {{ device.type }} </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="onRowClick($event, row)"></mat-row>
+      </table>
+    </div>
+  </div>
+</div>
+
+<ng-template #noEntityCard>
+  <mat-card class="no-entity-card">
+    <mat-card-content>
+      <div class="no-entity-content">
+        <img src="assets/logo_facenet.jpg" alt="Logo" class="no-entity-image">
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-template>
