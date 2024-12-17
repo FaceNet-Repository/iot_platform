@@ -150,7 +150,7 @@ public class AssetDeviceRelationService {
             }
             // Kiểm tra xem ID của đối tượng con đã gặp chưa
             if (seenIds.contains(child.getId())) {
-                throw new IllegalArgumentException("Child ID has already appeared in a parent entity: " + child.getId());
+                continue;
             }
             seenIds.add(child.getId());
             // Tìm các con của "child"
