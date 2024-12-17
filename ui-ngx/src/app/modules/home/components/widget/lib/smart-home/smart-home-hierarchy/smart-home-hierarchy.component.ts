@@ -16,28 +16,9 @@
 
 import {ChangeDetectorRef, Component, Input, OnDestroy, OnInit,} from '@angular/core';
 import {FlatTreeControl} from '@angular/cdk/tree';
-import {EntityId} from '@shared/models/id/entity-id';
 import {WidgetContext} from '@home/models/widget-component.models';
-import {EntityType} from '@shared/models/entity-type.models';
 import {TreeNode} from '@home/components/widget/lib/smart-home/smart-home-hierarchy/model/tree-node.model';
 import {HierarchyService} from '@home/components/widget/lib/smart-home/smart-home-hierarchy/service/hiererachy.service';
-
-class EntityIdMapper {
-  private readonly delimiter: string;
-
-  constructor(delimiter: string = '#facenet_delimiter#') {
-    this.delimiter = delimiter;
-  }
-
-  toString(entityId: EntityId): string {
-    return `${entityId.entityType}${this.delimiter}${entityId.id}`;
-  }
-
-  toEntityId(encodedId: string): EntityId {
-    const [entityType, id] = encodedId.split(this.delimiter);
-    return {entityType: entityType as EntityType, id};
-  }
-}
 
 @Component({
   selector: 'fn-smart-home-hierarchy',
@@ -54,9 +35,7 @@ export class SmartHomeHierarchyComponent implements OnInit, OnDestroy {
   hasChild = (_: number, node: TreeNode) => node.expandable;
 
   currentEntity: any = null;
-
-  private entityIdMapper = new EntityIdMapper();
-
+  currentNode: TreeNode = null;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -117,6 +96,7 @@ export class SmartHomeHierarchyComponent implements OnInit, OnDestroy {
   }
 
   onNodeClick(node: TreeNode) {
+    this.currentNode = node;
     if (this.currentEntity?.id.id === node.id) {
       this.currentEntity = null;
       return;

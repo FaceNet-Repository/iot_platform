@@ -16,10 +16,10 @@
 
 -->
 
-<div *ngIf="entity; else noEntityCard" class="container" fxLayout="column" fxLayoutGap="1rem">
+<div *ngIf="node; else noEntityCard" class="container" fxLayout="column" fxLayoutGap="1rem">
   <div class="header" fxLayout="column" fxLayoutGap="0.5rem">
     <div class="title" fxLayout="row" fxLayoutAlign="space-between center">
-      <span style="font-size: 1.5rem; font-weight: 500">{{ generalInformation.name ?? entity.name }}</span>
+      <span style="font-size: 1.5rem; font-weight: 500">{{ node.label }}</span>
       <div fxLayout="row" fxFlexAlign="end center" fxLayoutGap="0.5rem">
         <mat-icon class="icon-button" (click)="refresh()">refresh</mat-icon>
         <mat-icon class="icon-button" (click)="navigate()">output</mat-icon>
@@ -31,17 +31,53 @@
   </div>
   <mat-divider></mat-divider>
   <div class="content" fxFlex fxLayout="column" fxLayoutGap="0.5rem">
-    <div class="general-information-container" fxLayout="row wrap" fxLayoutGap="5%">
-      <span style="font-size: 1rem; font-weight: 500" fxFlex="100%">Thuộc tính</span>
-      <ng-container [fxShow]="entity['type'] === 'HOME'">
-        <div class="id-row" fxFlex="100%">ID: {{ entity.id.id }} <mat-icon class="icon-button" (click)="copyToClipboard(entity.id.id)">content_copy</mat-icon></div>
-        <div fxFlex="45%">Địa chỉ: {{ generalInformation.address }}</div>
-        <div fxFlex="45%">Chủ nhân: {{ generalInformation.owner }}</div>
-        <div fxFlex="45%">Kinh độ: {{ generalInformation.longitude }}</div>
-        <div fxFlex="45%">Vĩ độ: {{ generalInformation.latitude }}</div>
-        <div fxFlex="45%">Ngày thêm: {{ entity.createdTime | date: "dd/MM/YY" }}</div>
-        <div fxFlex="45%">Ngày xóa: {{ generalInformation.deletedTime | date: "dd/MM/YY" }}</div>
-      </ng-container>
+<!--    <div class="general-information-container" fxLayout="row wrap" fxLayoutGap="5%">-->
+<!--      <span style="font-size: 1rem; font-weight: 500" fxFlex="100%">Thuộc tính</span>-->
+<!--      <ng-container [fxShow]="entity && entity['type'] === 'HOME'">-->
+<!--        <div class="id-row" fxFlex="100%">ID: {{ node.id }} <mat-icon class="icon-button" (click)="copyToClipboard(node.id)">content_copy</mat-icon></div>-->
+<!--        <div fxFlex="45%">Địa chỉ: {{ serverAttributesRecord.address }}</div>-->
+<!--        <div fxFlex="45%">Chủ nhân: {{ serverAttributesRecord.owner }}</div>-->
+<!--        <div fxFlex="45%">Kinh độ: {{ serverAttributesRecord.longitude }}</div>-->
+<!--        <div fxFlex="45%">Vĩ độ: {{ serverAttributesRecord.latitude }}</div>-->
+<!--        <div fxFlex="45%">Ngày thêm: {{ entity?.createdTime | date: "dd/MM/YY" }}</div>-->
+<!--        <div fxFlex="45%">Ngày xóa: {{ serverAttributesRecord.deletedTime | date: "dd/MM/YY" }}</div>-->
+<!--      </ng-container>-->
+<!--    </div>-->
+
+    <div class="attribute-tabs" fxFlex="100%">
+      <ng-template #noAttributes>
+        <div style="height: 37px"></div>
+      </ng-template>
+      <mat-tab-group>
+        <mat-tab label="Server Attributes">
+          <div class="attributes" *ngIf="serverAttributes && serverAttributes.length; else noAttributes">
+            <div *ngFor="let attribute of serverAttributes">
+              {{ attribute.key }}: {{ attribute.value }}
+            </div>
+          </div>
+        </mat-tab>
+        <mat-tab [fxShow]="node.entityType === 'DEVICE'" label="Client Attributes">
+          <div class="attributes" *ngIf="clientAttributes && clientAttributes.length; else noAttributes">
+            <div *ngFor="let attribute of clientAttributes">
+              {{ attribute.key }}: {{ attribute.value }}
+            </div>
+          </div>
+        </mat-tab>
+        <mat-tab [fxShow]="node.entityType === 'DEVICE'" label="Shared Attributes">
+          <div class="attributes" *ngIf="sharedAttributes && sharedAttributes.length; else noAttributes">
+            <div *ngFor="let attribute of sharedAttributes">
+              {{ attribute.key }}: {{ attribute.value }}
+            </div>
+          </div>
+        </mat-tab>
+        <mat-tab label="Telemetry">
+          <div class="attributes" *ngIf="telemetry && telemetry.length; else noAttributes">
+            <div *ngFor="let attribute of telemetry">
+              {{ attribute.key }}: {{ attribute.value }}
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
     </div>
     <div class="table-container">
       <span style="font-size: 1rem; font-weight: 500">Danh sách thiết bị</span>

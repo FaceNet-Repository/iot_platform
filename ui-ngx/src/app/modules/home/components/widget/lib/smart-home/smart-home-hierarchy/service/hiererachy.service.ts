@@ -179,4 +179,8 @@ export class HierarchyService {
       map(([assetNodes, deviceNodes]) => [...assetNodes, ...deviceNodes])
     );
   }
+
+  refreshAttributes(node: TreeNode): Observable<string> {
+    return of(node.id);
+  }
 }
