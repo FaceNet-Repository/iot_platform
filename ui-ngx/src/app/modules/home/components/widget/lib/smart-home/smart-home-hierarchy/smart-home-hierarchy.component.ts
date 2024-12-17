@@ -66,7 +66,10 @@ export class SmartHomeHierarchyComponent implements OnInit, OnDestroy {
           node.label.toLowerCase().includes(searchTerm.toLowerCase())
         ))
     );
-    this.filteredDataSource$.subscribe((data) => console.log('tree data', data));
+    this.filteredDataSource$.subscribe((data) => {
+      this.cdr.detectChanges();
+      console.log('tree data', data);
+    });
     console.log('ngOnInit: end');
   }
 
@@ -88,14 +91,21 @@ export class SmartHomeHierarchyComponent implements OnInit, OnDestroy {
     }
     const isExpanding = !this.treeControl.isExpanded(node);
     if (isExpanding) {
+      let currentData = [...this.dataSourceSubject.getValue()];
+      const currentNode = currentData.find(item => item.id === node.id);
+      if (currentNode) {
+        currentNode.isLoading = true;
+        this.dataSourceSubject.next(currentData);
+      }
       this.hierarchyService.getChildNodes(node).subscribe(children => {
         if (!children || !children.length) {
           return;
         }
-        const currentData = [...this.dataSourceSubject.getValue()];
+        currentData = [...this.dataSourceSubject.getValue()];
         const parentIndex = currentData.indexOf(node);
         currentData.splice(parentIndex + 1, 0, ...children);
         this.dataSourceSubject.next(currentData);
+        node.isLoading = false;
         this.treeControl.expand(node);
         this.cdr.detectChanges();
       });

@@ -10,6 +10,7 @@ export type TreeNode = {
   label: string;
   level: number;
   expandable: boolean;
+  isLoading?: boolean;
   parentId?: string | null;
   data?: BaseData<EntityId>;
   serverAttributes?: AttributeData[];
