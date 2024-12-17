@@ -174,6 +174,15 @@ import { LatestVersionConfigPipe } from '@home/components/widget/lib/gateway/pip
 import {
   EntitiesHierarchyProWidgetComponent
 } from '@home/components/widget/lib/entity/entities-hierarchy-pro-widget.component';
+import {
+  SmartHomeHierarchyComponent
+} from '@home/components/widget/lib/smart-home/smart-home-hierarchy/smart-home-hierarchy.component';
+import {
+  SmartHomeIconComponent
+} from '@home/components/widget/lib/smart-home/smart-home-hierarchy/smart-home-icon.component';
+import {
+  SmartHomeEntityDetailsComponent
+} from '@home/components/widget/lib/smart-home/smart-home-hierarchy/smart-home-entity-details.component';
 
 @NgModule({
   declarations: [
@@ -243,7 +252,10 @@ import {
     LabelValueCardWidgetComponent,
     UnreadNotificationWidgetComponent,
     NotificationTypeFilterPanelComponent,
-    ScadaSymbolWidgetComponent
+    ScadaSymbolWidgetComponent,
+    SmartHomeHierarchyComponent,
+    SmartHomeEntityDetailsComponent,
+    SmartHomeIconComponent,
   ],
   imports: [
     CommonModule,
@@ -341,7 +353,10 @@ import {
     LabelValueCardWidgetComponent,
     UnreadNotificationWidgetComponent,
     NotificationTypeFilterPanelComponent,
-    ScadaSymbolWidgetComponent
+    ScadaSymbolWidgetComponent,
+    SmartHomeHierarchyComponent,
+    SmartHomeEntityDetailsComponent,
+    SmartHomeIconComponent,
   ],
   providers: [
     {provide: WIDGET_COMPONENTS_MODULE_TOKEN, useValue: WidgetComponentsModule},
