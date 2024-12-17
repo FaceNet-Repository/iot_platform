@@ -15,9 +15,7 @@
 ///
 
 import {Component, Input, OnChanges, SimpleChanges,} from '@angular/core';
-import {firstValueFrom} from 'rxjs';
-import {Asset} from '@shared/models/asset.models';
-import {AttributeData, AttributeScope} from '@shared/models/telemetry/telemetry.models';
+import {AttributeData} from '@shared/models/telemetry/telemetry.models';
 import {Router} from '@angular/router';
 import {DeviceService} from '@core/http/device.service';
 import {EntityRelationService} from '@core/http/entity-relation.service';

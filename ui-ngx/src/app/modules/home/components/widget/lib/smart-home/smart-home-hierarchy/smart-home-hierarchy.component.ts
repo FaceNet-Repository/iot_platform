@@ -14,11 +14,13 @@
 /// limitations under the License.
 ///
 
-import {ChangeDetectorRef, Component, Input, OnDestroy, OnInit,} from '@angular/core';
+import {ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild,} from '@angular/core';
 import {FlatTreeControl} from '@angular/cdk/tree';
 import {WidgetContext} from '@home/models/widget-component.models';
 import {TreeNode} from '@home/components/widget/lib/smart-home/smart-home-hierarchy/model/tree-node.model';
 import {HierarchyService} from '@home/components/widget/lib/smart-home/smart-home-hierarchy/service/hiererachy.service';
+import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
+import {map} from 'rxjs/operators';
 
 @Component({
   selector: 'fn-smart-home-hierarchy',
@@ -30,7 +32,10 @@ export class SmartHomeHierarchyComponent implements OnInit, OnDestroy {
   @Input()
   ctx: WidgetContext;
 
-  dataSource: TreeNode[] = [];
+  private dataSourceSubject = new BehaviorSubject<TreeNode[]>([]);
+  private searchTermSubject = new BehaviorSubject<string>('');
+  filteredDataSource$: Observable<TreeNode[]>;
+
   treeControl = new FlatTreeControl<TreeNode>(fn => fn.level, fn => fn.expandable);
   hasChild = (_: number, node: TreeNode) => node.expandable;
 
@@ -50,16 +55,30 @@ export class SmartHomeHierarchyComponent implements OnInit, OnDestroy {
     this.ctx.$scope.smartHomeHierarchyComponent = this;
     this.hierarchyService.getNodes(this.ctx.datasources.map(ds => ds.entityId))
       .subscribe(rootNodes => {
-        console.log('rootNodes', rootNodes);
-        this.dataSource = rootNodes;
+        this.dataSourceSubject.next(rootNodes);
         this.cdr.detectChanges();
       });
+    this.filteredDataSource$ = combineLatest([
+      this.dataSourceSubject.asObservable(),
+      this.searchTermSubject.asObservable(),
+    ]).pipe(
+      map(([dataSource, searchTerm]) => dataSource.filter(node =>
+          node.label.toLowerCase().includes(searchTerm.toLowerCase())
+        ))
+    );
+    this.filteredDataSource$.subscribe((data) => console.log('tree data', data));
     console.log('ngOnInit: end');
   }
 
   ngOnDestroy() {
     console.log('ngOnDestroy: start');
     console.log('ngOnDestroy: end');
+  }
+
+  onSearchChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    console.log(value);
+    this.searchTermSubject.next(value);
   }
 
   onNodeExpand(event: Event, node: TreeNode) {
@@ -73,15 +92,15 @@ export class SmartHomeHierarchyComponent implements OnInit, OnDestroy {
         if (!children || !children.length) {
           return;
         }
-        const currentData = [...this.dataSource];
+        const currentData = [...this.dataSourceSubject.getValue()];
         const parentIndex = currentData.indexOf(node);
         currentData.splice(parentIndex + 1, 0, ...children);
-        this.dataSource = currentData;
+        this.dataSourceSubject.next(currentData);
         this.treeControl.expand(node);
         this.cdr.detectChanges();
       });
     } else {
-      const currentData = [...this.dataSource];
+      const currentData = [...this.dataSourceSubject.getValue()];
       const descendants = this.getDescendants(node, currentData);
       descendants.forEach(descendant => {
         const index = currentData.indexOf(descendant);
@@ -89,7 +108,7 @@ export class SmartHomeHierarchyComponent implements OnInit, OnDestroy {
           currentData.splice(index, 1);
         }
       });
-      this.dataSource = currentData;
+      this.dataSourceSubject.next(currentData);
       this.treeControl.collapse(node);
       this.cdr.detectChanges();
     }

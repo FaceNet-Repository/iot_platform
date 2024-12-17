@@ -17,16 +17,15 @@
 -->
 
 <mat-card class="mat-padding container">
-  <div style="padding: 0 1rem" fxLayout="row" fxLayoutAlign="space-between center">
-    <span class="title">Smart Home Hierarchy</span>
+  <div style="padding: 0 1rem" fxLayout="row" fxLayoutAlign="start center">
     <div fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="0.5rem">
-      <span>Loại asset:</span>
-      <!--      <input [(ngModel)]="filterType" (ngModelChange)="filterInputChange.next($event)"/>-->
+      <span>Tìm kiếm</span>
+      <input placeholder="Aa" (change)="onSearchChange($event)"/>
     </div>
   </div>
   <mat-card-content [ngStyle]="{'grid-template-columns': currentEntity ? '1fr 1fr' : '1fr'}">
     <div class="content-container">
-      <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+      <mat-tree [dataSource]="filteredDataSource$ | async" [treeControl]="treeControl">
         <mat-tree-node
           *matTreeNodeDef="let node"
           class="tree-node"
