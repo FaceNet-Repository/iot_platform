@@ -105,7 +105,7 @@ public class AssetDeviceRelationService {
                 dto.setParentRelationId(child.getFromId());
                 dto.setName(child.getToName());
                 dto.setProfile(child.getAssetProfileTo());
-                if ("DEVICE".equals(child.getAssetProfileTo())){
+                if ("DEVICE".equals(child.getToType())){
                     dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.CLIENT_SCOPE));
                 } else {
                     dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
@@ -125,7 +125,10 @@ public class AssetDeviceRelationService {
         // Bước 5: Đệ quy tìm các con cho tất cả các tầng (giới hạn bởi level)
         for (AssetDeviceRelationDTO dto : relationMap.values()) {
             if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {
-                dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1, tenantId)); // Truyền level - 1
+                Set<UUID> seenIds = new HashSet<>();
+                seenIds.add(dto.getParentRelationId());
+                seenIds.add(dto.getId());
+                dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1, tenantId, seenIds)); // Truyền level - 1
             }
         }
 
@@ -135,7 +138,7 @@ public class AssetDeviceRelationService {
                 .collect(Collectors.toList());
     }
 
-    private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level, UUID tenantId) {
+    private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level, UUID tenantId, Set<UUID> seenIds) {
         if (level == 0) { // Nếu đạt đến level giới hạn, không tiếp tục đệ quy
             return children;
         }
@@ -145,6 +148,11 @@ public class AssetDeviceRelationService {
             if (child == null ) {
                 continue; // Bỏ qua các thực thể null hoặc không có to_id
             }
+            // Kiểm tra xem ID của đối tượng con đã gặp chưa
+            if (seenIds.contains(child.getId())) {
+                throw new IllegalArgumentException("Child ID has already appeared in a parent entity: " + child.getId());
+            }
+            seenIds.add(child.getId());
             // Tìm các con của "child"
             List<AssetDeviceRelationEntity> childEntities = assetDeviceRelationRepository.findByFromId(child.getId());
             if (!childEntities.isEmpty()) {
@@ -158,7 +166,7 @@ public class AssetDeviceRelationService {
                     subChildDTO.setParentRelationId(entity.getFromId());
                     subChildDTO.setName(entity.getToName());
                     subChildDTO.setProfile(entity.getAssetProfileTo());
-                    if ("DEVICE".equals(entity.getAssetProfileTo())){
+                    if ("DEVICE".equals(entity.getToType())){
                         subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.CLIENT_SCOPE));
                     } else {
                         subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
@@ -166,7 +174,7 @@ public class AssetDeviceRelationService {
                     subChildren.add(subChildDTO);
                 }
                 // Đệ quy để tìm tiếp các con của "subChild"
-                child.setChildren(findChildrenRecursively(subChildren, level - 1, tenantId)); // Truyền level - 1
+                child.setChildren(findChildrenRecursively(subChildren, level - 1, tenantId, seenIds)); // Truyền level - 1
             }
             result.add(child);
         }
