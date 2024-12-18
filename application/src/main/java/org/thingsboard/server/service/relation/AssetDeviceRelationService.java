@@ -18,6 +18,7 @@ package org.thingsboard.server.service.relation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.AttributeScope;
@@ -106,7 +107,24 @@ public class AssetDeviceRelationService {
                 dto.setName(child.getToName());
                 dto.setProfile(child.getAssetProfileTo());
                 if ("DEVICE".equals(child.getToType())){
-                    dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.CLIENT_SCOPE));
+                    // Lấy cả thuộc tính CLIENT_SCOPE và SERVER_SCOPE
+                    JsonNode clientAttributes = getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.CLIENT_SCOPE);
+                    JsonNode serverAttributes = getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.SERVER_SCOPE);
+
+                    // Tạo ObjectMapper để xử lý JsonNode
+                    ObjectMapper objectMapper = new ObjectMapper();
+
+                    // Hợp nhất hai JsonNode
+                    ObjectNode mergedAttributes = objectMapper.createObjectNode();
+                    if (clientAttributes != null && clientAttributes.isObject()) {
+                        mergedAttributes.setAll((ObjectNode) clientAttributes);
+                    }
+                    if (serverAttributes != null && serverAttributes.isObject()) {
+                        mergedAttributes.setAll((ObjectNode) serverAttributes);
+                    }
+
+                    // Đặt thuộc tính hợp nhất vào DTO
+                    dto.setAttributes(mergedAttributes);
                 } else {
                     dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
                 }
@@ -167,7 +185,24 @@ public class AssetDeviceRelationService {
                     subChildDTO.setName(entity.getToName());
                     subChildDTO.setProfile(entity.getAssetProfileTo());
                     if ("DEVICE".equals(entity.getToType())){
-                        subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.CLIENT_SCOPE));
+                        // Lấy cả CLIENT_SCOPE và SERVER_SCOPE dưới dạng JsonNode
+                        JsonNode clientAttributes = getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.CLIENT_SCOPE);
+                        JsonNode serverAttributes = getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.SERVER_SCOPE);
+
+                        // Tạo ObjectMapper để xử lý JsonNode
+                        ObjectMapper objectMapper = new ObjectMapper();
+
+                        // Hợp nhất hai JsonNode
+                        ObjectNode mergedAttributes = objectMapper.createObjectNode();
+                        if (clientAttributes != null && clientAttributes.isObject()) {
+                            mergedAttributes.setAll((ObjectNode) clientAttributes);
+                        }
+                        if (serverAttributes != null && serverAttributes.isObject()) {
+                            mergedAttributes.setAll((ObjectNode) serverAttributes);
+                        }
+
+                        // Đặt thuộc tính hợp nhất vào DTO
+                        subChildDTO.setAttributes(mergedAttributes);
                     } else {
                         subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
                     }
