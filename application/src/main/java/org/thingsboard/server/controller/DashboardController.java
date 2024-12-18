@@ -51,6 +51,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.config.annotations.ApiOperation;
+import org.thingsboard.server.dao.dto.CountDashboard;
 import org.thingsboard.server.dao.resource.ImageService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.dashboard.TbDashboardService;
@@ -645,6 +646,20 @@ public class DashboardController extends BaseController {
                 nonFilteredResult.hasNext());
         return checkNotNull(filteredResult);
     }
+
+    @ApiOperation(value = "Count Dashboards by Profile Name (countByProfilesName)",
+            notes = "Count the number of dashboards based on profile name and entity type (e.g., 'CUSTOMER', 'ASSET', 'DEVICE').")
+//    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/dashboard/count-by-profile", method = RequestMethod.POST)
+    @ResponseBody
+    public Long[] countByProfilesName(
+            @Parameter(description = "List of CountDashboard objects representing profile names and entity types")
+            @RequestBody List<CountDashboard> countDashboards) throws ThingsboardException {
+
+        TenantId tenantId = getCurrentUser().getTenantId();
+        return dashboardHCService.countByProfilesName(countDashboards, tenantId.getId());
+    }
+
 
     private Set<CustomerId> customerIdFromStr(String[] strCustomerIds) {
         Set<CustomerId> customerIds = new HashSet<>();
