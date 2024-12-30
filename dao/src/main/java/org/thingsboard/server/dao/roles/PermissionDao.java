@@ -28,4 +28,5 @@ public interface PermissionDao {
     PageData<Permission> findAll(UUID tenantId, String name, PageLink pageLink);
     Permission save(Permission permission);
     List<Permission> saveAll(List<Permission> permissions);
+    void deleteById(UUID id);
 }

@@ -897,21 +897,21 @@ CREATE TABLE IF NOT EXISTS mobile_app_settings (
     CONSTRAINT mobile_app_settings_tenant_id_unq_key UNIQUE (tenant_id)
 );
 
-CREATE TABLE tb_role (
+CREATE TABLE IF NOT EXISTS tb_role (
                          id UUID NULL DEFAULT NULL,
                          name VARCHAR NULL DEFAULT NULL,
                          created_time BIGINT NULL DEFAULT NULL,
                          tenant_id UUID NULL DEFAULT NULL
 );
 
-CREATE TABLE tb_role_permission (
+CREATE TABLE IF NOT EXISTS tb_role_permission (
                                     id UUID NULL DEFAULT NULL,
                                     role_id UUID NULL DEFAULT NULL,
                                     permission_id UUID NULL DEFAULT NULL,
                                     created_time BIGINT NULL DEFAULT NULL
 );
 
-CREATE TABLE tb_user_permission (
+CREATE TABLE IF NOT EXISTS tb_user_permission (
                                     id UUID NOT NULL CONSTRAINT tb_user_permission_pkey PRIMARY KEY,
                                     user_id UUID NULL DEFAULT NULL,
                                     action UUID NULL DEFAULT NULL,
@@ -920,14 +920,14 @@ CREATE TABLE tb_user_permission (
                                     entity_type VARCHAR(255) NULL DEFAULT NULL
 );
 
-CREATE TABLE tb_user_roles (
+CREATE TABLE IF NOT EXISTS tb_user_roles (
                                id UUID NULL DEFAULT NULL,
                                user_id UUID NULL DEFAULT NULL,
                                role_id UUID NULL DEFAULT NULL,
                                created_time BIGINT NULL DEFAULT NULL
 );
 
-CREATE TABLE tb_permission (
+CREATE TABLE IF NOT EXISTS tb_permission (
                                id UUID NULL DEFAULT NULL,
                                name VARCHAR NULL DEFAULT NULL,
                                created_time BIGINT NULL DEFAULT NULL

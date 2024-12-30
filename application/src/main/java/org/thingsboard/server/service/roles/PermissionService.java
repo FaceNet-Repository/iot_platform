@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
-import org.thingsboard.server.common.data.roles.Role;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.UUID;
