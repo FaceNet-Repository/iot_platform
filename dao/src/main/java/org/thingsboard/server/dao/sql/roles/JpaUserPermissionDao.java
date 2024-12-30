@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.dao.sql.roles;
 
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.roles.UserPermission;
@@ -51,15 +52,22 @@ public class JpaUserPermissionDao implements UserPermissionDao {
     }
 
     @Override
-    public UserPermissionEntity saveRole(UserPermission userPermission) {
-        UserPermissionEntity entity = new UserPermissionEntity();
-        entity.setId(userPermission.getId());
-        entity.setUserId(userPermission.getUserId());
-        entity.setAction(userPermission.getAction());
-        entity.setEntityId(userPermission.getEntityId());
-        entity.setCreatedTime(userPermission.getCreatedTime());
-        entity.setEntityType(userPermission.getEntityType());
-        return userPermissionRepository.save(entity);
+    public List<UserPermission> saveRoles(List<UserPermission> userPermissions) {
+        // Chuyển đổi từ UserPermission (DTO) sang UserPermissionEntity (Entity)
+        List<UserPermissionEntity> entities = userPermissions.stream().map(userPermission -> {
+            UserPermissionEntity entity = new UserPermissionEntity();
+            entity.setId(Uuids.timeBased());
+            entity.setUserId(userPermission.getUserId());
+            entity.setAction(userPermission.getAction());
+            entity.setEntityId(userPermission.getEntityId());
+            entity.setCreatedTime(System.currentTimeMillis());
+            entity.setEntityType(userPermission.getEntityType());
+            return entity;
+        }).collect(Collectors.toList());
+        List<UserPermissionEntity> savedEntities = userPermissionRepository.saveAll(entities);
+        return savedEntities.stream()
+                .map(UserPermissionEntity::toData)
+                .collect(Collectors.toList());
     }
 
     @Override

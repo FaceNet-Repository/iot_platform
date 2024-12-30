@@ -27,6 +27,8 @@ import org.thingsboard.server.common.data.roles.Role;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.roles.RolesService;
 
+import java.util.UUID;
+
 @RestController
 @TbCoreComponent
 @RequestMapping("/api")
@@ -59,6 +61,24 @@ public class RolesController extends BaseController {
         TenantId tenantId = getCurrentUser().getTenantId();
         role.setTenantId(tenantId.getId());
         return rolesService.createOrUpdateRoleWithPermissions(role);
+    }
+
+    /**
+     * Delete a role by ID.
+     *
+     * @param roleId the ID of the role to be deleted
+     * @throws ThingsboardException if the deletion fails
+     */
+    @DeleteMapping("/tenant/role/{roleId}")
+    public void deleteRoleById(@PathVariable UUID roleId) throws ThingsboardException {
+        try {
+            TenantId tenantId = getCurrentUser().getTenantId();
+            log.info("Deleting role with ID: {} for tenant: {}", roleId, tenantId);
+            rolesService.deleteById(roleId);
+        } catch (Exception e) {
+            log.error("Failed to delete role with ID: {}", roleId, e);
+            throw handleException(e);
+        }
     }
 
 

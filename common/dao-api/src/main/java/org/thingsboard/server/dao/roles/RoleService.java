@@ -24,4 +24,5 @@ import java.util.UUID;
 public interface RoleService {
     PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink);
     Role createOrUpdateRoleWithPermissions(Role role);
+    void deleteById(UUID id);
 }

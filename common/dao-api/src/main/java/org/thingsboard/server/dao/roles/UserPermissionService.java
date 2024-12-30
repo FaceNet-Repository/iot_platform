@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.sql.roles;
+package org.thingsboard.server.dao.roles;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
+import org.thingsboard.server.common.data.roles.UserPermission;
 
 import java.util.List;
-import java.util.UUID;
 
-@Repository
-public interface RolePermissionRepository extends JpaRepository<RolePermissionEntity, UUID> {
-    List<RolePermissionEntity> findAllByRoleId(UUID roleId);
-    List<RolePermissionEntity> findAllByPermissionId(UUID permissionId);
-    void deleteByRoleIdAndPermissionId(UUID roleId, UUID permissionId);
+public interface UserPermissionService {
+    List<UserPermission> saveRoles(List<UserPermission> userPermissions);
 }
