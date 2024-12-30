@@ -74,13 +74,50 @@ public class ModelConstants {
     /**
      * Roles constants.
      */
-    public static final String USER_ROLES = "tb_roles";
-    public static final String ROLES_ID = "id";
-    public static final String USER_ID = USER_ID_PROPERTY;
-    public static final String ACTION = "action";
-    public static final String ENTITY_ID = ENTITY_ID_COLUMN;
-    public static final String CREATED_TIME = CREATED_TIME_PROPERTY;
-    public static final String ENTITY_TYPE = "entity_type";
+    public static final String TB_ROLE = "tb_role";
+    public static final String ROLE_ID = "id";
+    public static final String ROLE_NAME = "name";
+    public static final String ROLE_CREATED_TIME = CREATED_TIME_PROPERTY;
+    public static final String ROLE_TENANT_ID = "tenant_id";
+
+    /**
+     * Role Permission constants.
+     */
+    public static final String TB_ROLE_PERMISSION = "tb_role_permission";
+    public static final String ROLE_PERMISSION_ID = "id";
+    public static final String ROLE_PERMISSION_ROLE_ID = "role_id";
+    public static final String ROLE_PERMISSION_PERMISSION_ID = "permission_id";
+    public static final String ROLE_PERMISSION_CREATED_TIME = CREATED_TIME_PROPERTY;
+
+    /**
+     * User Permission constants.
+     */
+    public static final String TB_USER_PERMISSION = "tb_user_permission";
+    public static final String USER_PERMISSION_ID = "id";
+    public static final String USER_PERMISSION_USER_ID = USER_ID_PROPERTY;
+    public static final String USER_PERMISSION_ACTION = "action";
+    public static final String USER_PERMISSION_ENTITY_ID = ENTITY_ID_COLUMN;
+    public static final String USER_PERMISSION_CREATED_TIME = CREATED_TIME_PROPERTY;
+    public static final String USER_PERMISSION_ENTITY_TYPE = "entity_type";
+
+    /**
+     * User Roles constants.
+     */
+    public static final String TB_USER_ROLES = "tb_user_roles";
+    public static final String USER_ROLES_ID = "id";
+    public static final String USER_ROLES_USER_ID = "user_id";
+    public static final String USER_ROLES_ROLE_ID = "role_id";
+    public static final String USER_ROLES_CREATED_TIME = CREATED_TIME_PROPERTY;
+
+    /**
+     * Permission constants.
+     */
+    public static final String TB_PERMISSION = "tb_permission";
+    public static final String PERMISSION_ID = "id";
+    public static final String PERMISSION_NAME = "name";
+    public static final String PERMISSION_CREATED_TIME = CREATED_TIME_PROPERTY;
+    public static final String PERMISSION_TENANT_ID = "tenant_id";
+
 
     /**
      * User_credentials constants.

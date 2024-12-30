@@ -216,4 +216,46 @@ public interface AssetRepository extends JpaRepository<AssetEntity, UUID>, Expor
     @Query(value = "SELECT DISTINCT new org.thingsboard.server.common.data.util.TbPair(a.tenantId , a.type) FROM  AssetEntity a")
     Page<TbPair<UUID, String>> getAllAssetTypes(Pageable pageable);
 
+    @Query(value = """
+        WITH month_range AS (
+            SELECT 
+                TO_CHAR(DATE_TRUNC('month', generate_series), 'YYYY-MM') AS month
+            FROM 
+                generate_series(
+                    TO_TIMESTAMP(:startTime / 1000),
+                    TO_TIMESTAMP(:endTime / 1000),
+                    '1 month'
+                )
+        ),
+        asset_counts AS (
+            SELECT 
+                TO_CHAR(DATE_TRUNC('month', TO_TIMESTAMP(a.created_time / 1000)), 'YYYY-MM') AS month,
+                COUNT(a.id) AS count
+            FROM 
+                asset a
+            WHERE 
+                a.asset_profile_id = :profileId
+                AND (:startTime IS NULL OR a.created_time >= :startTime)
+                AND (:endTime IS NULL OR a.created_time <= :endTime)
+            GROUP BY 
+                TO_CHAR(DATE_TRUNC('month', TO_TIMESTAMP(a.created_time / 1000)), 'YYYY-MM')
+        )
+        SELECT 
+            mr.month,
+            COALESCE(ac.count, 0) AS count
+        FROM 
+            month_range mr
+        LEFT JOIN 
+            asset_counts ac
+        ON 
+            mr.month = ac.month
+        ORDER BY 
+            TO_DATE(mr.month, 'YYYY-MM')
+        """, nativeQuery = true)
+    List<Object[]> countAssetsByMonth(
+            @Param("profileId") UUID profileId,
+            @Param("startTime") Long startTime,
+            @Param("endTime") Long endTime);
+
+
 }

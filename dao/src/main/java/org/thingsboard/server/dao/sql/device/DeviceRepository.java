@@ -194,4 +194,45 @@ public interface DeviceRepository extends JpaRepository<DeviceEntity, UUID>, Exp
     @Query("SELECT externalId FROM DeviceEntity WHERE id = :id")
     UUID getExternalIdById(@Param("id") UUID id);
 
+    @Query(value = """
+        WITH month_range AS (
+            SELECT 
+                TO_CHAR(DATE_TRUNC('month', generate_series), 'MM-YYYY') AS month_year
+            FROM 
+                generate_series(
+                    TO_TIMESTAMP(:startTime / 1000),
+                    TO_TIMESTAMP(:endTime / 1000),
+                    '1 month'
+                )
+        ),
+        device_counts AS (
+            SELECT 
+                TO_CHAR(DATE_TRUNC('month', TO_TIMESTAMP(d.created_time / 1000)), 'MM-YYYY') AS month_year,
+                COUNT(*) AS device_count
+            FROM 
+                device d
+            WHERE 
+                d.device_profile_id = :profileId
+                AND (:startTime IS NULL OR d.created_time >= :startTime)
+                AND (:endTime IS NULL OR d.created_time <= :endTime)
+            GROUP BY 
+                TO_CHAR(DATE_TRUNC('month', TO_TIMESTAMP(d.created_time / 1000)), 'MM-YYYY')
+        )
+        SELECT 
+            mr.month_year,
+            COALESCE(dc.device_count, 0) AS device_count
+        FROM 
+            month_range mr
+        LEFT JOIN 
+            device_counts dc
+        ON 
+            mr.month_year = dc.month_year
+        ORDER BY 
+            TO_DATE(mr.month_year, 'MM-YYYY')
+        """, nativeQuery = true)
+    List<Object[]> countDevicesByMonth(
+            @Param("profileId") UUID profileId,
+            @Param("startTime") Long startTime,
+            @Param("endTime") Long endTime);
+
 }

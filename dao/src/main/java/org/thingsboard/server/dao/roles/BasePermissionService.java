@@ -13,32 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.roles;
+package org.thingsboard.server.dao.roles;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.roles.Role;
-import org.thingsboard.server.dao.roles.RoleService;
-import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.common.data.roles.Permission;
 
 import java.util.UUID;
+
 @Service
-@TbCoreComponent
-public class RolesService {
-    private final RoleService roleService;
+@Slf4j
+public class BasePermissionService implements PermissionService{
+    private final PermissionDao permissionDao;
 
-    public RolesService(RoleService roleService) {
-        this.roleService = roleService;
+    public BasePermissionService(PermissionDao permissionDao) {
+        this.permissionDao = permissionDao;
     }
 
-    public PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink) {
-        return roleService.findAll(tenantId, name, pageLink);
+    @Override
+    public PageData<Permission> findAll(UUID tenantId, String name, PageLink pageLink) {
+        return permissionDao.findAll(tenantId, name, pageLink);
     }
-
-    public Role createOrUpdateRoleWithPermissions(Role role){
-        return roleService.createOrUpdateRoleWithPermissions(role);
-    }
-
 }

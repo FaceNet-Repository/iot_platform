@@ -20,17 +20,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.thingsboard.server.dao.model.sql.RolesEntity;
+import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
 
 import java.util.List;
 import java.util.UUID;
 @Repository
-public interface RolesRepository extends JpaRepository<RolesEntity, Integer> {
-    List<RolesEntity> findAllByUserIdAndActionAndEntityId(UUID userId, String action, UUID entityId);
-    List<RolesEntity> findAllByUserIdAndAction(UUID userId, String action);
-    @Query("SELECT r.entityId FROM RolesEntity r WHERE r.userId = :userId AND r.action = :action AND r.entityType = :entityType")
+public interface UserPermissionRepository extends JpaRepository<UserPermissionEntity, Integer> {
+    List<UserPermissionEntity> findAllByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
+    List<UserPermissionEntity> findAllByUserIdAndAction(UUID userId, UUID action);
+    @Query("SELECT r.entityId FROM UserPermissionEntity r WHERE r.userId = :userId AND r.action = :action AND r.entityType = :entityType")
     List<UUID> findEntityIdsByUserIdAndActionAndEntityType(@Param("userId") UUID userId,
-                                                           @Param("action") String action,
+                                                           @Param("action") UUID action,
                                                            @Param("entityType") String entityType);
-    void deleteByUserIdAndActionAndEntityId(UUID userId, String action, UUID entityId);
+    void deleteByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
 }

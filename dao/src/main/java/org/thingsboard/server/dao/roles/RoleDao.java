@@ -13,32 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.service.roles;
+package org.thingsboard.server.dao.roles;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Role;
-import org.thingsboard.server.dao.roles.RoleService;
-import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.dao.model.sql.RoleEntity;
 
+import java.util.List;
 import java.util.UUID;
-@Service
-@TbCoreComponent
-public class RolesService {
-    private final RoleService roleService;
 
-    public RolesService(RoleService roleService) {
-        this.roleService = roleService;
-    }
-
-    public PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink) {
-        return roleService.findAll(tenantId, name, pageLink);
-    }
-
-    public Role createOrUpdateRoleWithPermissions(Role role){
-        return roleService.createOrUpdateRoleWithPermissions(role);
-    }
-
+public interface RoleDao {
+    Role findById(UUID id);
+    List<Role> findByTenantId(UUID tenantId);
+    RoleEntity save(Role role);
+    void deleteById(UUID id);
+    PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink);
+    Role createOrUpdateRoleWithPermissions(Role role);
 }
