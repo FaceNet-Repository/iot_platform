@@ -43,17 +43,17 @@ public class RolesController extends BaseController {
      *
      * @param name the name (or part of the name) to filter roles, can be null or empty
      * @param page the page number (zero-based)
-     * @param size the size of the page
+     * @param pageSize the size of the page
      * @return a PageData object containing the roles
      */
     @GetMapping("/tenant/role/get-all-roles")
     public PageData<Role> getAllRoles(
-            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String textSearch,
             @RequestParam int page,
-            @RequestParam int size) throws ThingsboardException {
-        PageLink pageLink = new PageLink(size, page, name);
+            @RequestParam int pageSize) throws ThingsboardException {
+        PageLink pageLink = new PageLink(pageSize, page, textSearch);
         TenantId tenantId = getCurrentUser().getTenantId();
-        return rolesService.findAll(tenantId.getId(), name, pageLink);
+        return rolesService.findAll(tenantId.getId(), textSearch, pageLink);
     }
 
     @PostMapping("/tenant/role/create-or-update")
