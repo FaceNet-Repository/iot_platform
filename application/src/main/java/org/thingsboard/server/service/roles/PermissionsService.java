@@ -19,17 +19,17 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
-import org.thingsboard.server.common.data.roles.Role;
+import org.thingsboard.server.dao.roles.PermissionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.UUID;
 
 @Service
 @TbCoreComponent
-public class PermissionService {
+public class PermissionsService {
     private final PermissionService permissionService;
 
-    public PermissionService(PermissionService permissionService) {
+    public PermissionsService(PermissionService permissionService) {
         this.permissionService = permissionService;
     }
 

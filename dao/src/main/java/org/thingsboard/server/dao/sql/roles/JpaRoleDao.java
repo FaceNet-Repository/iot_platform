@@ -110,7 +110,12 @@ public class JpaRoleDao implements RoleDao {
 
     @Override
     public void deleteById(UUID id) {
+        // Xóa tất cả các RolePermission liên quan đến Role
+        List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByRoleId(id);
+        rolePermissionRepository.deleteAll(rolePermissions);
 
+        // Xóa Role
+        roleRepository.deleteById(id);
     }
 
     @Override

@@ -27,7 +27,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.roles.PermissionService;
+import org.thingsboard.server.service.roles.PermissionsService;
 
 @RestController
 @TbCoreComponent
@@ -36,7 +36,7 @@ import org.thingsboard.server.service.roles.PermissionService;
 @Slf4j
 public class PermissionController extends BaseController {
 
-    private final PermissionService permissionService;
+    private final PermissionsService permissionService;
 
     /**
      * Get all roles for a tenant, with optional search by name and pagination.

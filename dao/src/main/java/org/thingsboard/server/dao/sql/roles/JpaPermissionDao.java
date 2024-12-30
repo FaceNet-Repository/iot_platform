@@ -25,6 +25,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.PermissionEntity;
+import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
 import org.thingsboard.server.dao.roles.PermissionDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
@@ -36,11 +37,14 @@ import java.util.stream.Collectors;
 @SqlDao
 @Slf4j
 public class JpaPermissionDao implements PermissionDao {
+    private final RolePermissionRepository rolePermissionRepository;
 
     private final PermissionRepository permissionRepository;
 
-    public JpaPermissionDao(PermissionRepository permissionRepository) {
+    public JpaPermissionDao(PermissionRepository permissionRepository,
+                            RolePermissionRepository rolePermissionRepository) {
         this.permissionRepository = permissionRepository;
+        this.rolePermissionRepository = rolePermissionRepository;
     }
 
     @Override
@@ -97,5 +101,15 @@ public class JpaPermissionDao implements PermissionDao {
         return savedEntities.stream()
                 .map(PermissionEntity::toData)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        // Xóa tất cả các RolePermission liên quan đến Permission
+        List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByRoleId(id);
+        rolePermissionRepository.deleteAll(rolePermissions);
+
+        // Xóa Permission
+        permissionRepository.deleteById(id);
     }
 }
