@@ -23,6 +23,7 @@ import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.dao.ExportableEntityRepository;
 import org.thingsboard.server.dao.model.sql.CustomerEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -54,5 +55,47 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>,
             "ORDER BY c.tenant_id, c.title, c.id",
             nativeQuery = true)
     Page<CustomerEntity> findCustomersWithTheSameTitle(Pageable pageable);
+
+    @Query(value = """
+        WITH month_range AS (
+            SELECT 
+                TO_CHAR(DATE_TRUNC('month', generate_series), 'YYYY-MM') AS month
+            FROM 
+                generate_series(
+                    TO_TIMESTAMP(:startTime / 1000),
+                    TO_TIMESTAMP(:endTime / 1000),
+                    '1 month'
+                )
+        ),
+        customer_counts AS (
+            SELECT 
+                TO_CHAR(DATE_TRUNC('month', TO_TIMESTAMP(c.created_time / 1000)), 'YYYY-MM') AS month,
+                COUNT(c.id) AS count
+            FROM 
+                customer c
+            WHERE 
+                c.tenant_id = :tenantId
+                AND (:startTime IS NULL OR c.created_time >= :startTime)
+                AND (:endTime IS NULL OR c.created_time <= :endTime)
+            GROUP BY 
+                TO_CHAR(DATE_TRUNC('month', TO_TIMESTAMP(c.created_time / 1000)), 'YYYY-MM')
+        )
+        SELECT 
+            mr.month,
+            COALESCE(cc.count, 0) AS count
+        FROM 
+            month_range mr
+        LEFT JOIN 
+            customer_counts cc
+        ON 
+            mr.month = cc.month
+        ORDER BY 
+            TO_DATE(mr.month, 'YYYY-MM')
+        """, nativeQuery = true)
+    List<Object[]> countCustomersByMonth(
+            @Param("tenantId") UUID tenantId,
+            @Param("startTime") Long startTime,
+            @Param("endTime") Long endTime);
+
 
 }

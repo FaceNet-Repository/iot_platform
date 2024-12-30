@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.roles;
+package org.thingsboard.server.common.data.roles;
+import lombok.Data;
 
-import org.thingsboard.server.dao.model.sql.RolesEntity;
-
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-public interface RolesDao {
-    List<RolesEntity> findByUserIdAndActionAndEntityId(UUID userId, String action, UUID entityId);
-    List<RolesEntity> findByUserIdAndAction(UUID userId, String action);
-    RolesEntity saveRole(RolesEntity roleEntity);
-    void deleteRoleByUserIdAndEntityIdAndAction(UUID userId, String action, UUID entityId);
-    List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, String action, String entityType);
+@Data
+public class RolePermission {
+    private UUID id;
+    private UUID roleId;
+    private UUID permissionId;
+    private Long createdTime;
 }
