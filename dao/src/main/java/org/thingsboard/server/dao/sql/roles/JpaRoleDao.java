@@ -26,12 +26,11 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.common.data.roles.Role;
 import org.thingsboard.server.dao.DaoUtil;
-import org.thingsboard.server.dao.model.sql.PermissionEntity;
-import org.thingsboard.server.dao.model.sql.RoleEntity;
-import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
+import org.thingsboard.server.dao.model.sql.*;
 import org.thingsboard.server.dao.roles.RoleDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,6 +39,8 @@ import java.util.stream.Collectors;
 @SqlDao
 @Slf4j
 public class JpaRoleDao implements RoleDao {
+    private final UserPermissionRepository userPermissionRepository;
+    private final UserRolesRepository userRolesRepository;
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
@@ -47,10 +48,14 @@ public class JpaRoleDao implements RoleDao {
 
     public JpaRoleDao(RoleRepository roleRepository,
                       RolePermissionRepository rolePermissionRepository,
-                      PermissionRepository permissionRepository) {
+                      PermissionRepository permissionRepository,
+                      UserRolesRepository userRolesRepository,
+                      UserPermissionRepository userPermissionRepository) {
         this.roleRepository = roleRepository;
         this.rolePermissionRepository = rolePermissionRepository;
         this.permissionRepository = permissionRepository;
+        this.userRolesRepository = userRolesRepository;
+        this.userPermissionRepository = userPermissionRepository;
     }
 
     @Override
@@ -104,7 +109,7 @@ public class JpaRoleDao implements RoleDao {
         entity.setId(Uuids.timeBased());
         entity.setName(role.getName());
         entity.setTenantId(role.getTenantId());
-        entity.setCreatedTime(role.getCreatedTime());
+        entity.setCreatedTime(System.currentTimeMillis());
         return roleRepository.save(entity);
     }
 
@@ -113,6 +118,18 @@ public class JpaRoleDao implements RoleDao {
         // Xóa tất cả các RolePermission liên quan đến Role
         List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByRoleId(id);
         rolePermissionRepository.deleteAll(rolePermissions);
+
+        // Xóa tất cả các UserRole liên quan đến Role
+        List<UserRolesEntity> userRoles = userRolesRepository.findAllByRoleId(id);
+        userRolesRepository.deleteAll(userRoles);
+
+        // Xóa tất cả các UserPermission liên quan đến các RolePermission
+        List<UserPermissionEntity> userPermissions = new ArrayList<>();
+        for (RolePermissionEntity rolePermission : rolePermissions) {
+            List<UserPermissionEntity> userPermissionsForRole = userPermissionRepository.findAllByAction(rolePermission.getPermissionId());
+            userPermissions.addAll(userPermissionsForRole);
+        }
+        userPermissionRepository.deleteAll(userPermissions);
 
         // Xóa Role
         roleRepository.deleteById(id);

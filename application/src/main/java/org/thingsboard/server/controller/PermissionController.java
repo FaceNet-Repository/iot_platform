@@ -17,10 +17,7 @@ package org.thingsboard.server.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -28,6 +25,8 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.roles.PermissionsService;
+
+import java.util.UUID;
 
 @RestController
 @TbCoreComponent
@@ -41,18 +40,36 @@ public class PermissionController extends BaseController {
     /**
      * Get all roles for a tenant, with optional search by name and pagination.
      *
-     * @param name the name (or part of the name) to filter roles, can be null or empty
+     * @param textSearch the name (or part of the name) to filter roles, can be null or empty
      * @param page the page number (zero-based)
-     * @param size the size of the page
+     * @param pageSize the size of the page
      * @return a PageData object containing the roles
      */
     @GetMapping("/tenant/permission/get-all-permission")
     public PageData<Permission> getAllRoles(
-            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String textSearch,
             @RequestParam int page,
-            @RequestParam int size) throws ThingsboardException {
-        PageLink pageLink = new PageLink(size, page, name);
+            @RequestParam int pageSize) throws ThingsboardException {
+        PageLink pageLink = new PageLink(pageSize, page, textSearch);
         TenantId tenantId = getCurrentUser().getTenantId();
-        return permissionService.findAll(tenantId.getId(), name, pageLink);
+        return permissionService.findAll(tenantId.getId(), textSearch, pageLink);
+    }
+
+    /**
+     * Delete a permission by ID.
+     *
+     * @param permissionId the ID of the permission to be deleted
+     * @throws ThingsboardException if the deletion fails
+     */
+    @DeleteMapping("/tenant/permission/{permissionId}")
+    public void deletePermissionById(@PathVariable UUID permissionId) throws ThingsboardException {
+        try {
+            TenantId tenantId = getCurrentUser().getTenantId();
+            log.info("Deleting permission with ID: {} for tenant: {}", permissionId, tenantId);
+            permissionService.deleteById(permissionId);
+        } catch (Exception e) {
+            log.error("Failed to delete permission with ID: {}", permissionId, e);
+            throw handleException(e);
+        }
     }
 }

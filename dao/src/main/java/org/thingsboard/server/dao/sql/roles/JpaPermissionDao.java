@@ -26,9 +26,12 @@ import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.PermissionEntity;
 import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
+import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
+import org.thingsboard.server.dao.model.sql.UserRolesEntity;
 import org.thingsboard.server.dao.roles.PermissionDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -37,14 +40,17 @@ import java.util.stream.Collectors;
 @SqlDao
 @Slf4j
 public class JpaPermissionDao implements PermissionDao {
+    private final UserPermissionRepository userPermissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
     private final PermissionRepository permissionRepository;
 
     public JpaPermissionDao(PermissionRepository permissionRepository,
-                            RolePermissionRepository rolePermissionRepository) {
+                            RolePermissionRepository rolePermissionRepository,
+                            UserPermissionRepository userPermissionRepository) {
         this.permissionRepository = permissionRepository;
         this.rolePermissionRepository = rolePermissionRepository;
+        this.userPermissionRepository = userPermissionRepository;
     }
 
     @Override
@@ -106,8 +112,13 @@ public class JpaPermissionDao implements PermissionDao {
     @Override
     public void deleteById(UUID id) {
         // Xóa tất cả các RolePermission liên quan đến Permission
-        List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByRoleId(id);
+        List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByPermissionId(id);
         rolePermissionRepository.deleteAll(rolePermissions);
+
+        // Xóa tất cả các UserPermission liên quan đến các RolePermission
+        List<UserPermissionEntity> userPermissions = new ArrayList<>();
+        List<UserPermissionEntity> userPermissionsForRole = userPermissionRepository.findAllByAction(id);
+        userPermissionRepository.deleteAll(userPermissionsForRole);
 
         // Xóa Permission
         permissionRepository.deleteById(id);

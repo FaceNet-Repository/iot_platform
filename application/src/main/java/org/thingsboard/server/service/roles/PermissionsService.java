@@ -36,4 +36,8 @@ public class PermissionsService {
     public PageData<Permission> findAll(UUID tenantId, String name, PageLink pageLink) {
         return permissionService.findAll(tenantId, name, pageLink);
     }
+
+    public void deleteById(UUID id){
+        permissionService.deleteById(id);
+    }
 }

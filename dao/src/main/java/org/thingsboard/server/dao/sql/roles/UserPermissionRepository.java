@@ -28,6 +28,7 @@ import java.util.UUID;
 public interface UserPermissionRepository extends JpaRepository<UserPermissionEntity, Integer> {
     List<UserPermissionEntity> findAllByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
     List<UserPermissionEntity> findAllByUserIdAndAction(UUID userId, UUID action);
+    List<UserPermissionEntity> findAllByAction(UUID action);
     @Query("SELECT r.entityId FROM UserPermissionEntity r WHERE r.userId = :userId AND r.action = :action AND r.entityType = :entityType")
     List<UUID> findEntityIdsByUserIdAndActionAndEntityType(@Param("userId") UUID userId,
                                                            @Param("action") UUID action,

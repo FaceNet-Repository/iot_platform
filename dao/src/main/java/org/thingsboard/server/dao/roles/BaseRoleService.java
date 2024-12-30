@@ -41,4 +41,9 @@ public class BaseRoleService implements RoleService{
     public Role createOrUpdateRoleWithPermissions(Role role){
         return roleDao.createOrUpdateRoleWithPermissions(role);
     }
+
+    @Override
+    public void deleteById(UUID id){
+        roleDao.deleteById(id);
+    }
 }

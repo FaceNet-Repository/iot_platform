@@ -930,6 +930,7 @@ CREATE TABLE IF NOT EXISTS tb_user_roles (
 CREATE TABLE IF NOT EXISTS tb_permission (
                                id UUID NULL DEFAULT NULL,
                                name VARCHAR NULL DEFAULT NULL,
-                               created_time BIGINT NULL DEFAULT NULL
+                               created_time BIGINT NULL DEFAULT NULL,
+                               tenant_id UUID NULL DEFAULT NULL
 );
 

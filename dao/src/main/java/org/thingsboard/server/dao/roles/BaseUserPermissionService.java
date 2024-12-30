@@ -15,16 +15,24 @@
  */
 package org.thingsboard.server.dao.roles;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
 
 import java.util.List;
-import java.util.UUID;
 
-public interface UserPermissionDao {
-    List<UserPermission> findByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
-    List<UserPermission> findByUserIdAndAction(UUID userId, UUID action);
-    List<UserPermission> saveRoles(List<UserPermission> userPermissions);
-    void deleteRoleByUserIdAndEntityIdAndAction(UUID userId, UUID action, UUID entityId);
-    List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType);
+@Service
+@Slf4j
+public class BaseUserPermissionService implements UserPermissionService {
+    private final UserPermissionDao userPermissionDao;
+
+    public BaseUserPermissionService(UserPermissionDao userPermissionDao) {
+        this.userPermissionDao = userPermissionDao;
+    }
+
+    @Override
+    public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
+        return userPermissionDao.saveRoles(userPermissions);
+    }
 }

@@ -15,34 +15,23 @@
  */
 package org.thingsboard.server.service.roles;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.roles.Role;
-import org.thingsboard.server.dao.roles.RoleService;
+import org.thingsboard.server.common.data.roles.UserPermission;
+import org.thingsboard.server.dao.roles.UserPermissionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
-import java.util.UUID;
+import java.util.List;
+
 @Service
 @TbCoreComponent
-public class RolesService {
-    private final RoleService roleService;
+public class UserPermissionsService {
+    private final UserPermissionService userPermissionService;
 
-    public RolesService(RoleService roleService) {
-        this.roleService = roleService;
+    public UserPermissionsService(UserPermissionService userPermissionService) {
+        this.userPermissionService = userPermissionService;
     }
 
-    public PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink) {
-        return roleService.findAll(tenantId, name, pageLink);
+    public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
+        return userPermissionService.saveRoles(userPermissions);
     }
-
-    public Role createOrUpdateRoleWithPermissions(Role role){
-        return roleService.createOrUpdateRoleWithPermissions(role);
-    }
-
-    public void deleteById(UUID id){
-        roleService.deleteById(id);
-    }
-
 }
