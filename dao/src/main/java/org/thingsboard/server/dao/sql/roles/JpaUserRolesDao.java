@@ -15,11 +15,16 @@
  */
 package org.thingsboard.server.dao.sql.roles;
 
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.roles.UserRoles;
+import org.thingsboard.server.dao.model.sql.RoleEntity;
+import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
 import org.thingsboard.server.dao.model.sql.UserRolesEntity;
+import org.thingsboard.server.dao.roles.UserPermissionService;
 import org.thingsboard.server.dao.roles.UserRolesDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
@@ -31,11 +36,22 @@ import java.util.stream.Collectors;
 @SqlDao
 @Slf4j
 public class JpaUserRolesDao implements UserRolesDao {
+    private final RolePermissionRepository rolePermissionRepository;
+    private final PermissionRepository permissionRepository;
+    private final RoleRepository roleRepository;
 
     private final UserRolesRepository userRolesRepository;
+    private final UserPermissionService userPermissionService;
 
-    public JpaUserRolesDao(UserRolesRepository userRolesRepository) {
+    public JpaUserRolesDao(UserRolesRepository userRolesRepository,
+                           RoleRepository roleRepository,
+                           PermissionRepository permissionRepository,
+                           RolePermissionRepository rolePermissionRepository, UserPermissionService userPermissionService) {
         this.userRolesRepository = userRolesRepository;
+        this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
+        this.rolePermissionRepository = rolePermissionRepository;
+        this.userPermissionService = userPermissionService;
     }
 
     @Override
@@ -59,4 +75,42 @@ public class JpaUserRolesDao implements UserRolesDao {
         entity.setCreatedTime(userRoles.getCreatedTime());
         return userRolesRepository.save(entity);
     }
+
+    @Override
+    @Transactional
+    public UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType) {
+        List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByRoleId(roleId);
+        if (rolePermissions.isEmpty()) {
+            throw new IllegalArgumentException("No permissions found for role: " + roleId);
+        }
+
+        List<UserPermission> userPermissions = rolePermissions.stream()
+                .map(rolePermission -> {
+                    UserPermission userPermission = new UserPermission();
+                    userPermission.setId(Uuids.timeBased());
+                    userPermission.setUserId(userId);
+                    userPermission.setAction(rolePermission.getPermissionId());
+                    userPermission.setEntityId(entityId);
+                    userPermission.setEntityType(entityType);
+                    userPermission.setCreatedTime(System.currentTimeMillis());
+                    return userPermission;
+                })
+                .collect(Collectors.toList());
+
+        userPermissionService.saveRoles(userPermissions);
+
+        UserRolesEntity userRole = new UserRolesEntity();
+        userRole.setId(Uuids.timeBased());
+        userRole.setUserId(userId);
+        userRole.setRoleId(roleId);
+        userRole.setEntityId(entityId);
+        userRole.setEntityType(entityType);
+        userRole.setCreatedTime(System.currentTimeMillis());
+
+        userRolesRepository.save(userRole);
+
+        return userRole.toData();
+    }
+
+
 }

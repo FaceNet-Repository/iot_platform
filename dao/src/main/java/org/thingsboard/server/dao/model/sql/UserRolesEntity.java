@@ -43,6 +43,12 @@ public class UserRolesEntity implements ToData<UserRoles> {
     @Column(name = USER_ROLES_CREATED_TIME)
     Long createdTime;
 
+    @Column(name = USER_ROLES_ENTITY_ID)
+    UUID entityId;
+
+    @Column(name = USER_ROLES_ENTITY_TYPE)
+    String entityType;
+
     public UserRolesEntity() {
     }
 
@@ -53,6 +59,8 @@ public class UserRolesEntity implements ToData<UserRoles> {
         userRoles.setUserId(this.userId);
         userRoles.setRoleId(this.roleId);
         userRoles.setCreatedTime(this.createdTime);
+        userRoles.setEntityId(this.entityId);
+        userRoles.setEntityType(this.entityType);
         return userRoles;
     }
 

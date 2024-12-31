@@ -138,7 +138,10 @@ public class JpaRoleDao implements RoleDao {
     @Override
     public Role createOrUpdateRoleWithPermissions(Role role) {
         // Kiểm tra nếu Role đã tồn tại
-        RoleEntity existingRole = roleRepository.findById(role.getId()).orElse(null);
+        RoleEntity existingRole;
+        if(role.getId() != null){
+            existingRole = roleRepository.findById(role.getId()).orElse(null);
+        } else  existingRole = null;
         RoleEntity roleEntity;
 
         if (existingRole != null) {
@@ -152,6 +155,7 @@ public class JpaRoleDao implements RoleDao {
             roleEntity.setId(role.getId() != null ? role.getId() : Uuids.timeBased());
             roleEntity.setName(role.getName());
             roleEntity.setCreatedTime(System.currentTimeMillis());
+            roleEntity.setTenantId(role.getTenantId());
         }
 
         // Lưu Role vào cơ sở dữ liệu

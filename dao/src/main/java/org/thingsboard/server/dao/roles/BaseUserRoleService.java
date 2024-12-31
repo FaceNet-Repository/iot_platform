@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.common.data.roles;
+package org.thingsboard.server.dao.roles;
 
-import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.roles.UserRoles;
 
 import java.util.UUID;
 
-@Data
-public class UserPermission {
-    private UUID id;
-    private UUID userId;
-    private UUID action;
-    private String actionName;
-    private UUID entityId;
-    private Long createdTime;
-    private String entityType;
+@Service
+@Slf4j
+public class BaseUserRoleService implements UserRoleService  {
+    private final UserRolesDao userRolesDao;
+
+    public BaseUserRoleService(UserRolesDao userRolesDao) {
+        this.userRolesDao = userRolesDao;
+    }
+    @Override
+    public UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType){
+        return userRolesDao.assignRoleToUser(userId, roleId, entityId, entityType);
+    }
 }

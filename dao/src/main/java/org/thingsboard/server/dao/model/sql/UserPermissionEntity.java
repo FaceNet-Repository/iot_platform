@@ -38,6 +38,9 @@ public class UserPermissionEntity implements ToData<UserPermission> {
     @Column(name = USER_PERMISSION_ACTION)
     UUID action;
 
+    @Column(name = USER_PERMISSION_ACTION_NAME)
+    String actionName;
+
     @Column(name = USER_PERMISSION_ENTITY_ID)
     UUID entityId;
 
@@ -59,6 +62,7 @@ public class UserPermissionEntity implements ToData<UserPermission> {
         userPermission.setEntityId(this.entityId);
         userPermission.setCreatedTime(this.createdTime);
         userPermission.setEntityType(this.entityType);
+        userPermission.setActionName(this.actionName);
         return userPermission;
     }
 

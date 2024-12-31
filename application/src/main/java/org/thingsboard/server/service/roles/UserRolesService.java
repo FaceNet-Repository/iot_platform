@@ -13,18 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.thingsboard.server.dao.roles;
+package org.thingsboard.server.service.roles;
 
+import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.roles.UserRoles;
-import org.thingsboard.server.dao.model.sql.UserRolesEntity;
+import org.thingsboard.server.dao.roles.UserRoleService;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 
-import java.util.List;
 import java.util.UUID;
 
-public interface UserRolesDao {
-    UserRoles findById(UUID id);
-    List<UserRoles> findByUserId(UUID userId);
-    UserRolesEntity save(UserRoles userRoles);
-    UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType);
+@Service
+@TbCoreComponent
+public class UserRolesService {
+    private final UserRoleService userRoleService;
 
+    public UserRolesService(UserRoleService userRoleService) {
+        this.userRoleService = userRoleService;
+    }
+
+    public UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType){
+        return userRoleService.assignRoleToUser(userId, roleId, entityId, entityType);
+    }
 }

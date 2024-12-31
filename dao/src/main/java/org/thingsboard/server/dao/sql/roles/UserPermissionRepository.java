@@ -15,6 +15,8 @@
  */
 package org.thingsboard.server.dao.sql.roles;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.data.jpa.repository.Query;
@@ -27,6 +29,13 @@ import java.util.UUID;
 @Repository
 public interface UserPermissionRepository extends JpaRepository<UserPermissionEntity, Integer> {
     List<UserPermissionEntity> findAllByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
+    Page<UserPermissionEntity> findAllByUserId(UUID userId, Pageable pageable);
+    Page<UserPermissionEntity> findAllByUserIdAndNameEntityContainingIgnoreCaseOrActionNameContainingIgnoreCase(
+            UUID userId,
+            String nameEntity,
+            String actionName,
+            Pageable pageable
+    );
     List<UserPermissionEntity> findAllByUserIdAndAction(UUID userId, UUID action);
     List<UserPermissionEntity> findAllByAction(UUID action);
     @Query("SELECT r.entityId FROM UserPermissionEntity r WHERE r.userId = :userId AND r.action = :action AND r.entityType = :entityType")

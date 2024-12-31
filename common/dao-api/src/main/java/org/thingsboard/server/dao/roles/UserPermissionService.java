@@ -15,10 +15,14 @@
  */
 package org.thingsboard.server.dao.roles;
 
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface UserPermissionService {
     List<UserPermission> saveRoles(List<UserPermission> userPermissions);
+    PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink);
 }
