@@ -15,6 +15,8 @@
  */
 package org.thingsboard.server.dao.roles;
 
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
 
@@ -25,6 +27,7 @@ public interface UserPermissionDao {
     List<UserPermission> findByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
     List<UserPermission> findByUserIdAndAction(UUID userId, UUID action);
     List<UserPermission> saveRoles(List<UserPermission> userPermissions);
+    PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink);
     void deleteRoleByUserIdAndEntityIdAndAction(UUID userId, UUID action, UUID entityId);
     List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType);
 }

@@ -26,4 +26,6 @@ public class UserRoles {
     private UUID userId;
     private UUID roleId;
     private Long createdTime;
+    private String entityType;
+    private UUID entityId;
 }

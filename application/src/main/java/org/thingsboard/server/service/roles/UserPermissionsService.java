@@ -16,11 +16,14 @@
 package org.thingsboard.server.service.roles;
 
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.dao.roles.UserPermissionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @TbCoreComponent
@@ -33,5 +36,9 @@ public class UserPermissionsService {
 
     public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
         return userPermissionService.saveRoles(userPermissions);
+    }
+
+    public PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink){
+        return userPermissionService.findByUserId(userId, pageLink);
     }
 }

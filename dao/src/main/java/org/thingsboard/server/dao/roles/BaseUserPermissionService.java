@@ -17,10 +17,13 @@ package org.thingsboard.server.dao.roles;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -34,5 +37,10 @@ public class BaseUserPermissionService implements UserPermissionService {
     @Override
     public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
         return userPermissionDao.saveRoles(userPermissions);
+    }
+
+    @Override
+    public PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink){
+        return userPermissionDao.findByUserId(userId, pageLink);
     }
 }

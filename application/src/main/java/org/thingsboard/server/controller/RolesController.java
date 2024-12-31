@@ -41,7 +41,7 @@ public class RolesController extends BaseController {
     /**
      * Get all roles for a tenant, with optional search by name and pagination.
      *
-     * @param name the name (or part of the name) to filter roles, can be null or empty
+     * @param textSearch the name (or part of the name) to filter roles, can be null or empty
      * @param page the page number (zero-based)
      * @param pageSize the size of the page
      * @return a PageData object containing the roles
