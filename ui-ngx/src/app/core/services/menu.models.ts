@@ -101,6 +101,8 @@ export enum MenuId {
   otaUpdates = 'otaUpdates',
   version_control = 'version_control',
   api_usage = 'api_usage',
+  roles = 'roles',
+  permissions = 'permissions',
   entity_management = 'entity_management',
   hcp_management = 'hcp_management',
   home_management = 'home_management',
@@ -647,6 +649,26 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
+    MenuId.roles,
+    {
+      id: MenuId.roles,
+      name: 'role.roles',
+      type: 'link',
+      path: '/roles',
+      icon: 'app_registration'
+    }
+  ],
+  [
+    MenuId.permissions,
+    {
+      id: MenuId.permissions,
+      name: 'permission.permissions',
+      type: 'link',
+      path: '/permissions',
+      icon: 'app_registration'
+    }
+  ],
+  [
     MenuId.entity_management,
     {
       id: MenuId.entity_management,
@@ -853,6 +875,8 @@ const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
       {
         id: MenuId.security_settings,
         pages: [
+          {id: MenuId.roles},
+          {id: MenuId.permissions},
           {id: MenuId.audit_log}
         ]
       }

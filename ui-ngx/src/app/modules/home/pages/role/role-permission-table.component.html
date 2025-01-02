@@ -1,0 +1,90 @@
+<!--
+
+    Copyright © 2016-2024 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<div class="mat-padding tb-entity-table tb-absolute-fill">
+  <div fxFlex fxLayout="column" class="tb-entity-table-content tb-outlined-border">
+    <mat-toolbar class="mat-mdc-table-toolbar">
+      <div class="mat-toolbar-tools">
+        <div fxLayout="row" fxLayoutAlign="start center" class="title-container">
+          <span class="tb-entity-table-title">Permissions</span>
+        </div>
+        <span fxFlex></span>
+        <button mat-icon-button matTooltip="Add" matTooltipPosition="above" (click)="openDialog()">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Refresh" matTooltipPosition="above">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Search" matTooltipPosition="above">
+          <mat-icon>search</mat-icon>
+        </button>
+      </div>
+    </mat-toolbar>
+    <mat-toolbar class="mat-mdc-table-toolbar" color="primary" [fxShow]="!dataSource.selection.isEmpty()">
+      <div class="mat-toolbar-tools" fxLayoutAlign="space-between center">
+        <span class="tb-entity-table-info">
+          {{ 'permission.selected-permissions' | translate:{count: dataSource.selection.selected.length} }}
+        </span>
+        <button mat-icon-button matTooltip="Delete" matTooltipPosition="above">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </mat-toolbar>
+    <div fxFlex class="table-container">
+      <table mat-table [dataSource]="dataSource">
+        <ng-container matColumnDef="select" sticky>
+          <mat-header-cell *matHeaderCellDef style="width: 30px;">
+            <mat-checkbox (change)="$event ? dataSource.masterToggle() : null"
+                          [checked]="dataSource.selection.hasValue() && (dataSource.isAllSelected() | async)"
+                          [indeterminate]="dataSource.selection.hasValue() && (dataSource.isAllSelected() | async) === false">
+            </mat-checkbox>
+          </mat-header-cell>
+          <mat-cell *matCellDef="let relation">
+            <mat-checkbox (click)="$event.stopPropagation()"
+                          (change)="$event ? dataSource.selection.toggle(relation) : null"
+                          [checked]="dataSource.selection.isSelected(relation)">
+            </mat-checkbox>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="id">
+          <mat-header-cell *matHeaderCellDef>Id</mat-header-cell>
+          <mat-cell *matCellDef="let permission">{{ permission.id.id }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="name">
+          <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+          <mat-cell *matCellDef="let permission">{{ permission.name }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef style="width: 80px;"></mat-header-cell>
+          <mat-cell *matCellDef="let relation">
+            <button mat-icon-button matTooltip="Edit" matTooltipPosition="above">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Delete" matTooltipPosition="above">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </table>
+      <span fxLayoutAlign="center center" class="no-data-found">No relations found</span>
+    </div>
+    <mat-divider></mat-divider>
+    <mat-paginator [length]="20" [pageIndex]="0" [pageSize]="10" [pageSizeOptions]="[10, 20, 30]"></mat-paginator>
+  </div>
+</div>
