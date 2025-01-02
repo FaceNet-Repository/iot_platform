@@ -46,4 +46,7 @@ public class BaseRoleService implements RoleService{
     public void deleteById(UUID id){
         roleDao.deleteById(id);
     }
+
+    @Override
+    public Role findById(UUID id) { return roleDao.findById(id); }
 }

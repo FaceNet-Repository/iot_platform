@@ -18,9 +18,10 @@ package org.thingsboard.server.dao.sql.roles;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.thingsboard.server.dao.model.sql.PermissionEntity;
-import org.thingsboard.server.dao.model.sql.RoleEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,4 +31,6 @@ public interface PermissionRepository extends JpaRepository<PermissionEntity, UU
     List<PermissionEntity> findAllByName(String name);
     Page<PermissionEntity> findAllByTenantId(UUID tenantId, Pageable pageable);
     Page<PermissionEntity> findByNameContainingIgnoreCaseAndTenantId(String name, UUID tenantId, Pageable pageable);
+    @Query("SELECT p FROM PermissionEntity p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :searchText, '%'))")
+    List<PermissionEntity> findByNameContainingIgnoreCase(@Param("searchText") String searchText, Pageable pageable);
 }

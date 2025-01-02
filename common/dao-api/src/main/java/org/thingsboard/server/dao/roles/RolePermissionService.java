@@ -18,17 +18,11 @@ package org.thingsboard.server.dao.roles;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
-import org.thingsboard.server.common.data.roles.RolePermission;
-import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
 
-import java.util.List;
 import java.util.UUID;
 
-public interface RolePermissionDao {
-    RolePermission findById(UUID id);
-    List<RolePermission> findByRoleId(UUID roleId);
-    RolePermissionEntity save(RolePermission rolePermission);
+public interface RolePermissionService {
     PageData<Permission> findPermissionsByRoleId(UUID roleId, String searchText, PageLink pageLink);
-    void deleteById(UUID id);
-    RolePermissionEntity findByRoleIdAndPermissionId(UUID roleId, UUID permissionId);
+    void addPermissionToRole(UUID roleId, UUID permissionId);
+    void removePermissionFromRole(UUID roleId, UUID permissionId);
 }

@@ -16,9 +16,16 @@
 package org.thingsboard.server.dao.sql.roles;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.common.data.roles.RolePermission;
+import org.thingsboard.server.dao.DaoUtil;
+import org.thingsboard.server.dao.model.sql.PermissionEntity;
 import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
 import org.thingsboard.server.dao.roles.RolePermissionDao;
 import org.thingsboard.server.dao.util.SqlDao;
@@ -30,11 +37,14 @@ import java.util.stream.Collectors;
 @SqlDao
 @Slf4j
 public class JpaRolePermissionDao implements RolePermissionDao {
+    private final PermissionRepository permissionRepository;
 
     private final RolePermissionRepository rolePermissionRepository;
 
-    public JpaRolePermissionDao(RolePermissionRepository rolePermissionRepository) {
+    public JpaRolePermissionDao(RolePermissionRepository rolePermissionRepository,
+                                PermissionRepository permissionRepository) {
         this.rolePermissionRepository = rolePermissionRepository;
+        this.permissionRepository = permissionRepository;
     }
 
     @Override
@@ -57,5 +67,36 @@ public class JpaRolePermissionDao implements RolePermissionDao {
         entity.setPermissionId(rolePermission.getPermissionId());
         entity.setCreatedTime(rolePermission.getCreatedTime());
         return rolePermissionRepository.save(entity);
+    }
+
+    @Override
+    public PageData<Permission> findPermissionsByRoleId(UUID roleId, String searchText, PageLink pageLink) {
+        Pageable pageable = DaoUtil.toPageable(pageLink);
+        Page<RolePermissionEntity> rolePermissionEntities = rolePermissionRepository.findAllByRoleId(roleId, pageable);
+        List<UUID> permissionIds = rolePermissionEntities.stream()
+                .map(RolePermissionEntity::getPermissionId)
+                .collect(Collectors.toList());
+        if (permissionIds.isEmpty()) {
+            return new PageData<>(List.of(), 0, 0, false);
+        }
+        List<PermissionEntity> permissionEntities = permissionRepository.findAllById(permissionIds).stream()
+                .filter(p -> p.getName().toLowerCase().contains(searchText.toLowerCase()))
+                .collect(Collectors.toList());
+        List<Permission> permissions = permissionEntities.stream()
+                .map(PermissionEntity::toData)
+                .collect(Collectors.toList());
+        long totalElements = permissionEntities.size();
+        int totalPages = (int) Math.ceil((double) totalElements / pageLink.getPageSize());
+        return new PageData<>(permissions, totalPages, totalElements, pageable.getPageNumber() < totalPages - 1);
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        rolePermissionRepository.deleteById(id);
+    }
+
+    @Override
+    public RolePermissionEntity findByRoleIdAndPermissionId(UUID roleId, UUID permissionId) {
+        return rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId);
     }
 }
