@@ -43,7 +43,7 @@ public class UserRoleController extends BaseController {
      * @param entityType The type of the associated entity
      * @return The UserRoles entity representing the assigned role
      */
-    @PostMapping("/users/assign-role")
+    @PostMapping("/user-roles/assign-role")
     public ResponseEntity<UserRoles> assignRoleToUser(
             @RequestParam UUID userId,
             @RequestParam UUID roleId,

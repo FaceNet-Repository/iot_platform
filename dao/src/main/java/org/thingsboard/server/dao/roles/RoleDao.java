@@ -15,8 +15,6 @@
  */
 package org.thingsboard.server.dao.roles;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Role;

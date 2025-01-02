@@ -25,4 +25,5 @@ public interface RoleService {
     PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink);
     Role createOrUpdateRoleWithPermissions(Role role);
     void deleteById(UUID id);
+    Role findById(UUID id);
 }
