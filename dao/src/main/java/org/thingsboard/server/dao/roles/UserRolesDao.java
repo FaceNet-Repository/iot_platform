@@ -15,16 +15,14 @@
  */
 package org.thingsboard.server.dao.roles;
 
-import org.thingsboard.server.common.data.roles.UserRoles;
-import org.thingsboard.server.dao.model.sql.UserRolesEntity;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.roles.UserPermission;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface UserRolesDao {
-    UserRoles findById(UUID id);
-    List<UserRoles> findByUserId(UUID userId);
-    UserRolesEntity save(UserRoles userRoles);
-    UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType);
+    void assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType);
     void unassignRoleFromUser(UUID userId, UUID roleId);
+    PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink);
 }

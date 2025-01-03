@@ -17,6 +17,9 @@ package org.thingsboard.server.dao.roles;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.roles.UserRoles;
 
 import java.util.UUID;
@@ -30,13 +33,17 @@ public class BaseUserRoleService implements UserRoleService  {
         this.userRolesDao = userRolesDao;
     }
     @Override
-    public UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType){
-        return userRolesDao.assignRoleToUser(userId, roleId, entityId, entityType);
+    public void assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType){
+        userRolesDao.assignRoleToUser(userId, roleId, entityId, entityType);
     }
-
     @Override
     public void unassignRoleFromUser(UUID userId, UUID roleId) {
         userRolesDao.unassignRoleFromUser(userId, roleId);
+    }
+
+    @Override
+    public PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink){
+        return userRolesDao.findUserPermissionsWithRoleName(userId, pageLink);
     }
 
 }

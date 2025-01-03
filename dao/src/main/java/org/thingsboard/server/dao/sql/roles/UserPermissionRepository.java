@@ -22,6 +22,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
 
 import java.util.List;
@@ -39,5 +40,18 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
                                                            @Param("entityType") String entityType);
     void deleteByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
     List<UserPermissionEntity> findAllByUserIdAndActionIn(UUID userId, List<UUID> permissionIds);
+    List<UserPermissionEntity> findAllByUserIdAndRoleId(UUID userId, UUID roleId);
 
+    @Query("""
+        SELECT new org.thingsboard.server.common.data.roles.UserPermission(
+            up.roleId,
+            r.name
+        )
+        FROM UserPermissionEntity up
+        JOIN RoleEntity r ON up.roleId = r.id
+        WHERE up.userId = :userId
+          AND up.roleId IS NOT NULL
+        ORDER BY r.name
+    """)
+    Page<UserPermission> findUserPermissionsWithRoleNameByUserId(@Param("userId") UUID userId, Pageable pageable);
 }

@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
@@ -33,7 +34,7 @@ import java.util.UUID;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @Slf4j
-public class UserPermissionController {
+public class UserPermissionController extends BaseController {
     private final UserPermissionsService userPermissionsService;
 
     /**
@@ -54,10 +55,10 @@ public class UserPermissionController {
             @RequestParam UUID userId,
             @RequestParam int page,
             @RequestParam int pageSize,
-            @RequestParam(required = false) String textSearch) {
+            @RequestParam(required = false) String textSearch) throws ThingsboardException {
         log.info("Received request to get user permissions for userId: {}, page: {}, pageSize: {}, search: {}", userId, page, pageSize, textSearch);
         PageLink pageLink = new PageLink(pageSize, page, textSearch);
-        PageData<UserPermission> pageData = userPermissionsService.findByUserId(userId, pageLink);
+        PageData<UserPermission> pageData = userPermissionsService.findByUserId(userId, pageLink, getTenantId());
         return ResponseEntity.ok(pageData);
     }
 
