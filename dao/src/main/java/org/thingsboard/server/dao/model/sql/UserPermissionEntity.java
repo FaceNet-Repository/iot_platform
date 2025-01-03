@@ -50,6 +50,9 @@ public class UserPermissionEntity implements ToData<UserPermission> {
     @Column(name = USER_PERMISSION_ENTITY_TYPE)
     String entityType;
 
+    @Column(name = USER_PERMISSION_ROLE)
+    UUID roleId;
+
     public UserPermissionEntity() {
     }
 
@@ -58,11 +61,12 @@ public class UserPermissionEntity implements ToData<UserPermission> {
         UserPermission userPermission = new UserPermission();
         userPermission.setId(this.id);
         userPermission.setUserId(this.userId);
-        userPermission.setAction(this.action);
+        userPermission.setPermissionId(this.action);
         userPermission.setEntityId(this.entityId);
         userPermission.setCreatedTime(this.createdTime);
         userPermission.setEntityType(this.entityType);
-        userPermission.setActionName(this.actionName);
+        userPermission.setPermissionName(this.actionName);
+        userPermission.setRoleId(this.roleId);
         return userPermission;
     }
 

@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JpaRoleDao implements RoleDao {
     private final UserPermissionRepository userPermissionRepository;
-    private final UserRolesRepository userRolesRepository;
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
@@ -49,12 +48,10 @@ public class JpaRoleDao implements RoleDao {
     public JpaRoleDao(RoleRepository roleRepository,
                       RolePermissionRepository rolePermissionRepository,
                       PermissionRepository permissionRepository,
-                      UserRolesRepository userRolesRepository,
                       UserPermissionRepository userPermissionRepository) {
         this.roleRepository = roleRepository;
         this.rolePermissionRepository = rolePermissionRepository;
         this.permissionRepository = permissionRepository;
-        this.userRolesRepository = userRolesRepository;
         this.userPermissionRepository = userPermissionRepository;
     }
 
@@ -119,10 +116,6 @@ public class JpaRoleDao implements RoleDao {
         List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByRoleId(id);
         rolePermissionRepository.deleteAll(rolePermissions);
 
-        // Xóa tất cả các UserRole liên quan đến Role
-        List<UserRolesEntity> userRoles = userRolesRepository.findAllByRoleId(id);
-        userRolesRepository.deleteAll(userRoles);
-
         // Xóa tất cả các UserPermission liên quan đến các RolePermission
         List<UserPermissionEntity> userPermissions = new ArrayList<>();
         for (RolePermissionEntity rolePermission : rolePermissions) {
@@ -161,36 +154,38 @@ public class JpaRoleDao implements RoleDao {
         // Lưu Role vào cơ sở dữ liệu
         RoleEntity savedRole = roleRepository.save(roleEntity);
 
-        // Lấy danh sách RolePermission hiện tại trong cơ sở dữ liệu
-        List<RolePermissionEntity> existingPermissions = rolePermissionRepository.findAllByRoleId(savedRole.getId());
+        if (role.getPermissions() != null && !role.getPermissions().isEmpty()) {
+            // Lấy danh sách RolePermission hiện tại trong cơ sở dữ liệu
+            List<RolePermissionEntity> existingPermissions = rolePermissionRepository.findAllByRoleId(savedRole.getId());
 
-        // Lấy danh sách PermissionId từ Role mới
-        List<UUID> newPermissionIds = role.getPermissions().stream()
-                .map(Permission::getId)
-                .collect(Collectors.toList());
+            // Lấy danh sách PermissionId từ Role mới
+            List<UUID> newPermissionIds = role.getPermissions().stream()
+                    .map(Permission::getId)
+                    .collect(Collectors.toList());
 
-        // Xử lý Permission: Xóa những Permission không còn trong danh sách mới
-        List<RolePermissionEntity> permissionsToDelete = existingPermissions.stream()
-                .filter(existing -> !newPermissionIds.contains(existing.getPermissionId()))
-                .collect(Collectors.toList());
-        rolePermissionRepository.deleteAll(permissionsToDelete);
+            // Xử lý Permission: Xóa những Permission không còn trong danh sách mới
+            List<RolePermissionEntity> permissionsToDelete = existingPermissions.stream()
+                    .filter(existing -> !newPermissionIds.contains(existing.getPermissionId()))
+                    .collect(Collectors.toList());
+            rolePermissionRepository.deleteAll(permissionsToDelete);
 
-        // Xử lý Permission: Thêm những Permission mới
-        List<UUID> existingPermissionIds = existingPermissions.stream()
-                .map(RolePermissionEntity::getPermissionId)
-                .collect(Collectors.toList());
-        List<RolePermissionEntity> permissionsToAdd = role.getPermissions().stream()
-                .filter(permission -> !existingPermissionIds.contains(permission.getId())) // Chỉ thêm những Permission chưa tồn tại
-                .map(permission -> {
-                    RolePermissionEntity permissionRoleEntity = new RolePermissionEntity();
-                    permissionRoleEntity.setId(Uuids.timeBased());
-                    permissionRoleEntity.setRoleId(savedRole.getId());
-                    permissionRoleEntity.setPermissionId(permission.getId());
-                    permissionRoleEntity.setCreatedTime(System.currentTimeMillis());
-                    return permissionRoleEntity;
-                })
-                .collect(Collectors.toList());
-        rolePermissionRepository.saveAll(permissionsToAdd);
+            // Xử lý Permission: Thêm những Permission mới
+            List<UUID> existingPermissionIds = existingPermissions.stream()
+                    .map(RolePermissionEntity::getPermissionId)
+                    .collect(Collectors.toList());
+            List<RolePermissionEntity> permissionsToAdd = role.getPermissions().stream()
+                    .filter(permission -> !existingPermissionIds.contains(permission.getId())) // Chỉ thêm những Permission chưa tồn tại
+                    .map(permission -> {
+                        RolePermissionEntity permissionRoleEntity = new RolePermissionEntity();
+                        permissionRoleEntity.setId(Uuids.timeBased());
+                        permissionRoleEntity.setRoleId(savedRole.getId());
+                        permissionRoleEntity.setPermissionId(permission.getId());
+                        permissionRoleEntity.setCreatedTime(System.currentTimeMillis());
+                        return permissionRoleEntity;
+                    })
+                    .collect(Collectors.toList());
+            rolePermissionRepository.saveAll(permissionsToAdd);
+        }
 
         // Trả về Role đã được lưu, bao gồm danh sách Permission mới
         Role updatedRole = savedRole.toData();

@@ -16,10 +16,15 @@
 package org.thingsboard.server.service.roles;
 
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.id.AssetId;
+import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.common.data.roles.UserPermission;
+import org.thingsboard.server.dao.asset.AssetService;
+import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.roles.UserPermissionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
@@ -31,18 +36,59 @@ import java.util.UUID;
 public class UserPermissionsService {
     private final UserPermissionService userPermissionService;
     private final PermissionsService permissionsService;
+    private final RolesService rolesService;
+    private final AssetService assetService;
+    private final DeviceService deviceService;
 
-    public UserPermissionsService(UserPermissionService userPermissionService, PermissionsService permissionsService) {
+    public UserPermissionsService(UserPermissionService userPermissionService, PermissionsService permissionsService, RolesService rolesService, AssetService assetService, DeviceService deviceService) {
         this.userPermissionService = userPermissionService;
         this.permissionsService = permissionsService;
+        this.rolesService = rolesService;
+        this.assetService = assetService;
+        this.deviceService = deviceService;
     }
 
     public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
         return userPermissionService.saveRoles(userPermissions);
     }
 
-    public PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink){
-        return userPermissionService.findByUserId(userId, pageLink);
+    public PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink, TenantId tenantId) {
+        PageData<UserPermission> userPermissions = userPermissionService.findByUserId(userId, pageLink);
+        if (userPermissions == null || userPermissions.getData().isEmpty()) {
+            return userPermissions;
+        }
+
+        List<UserPermission> updatedPermissions = userPermissions.getData().stream().map(userPermission -> {
+            if (userPermission.getPermissionId() != null) {
+                String permissionName = permissionsService.findById(userPermission.getPermissionId()).getName();
+                userPermission.setPermissionName(permissionName);
+            }
+
+            if (userPermission.getEntityId() != null) {
+                if("ASSET".equals(userPermission.getEntityType())){
+                    AssetId assetId = new AssetId(userPermission.getEntityId());
+                    userPermission.setEntityName(assetService.findAssetInfoById(tenantId, assetId).getName());
+                } else if("DEVICE".equals(userPermission.getEntityType())){
+                    DeviceId deviceId = new DeviceId(userPermission.getEntityId());
+                    userPermission.setEntityName(deviceService.findDeviceById(tenantId, deviceId).getName());
+                } else userPermission.setEntityName(null);
+            }
+
+            // Lấy tên vai trò (roleName)
+            if (userPermission.getRoleId() != null) {
+                String roleName = rolesService.findById(userPermission.getRoleId()).getName();
+                userPermission.setRoleName(roleName);
+            }
+
+            return userPermission;
+        }).toList();
+
+        return new PageData<>(
+                updatedPermissions,
+                userPermissions.getTotalPages(),
+                userPermissions.getTotalElements(),
+                userPermissions.hasNext()
+        );
     }
 
     public void deleteRoleByUserIdAndEntityIdAndAction(UUID userId, UUID entityId ,UUID permissionId){

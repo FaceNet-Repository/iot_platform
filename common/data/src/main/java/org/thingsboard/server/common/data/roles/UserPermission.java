@@ -23,9 +23,21 @@ import java.util.UUID;
 public class UserPermission {
     private UUID id;
     private UUID userId;
-    private UUID action;
-    private String actionName;
+    private UUID permissionId;
+    private String permissionName;
     private UUID entityId;
+    private String entityName;
     private Long createdTime;
     private String entityType;
+    private UUID roleId;
+    private String roleName;
+
+    public UserPermission(UUID roleId, String roleName) {
+        this.roleId = roleId;
+        this.roleName = roleName;
+    }
+
+    public UserPermission() {
+
+    }
 }

@@ -16,6 +16,9 @@
 package org.thingsboard.server.service.roles;
 
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.roles.UserRoles;
 import org.thingsboard.server.dao.roles.UserRoleService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -31,11 +34,15 @@ public class UserRolesService {
         this.userRoleService = userRoleService;
     }
 
-    public UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType){
-        return userRoleService.assignRoleToUser(userId, roleId, entityId, entityType);
+    public void assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType){
+        userRoleService.assignRoleToUser(userId, roleId, entityId, entityType);
     }
 
     public void  unassignRoleFromUser(UUID userId, UUID roleId){
         userRoleService.unassignRoleFromUser(userId, roleId);
+    }
+
+    public PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink){
+        return userRoleService.findUserPermissionsWithRoleName(userId, pageLink);
     }
 }

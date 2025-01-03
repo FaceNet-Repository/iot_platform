@@ -95,10 +95,10 @@ public class ModelConstants {
     public static final String TB_USER_PERMISSION = "tb_user_permission";
     public static final String USER_PERMISSION_ID = "id";
     public static final String USER_PERMISSION_USER_ID = USER_ID_PROPERTY;
-    public static final String USER_PERMISSION_ACTION = "action";
+    public static final String USER_PERMISSION_ACTION = "permission_id";
     public static final String USER_PERMISSION_ACTION_NAME = "action_name";
     public static final String USER_PERMISSION_ENTITY_ID = ENTITY_ID_COLUMN;
-    public static final String USER_PERMISSION_ENTITY_NAME = "entity_name";
+    public static final String USER_PERMISSION_ROLE = "role_id";
     public static final String USER_PERMISSION_CREATED_TIME = CREATED_TIME_PROPERTY;
     public static final String USER_PERMISSION_ENTITY_TYPE = "entity_type";
 
@@ -111,7 +111,6 @@ public class ModelConstants {
     public static final String USER_ROLES_ROLE_ID = "role_id";
     public static final String USER_ROLES_CREATED_TIME = CREATED_TIME_PROPERTY;
     public static final String USER_ROLES_ENTITY_ID = ENTITY_ID_COLUMN;
-    public static final String USER_ROLES_ENTITY_NAME = "entity_name";
     public static final String USER_ROLES_ENTITY_TYPE = "entity_type";
 
     /**

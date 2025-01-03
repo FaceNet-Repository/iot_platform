@@ -19,6 +19,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.roles.UserRoles;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.roles.UserRolesService;
@@ -50,8 +53,8 @@ public class UserRoleController extends BaseController {
             @RequestParam UUID entityId,
             @RequestParam String entityType) {
         log.info("Assigning role {} to user {} for entity {} of type {}", roleId, userId, entityId, entityType);
-        UserRoles assignedRole = userRolesService.assignRoleToUser(userId, roleId, entityId, entityType);
-        return ResponseEntity.ok(assignedRole);
+        userRolesService.assignRoleToUser(userId, roleId, entityId, entityType);
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -69,4 +72,22 @@ public class UserRoleController extends BaseController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * API to get user permissions with role names
+     *
+     * @pathvariable userId    The ID of the user
+     * @param page
+     * @param pageSize pagination information (page size and page number)
+     * @return A PageData of UserPermissions with role names
+     */
+    @GetMapping("/user-roles/roles/{userId}")
+    public ResponseEntity<PageData<UserPermission>> getUserPermissionsWithRoleName(
+            @PathVariable UUID userId,
+            @RequestParam int page,
+            @RequestParam int pageSize) {
+        log.info("Fetching user permissions with role names for user {}", userId);
+        PageLink pageLink = new PageLink(pageSize, page);
+        PageData<UserPermission> userPermissions = userRolesService.findUserPermissionsWithRoleName(userId, pageLink);
+        return ResponseEntity.ok(userPermissions);
+    }
 }

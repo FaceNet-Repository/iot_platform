@@ -25,13 +25,9 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.PermissionEntity;
-import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
-import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
-import org.thingsboard.server.dao.model.sql.UserRolesEntity;
 import org.thingsboard.server.dao.roles.PermissionDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

@@ -17,15 +17,17 @@ package org.thingsboard.server.dao.sql.roles;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
-import org.thingsboard.server.common.data.roles.UserRoles;
-import org.thingsboard.server.dao.model.sql.RoleEntity;
+import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
 import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
-import org.thingsboard.server.dao.model.sql.UserRolesEntity;
-import org.thingsboard.server.dao.roles.UserPermissionService;
+import org.thingsboard.server.dao.roles.UserPermissionDao;
 import org.thingsboard.server.dao.roles.UserRolesDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
@@ -39,50 +41,18 @@ import java.util.stream.Collectors;
 public class JpaUserRolesDao implements UserRolesDao {
     private final UserPermissionRepository userPermissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
-    private final PermissionRepository permissionRepository;
-    private final RoleRepository roleRepository;
+    private final UserPermissionDao userPermissionDao;
 
-    private final UserRolesRepository userRolesRepository;
-    private final UserPermissionService userPermissionService;
-
-    public JpaUserRolesDao(UserRolesRepository userRolesRepository,
-                           RoleRepository roleRepository,
-                           PermissionRepository permissionRepository,
-                           RolePermissionRepository rolePermissionRepository, UserPermissionService userPermissionService,
-                           UserPermissionRepository userPermissionRepository) {
-        this.userRolesRepository = userRolesRepository;
-        this.roleRepository = roleRepository;
-        this.permissionRepository = permissionRepository;
+    public JpaUserRolesDao(RolePermissionRepository rolePermissionRepository,
+                           UserPermissionRepository userPermissionRepository, UserPermissionDao userPermissionDao) {
         this.rolePermissionRepository = rolePermissionRepository;
-        this.userPermissionService = userPermissionService;
         this.userPermissionRepository = userPermissionRepository;
-    }
-
-    @Override
-    public UserRoles findById(UUID id) {
-        return userRolesRepository.findById(id).map(UserRolesEntity::toData).orElse(null);
-    }
-
-    @Override
-    public List<UserRoles> findByUserId(UUID userId) {
-        return userRolesRepository.findAllByUserId(userId).stream()
-                .map(UserRolesEntity::toData)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public UserRolesEntity save(UserRoles userRoles) {
-        UserRolesEntity entity = new UserRolesEntity();
-        entity.setId(userRoles.getId());
-        entity.setUserId(userRoles.getUserId());
-        entity.setRoleId(userRoles.getRoleId());
-        entity.setCreatedTime(userRoles.getCreatedTime());
-        return userRolesRepository.save(entity);
+        this.userPermissionDao = userPermissionDao;
     }
 
     @Override
     @Transactional
-    public UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType) {
+    public void assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType) {
         List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByRoleId(roleId);
         if (rolePermissions.isEmpty()) {
             throw new IllegalArgumentException("No permissions found for role: " + roleId);
@@ -92,43 +62,33 @@ public class JpaUserRolesDao implements UserRolesDao {
                 .map(rolePermission -> {
                     UserPermission userPermission = new UserPermission();
                     userPermission.setId(Uuids.timeBased());
+                    userPermission.setRoleId(roleId);
                     userPermission.setUserId(userId);
-                    userPermission.setAction(rolePermission.getPermissionId());
+                    userPermission.setPermissionId(rolePermission.getPermissionId());
                     userPermission.setEntityId(entityId);
                     userPermission.setEntityType(entityType);
                     userPermission.setCreatedTime(System.currentTimeMillis());
                     return userPermission;
                 })
                 .collect(Collectors.toList());
-
-        userPermissionService.saveRoles(userPermissions);
-
-        UserRolesEntity userRole = new UserRolesEntity();
-        userRole.setId(Uuids.timeBased());
-        userRole.setUserId(userId);
-        userRole.setRoleId(roleId);
-        userRole.setEntityId(entityId);
-        userRole.setEntityType(entityType);
-        userRole.setCreatedTime(System.currentTimeMillis());
-
-        userRolesRepository.save(userRole);
-
-        return userRole.toData();
+        userPermissionDao.saveRoles(userPermissions);
     }
 
     @Override
     public void unassignRoleFromUser(UUID userId, UUID roleId) {
-        UserRolesEntity userRole = userRolesRepository.findByUserIdAndRoleId(userId, roleId)
-                .orElseThrow(() -> new RuntimeException("Role not assigned to user."));
-        userRolesRepository.delete(userRole);
+        List<UserPermissionEntity> userPermissions = userPermissionRepository.findAllByUserIdAndRoleId(userId, roleId);
+        userPermissionRepository.deleteAll(userPermissions);
+    }
 
-        List<UUID> permissionIds = rolePermissionRepository.findAllByRoleId(roleId).stream()
-                .map(RolePermissionEntity::getPermissionId)
-                .collect(Collectors.toList());
-
-        if (!permissionIds.isEmpty()) {
-            List<UserPermissionEntity> userPermissions = userPermissionRepository.findAllByUserIdAndActionIn(userId, permissionIds);
-            userPermissionRepository.deleteAll(userPermissions);
-        }
+    @Override
+    public PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink) {
+        Pageable pageable = DaoUtil.toPageable(pageLink);
+        Page<UserPermission> userPermissionPage = userPermissionRepository.findUserPermissionsWithRoleNameByUserId(userId, pageable);
+        return new PageData<>(
+                userPermissionPage.getContent(),
+                userPermissionPage.getTotalPages(),
+                userPermissionPage.getTotalElements(),
+                userPermissionPage.hasNext()
+        );
     }
 }
