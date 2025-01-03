@@ -43,4 +43,14 @@ public class BaseUserPermissionService implements UserPermissionService {
     public PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink){
         return userPermissionDao.findByUserId(userId, pageLink);
     }
+
+    @Override
+    public void deleteRoleByUserIdAndEntityIdAndAction(UUID userId, UUID entityId, UUID permissionId) {
+        userPermissionDao.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
+    }
+
+    @Override
+    public List<UserPermission> findByUserIdAndEntityIdAndAction(UUID userId, UUID entityId, UUID permissionId) {
+        return userPermissionDao.findByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
+    }
 }

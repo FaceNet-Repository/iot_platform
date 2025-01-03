@@ -24,6 +24,7 @@ import java.util.UUID;
 public interface PermissionService {
     PageData<Permission> findAll(UUID tenantId, String name, PageLink pageLink);
     void deleteById(UUID id);
-    Permission save(Permission permission);
+    Permission save(Permission permission, UUID tenantId);
     Permission findById(UUID id);
+    Permission findByName(String name, UUID tenantId);
 }

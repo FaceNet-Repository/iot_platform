@@ -21,4 +21,5 @@ import java.util.UUID;
 
 public interface UserRoleService {
     UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType);
+    void unassignRoleFromUser(UUID userId, UUID roleId);
 }

@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
+import org.thingsboard.server.dao.model.sql.PermissionEntity;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -44,12 +46,22 @@ public class BasePermissionService implements PermissionService{
     }
 
     @Override
-    public Permission save(Permission permission) {
+    public Permission save(Permission permission, UUID tenantId) {
+        Optional<PermissionEntity> existingPermission = permissionDao.findByNameIgnoreCase(permission.getName(), tenantId);
+        if (existingPermission.isPresent() &&
+                !existingPermission.get().getId().equals(permission.getId())) {
+            throw new RuntimeException("Permission with the name '" + permission.getName() + "' already exists.");
+        }
         return permissionDao.save(permission);
     }
 
     @Override
     public Permission findById(UUID id) {
         return permissionDao.findById(id);
+    }
+
+    @Override
+    public Permission findByName(String name, UUID tenantId) {
+        return permissionDao.findByName(name, tenantId).toData();
     }
 }

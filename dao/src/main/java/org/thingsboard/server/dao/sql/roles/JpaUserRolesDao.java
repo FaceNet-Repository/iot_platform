@@ -23,6 +23,7 @@ import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.roles.UserRoles;
 import org.thingsboard.server.dao.model.sql.RoleEntity;
 import org.thingsboard.server.dao.model.sql.RolePermissionEntity;
+import org.thingsboard.server.dao.model.sql.UserPermissionEntity;
 import org.thingsboard.server.dao.model.sql.UserRolesEntity;
 import org.thingsboard.server.dao.roles.UserPermissionService;
 import org.thingsboard.server.dao.roles.UserRolesDao;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 @SqlDao
 @Slf4j
 public class JpaUserRolesDao implements UserRolesDao {
+    private final UserPermissionRepository userPermissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
@@ -46,12 +48,14 @@ public class JpaUserRolesDao implements UserRolesDao {
     public JpaUserRolesDao(UserRolesRepository userRolesRepository,
                            RoleRepository roleRepository,
                            PermissionRepository permissionRepository,
-                           RolePermissionRepository rolePermissionRepository, UserPermissionService userPermissionService) {
+                           RolePermissionRepository rolePermissionRepository, UserPermissionService userPermissionService,
+                           UserPermissionRepository userPermissionRepository) {
         this.userRolesRepository = userRolesRepository;
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.rolePermissionRepository = rolePermissionRepository;
         this.userPermissionService = userPermissionService;
+        this.userPermissionRepository = userPermissionRepository;
     }
 
     @Override
@@ -112,5 +116,19 @@ public class JpaUserRolesDao implements UserRolesDao {
         return userRole.toData();
     }
 
+    @Override
+    public void unassignRoleFromUser(UUID userId, UUID roleId) {
+        UserRolesEntity userRole = userRolesRepository.findByUserIdAndRoleId(userId, roleId)
+                .orElseThrow(() -> new RuntimeException("Role not assigned to user."));
+        userRolesRepository.delete(userRole);
 
+        List<UUID> permissionIds = rolePermissionRepository.findAllByRoleId(roleId).stream()
+                .map(RolePermissionEntity::getPermissionId)
+                .collect(Collectors.toList());
+
+        if (!permissionIds.isEmpty()) {
+            List<UserPermissionEntity> userPermissions = userPermissionRepository.findAllByUserIdAndActionIn(userId, permissionIds);
+            userPermissionRepository.deleteAll(userPermissions);
+        }
+    }
 }

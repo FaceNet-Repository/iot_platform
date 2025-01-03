@@ -33,6 +33,7 @@ import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -88,6 +89,7 @@ public class JpaPermissionDao implements PermissionDao {
         entity.setId(Uuids.timeBased());
         entity.setName(permission.getName());
         entity.setCreatedTime(System.currentTimeMillis());
+        entity.setTenantId(permission.getTenantId());
         return permissionRepository.save(entity).toData();
     }
 
@@ -120,6 +122,16 @@ public class JpaPermissionDao implements PermissionDao {
             throw new IllegalStateException("Permission is assigned to a user and cannot be deleted.");
         }
         permissionRepository.deleteById(id);
+    }
+
+    @Override
+    public Optional<PermissionEntity> findByNameIgnoreCase(String name, UUID tenantId) {
+        return permissionRepository.findByNameIgnoreCaseAndTenantId(name, tenantId);
+    }
+
+    @Override
+    public PermissionEntity findByName(String name, UUID tenantId) {
+        return permissionRepository.findByNameAndTenantId(name, tenantId);
     }
 
 }
