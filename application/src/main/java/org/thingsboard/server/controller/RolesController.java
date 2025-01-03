@@ -18,7 +18,9 @@ package org.thingsboard.server.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -145,6 +147,29 @@ public class RolesController extends BaseController {
             rolePermissionsService.removePermissionFromRole(roleId, permissionId);
         } catch (Exception e) {
             log.error("Failed to remove permission {} from role {}", permissionId, roleId, e);
+            throw handleException(e);
+        }
+    }
+
+    /**
+     * Get a role by its ID.
+     *
+     * @param roleId the ID of the role
+     * @return the Role object with the given ID
+     * @throws ThingsboardException if the operation fails or the role is not found
+     */
+    @GetMapping("/tenant/role/{roleId}")
+    public ResponseEntity<Role> getRoleById(@PathVariable UUID roleId) throws ThingsboardException {
+        try {
+            TenantId tenantId = getCurrentUser().getTenantId();
+            log.info("Fetching role with ID: {} for tenant: {}", roleId, tenantId);
+            Role role = rolesService.findById(roleId);
+            if (role == null) {
+                throw new ThingsboardException("Role not found", ThingsboardErrorCode.ITEM_NOT_FOUND);
+            }
+            return ResponseEntity.ok(role);
+        } catch (Exception e) {
+            log.error("Failed to fetch role with ID: {}", roleId, e);
             throw handleException(e);
         }
     }

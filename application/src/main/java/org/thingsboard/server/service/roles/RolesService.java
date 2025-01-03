@@ -45,4 +45,8 @@ public class RolesService {
         roleService.deleteById(id);
     }
 
+    public Role findById(UUID id){
+        return roleService.findById(id);
+    }
+
 }
