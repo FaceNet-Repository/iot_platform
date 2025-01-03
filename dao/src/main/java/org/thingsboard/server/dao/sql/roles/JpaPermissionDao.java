@@ -111,16 +111,15 @@ public class JpaPermissionDao implements PermissionDao {
 
     @Override
     public void deleteById(UUID id) {
-        // Xóa tất cả các RolePermission liên quan đến Permission
-        List<RolePermissionEntity> rolePermissions = rolePermissionRepository.findAllByPermissionId(id);
-        rolePermissionRepository.deleteAll(rolePermissions);
-
-        // Xóa tất cả các UserPermission liên quan đến các RolePermission
-        List<UserPermissionEntity> userPermissions = new ArrayList<>();
-        List<UserPermissionEntity> userPermissionsForRole = userPermissionRepository.findAllByAction(id);
-        userPermissionRepository.deleteAll(userPermissionsForRole);
-
-        // Xóa Permission
+        boolean existsInRolePermissions = rolePermissionRepository.existsByPermissionId(id);
+        boolean existsInUserPermissions = userPermissionRepository.existsByAction(id);
+        if (existsInRolePermissions) {
+            throw new IllegalStateException("Permission is assigned to a group role and cannot be deleted.");
+        }
+        if (existsInUserPermissions) {
+            throw new IllegalStateException("Permission is assigned to a user and cannot be deleted.");
+        }
         permissionRepository.deleteById(id);
     }
+
 }

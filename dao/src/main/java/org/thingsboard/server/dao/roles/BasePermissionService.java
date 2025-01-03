@@ -37,8 +37,19 @@ public class BasePermissionService implements PermissionService{
         return permissionDao.findAll(tenantId, name, pageLink);
     }
 
+
     @Override
     public void deleteById(UUID id){
         permissionDao.deleteById(id);
+    }
+
+    @Override
+    public Permission save(Permission permission) {
+        return permissionDao.save(permission);
+    }
+
+    @Override
+    public Permission findById(UUID id) {
+        return permissionDao.findById(id);
     }
 }
