@@ -40,7 +40,7 @@ export type EntityManagementConfig = {
 
 export type TableDataSourceItem = {
   id?: EntityId;
-  createdAt: number;
+  createdTime: number;
   name: string;
   [key: string]: any;
 };

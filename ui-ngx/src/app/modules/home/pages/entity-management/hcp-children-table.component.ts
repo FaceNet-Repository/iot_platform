@@ -190,7 +190,7 @@ export class HcpChildrenTableComponent implements OnInit, AfterViewInit, OnDestr
         this.deviceService.getDevices(childDeviceIds).subscribe({
           next: (devices) => {
             this.dataSource.data = devices.map((device) => ({
-              createdAt: device.createdTime,
+              createdTime: device.createdTime,
               id: device.id,
               name: device.name,
               type: device.type,

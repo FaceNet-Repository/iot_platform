@@ -92,9 +92,17 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
     this.entityConfig = this.route.snapshot.data.entityConfig;
     const savedColumnConfig = localStorage.getItem(this.storageKey);
     if (savedColumnConfig) {
-      this.entityConfig.columns = JSON.parse(savedColumnConfig);
+      const columns = JSON.parse(savedColumnConfig);
+      this.entityConfig.columns = columns;
+      this.entityConfig.latestTelemetries = columns.filter(item => item.dataType === 'latest_telemetry').map(item => item.key);
+      this.entityConfig.staticAttributes = columns.filter(item => item.dataType === 'static').map(item => item.key);
+      this.entityConfig.serverScopeAttributes = columns.filter(item => item.dataType === 'server_attribute').map(item => item.key);
+      this.entityConfig.clientScopeAttributes = columns.filter(item => item.dataType === 'client_attribute').map(item => item.key);
+      this.entityConfig.sharedScopeAttributes = columns.filter(item => item.dataType === 'shared_attribute').map(item => item.key);
+      this.entityConfig.displayedColumns = ['index', ...columns.map(item => item.key)];
       this.entityConfig.displayedColumns = ['index', ...this.entityConfig.columns.map(item => item.key)];
     }
+    console.log('entity config', this.entityConfig);
     this.pageLink = new PageLink(10, 0, null, {
       property: 'createdTime',
       direction: Direction.DESC,
@@ -222,7 +230,7 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
         const data = pageData.data.map((item) => ({
           id: item.id,
           name: item.name,
-          createdAt: item.createdTime,
+          createdTime: item.createdTime,
         })) as TableDataSourceItem[];
         const telemetryObservables = data.map(entry => {
           const subscriber = TelemetrySubscriber.createEntityAttributesSubscription(
@@ -312,11 +320,16 @@ export class EntityManagementComponent implements OnInit, AfterViewInit, OnDestr
       this.assetService.getTenantAssetInfos(this.pageLink, this.entityConfig.entityProfileType).subscribe({
         next: (pageData) => {
           this.totalItems = pageData.totalElements;
-          this.dataSource.data = pageData.data.map((item) => ({
-            id: item.id,
-            name: item.name,
-            createdAt: item.createdTime,
-          })) as TableDataSourceItem[];
+          this.dataSource.data = pageData.data.map((item) => {
+            const staticAttributes: any = {};
+            this.entityConfig.columns.filter(col => col.dataType === 'static').map(col => col.key).forEach(key => {
+              staticAttributes[key] = item[key];
+            });
+            return {
+              id: item.id,
+              ...staticAttributes
+            };
+          }) as TableDataSourceItem[];
           this.loadTelemetry();
         },
         error: (e) => {
