@@ -43,7 +43,7 @@ public class JpaUserPermissionDao implements UserPermissionDao {
     }
 
     @Override
-    public List<UserPermission> findByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId) {
+    public List<UserPermission> findByUserIdAndEntityIdAndAction(UUID userId, UUID entityId, UUID action) {
         return userPermissionRepository.findAllByUserIdAndActionAndEntityId(userId, action, entityId).stream()
                 .map(UserPermissionEntity::toData)
                 .collect(Collectors.toList());
@@ -61,16 +61,7 @@ public class JpaUserPermissionDao implements UserPermissionDao {
         Pageable pageable = DaoUtil.toPageable(pageLink);
 
         Page<UserPermissionEntity> page;
-        if (pageLink.getTextSearch() != null && !pageLink.getTextSearch().isEmpty()) {
-            page = userPermissionRepository.findAllByUserIdAndNameEntityContainingIgnoreCaseOrActionNameContainingIgnoreCase(
-                    userId,
-                    pageLink.getTextSearch(),
-                    pageLink.getTextSearch(),
-                    pageable
-            );
-        } else {
-            page = userPermissionRepository.findAllByUserId(userId, pageable);
-        }
+        page = userPermissionRepository.findAllByUserId(userId, pageable);
 
         return new PageData<>(
                 page.getContent().stream().map(UserPermissionEntity::toData).collect(Collectors.toList()),

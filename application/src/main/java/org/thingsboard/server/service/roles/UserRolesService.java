@@ -34,4 +34,8 @@ public class UserRolesService {
     public UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType){
         return userRoleService.assignRoleToUser(userId, roleId, entityId, entityType);
     }
+
+    public void  unassignRoleFromUser(UUID userId, UUID roleId){
+        userRoleService.unassignRoleFromUser(userId, roleId);
+    }
 }

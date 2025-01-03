@@ -18,6 +18,7 @@ package org.thingsboard.server.service.roles;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.dao.roles.UserPermissionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -29,9 +30,11 @@ import java.util.UUID;
 @TbCoreComponent
 public class UserPermissionsService {
     private final UserPermissionService userPermissionService;
+    private final PermissionsService permissionsService;
 
-    public UserPermissionsService(UserPermissionService userPermissionService) {
+    public UserPermissionsService(UserPermissionService userPermissionService, PermissionsService permissionsService) {
         this.userPermissionService = userPermissionService;
+        this.permissionsService = permissionsService;
     }
 
     public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
@@ -41,4 +44,21 @@ public class UserPermissionsService {
     public PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink){
         return userPermissionService.findByUserId(userId, pageLink);
     }
+
+    public void deleteRoleByUserIdAndEntityIdAndAction(UUID userId, UUID entityId ,UUID permissionId){
+        userPermissionService.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
+    }
+
+    public void checkUserPermission(UUID userId, UUID entityId, String permissionName, UUID tenantId) throws IllegalAccessException {
+        Permission permissionOpt = permissionsService.findByName(permissionName, tenantId);
+        if (permissionOpt == null) {
+            throw new IllegalAccessException("Permission not found: " + permissionName);
+        }
+        UUID permissionId = permissionOpt.getId();
+        List<UserPermission> userPermissions = userPermissionService.findByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
+        if (userPermissions.isEmpty()) {
+            throw new IllegalAccessException("User does not have " + permissionName + " permission for this entity.");
+        }
+    }
+
 }

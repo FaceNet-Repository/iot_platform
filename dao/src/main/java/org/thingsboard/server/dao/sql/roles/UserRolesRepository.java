@@ -20,6 +20,7 @@ import org.springframework.stereotype.Repository;
 import org.thingsboard.server.dao.model.sql.UserRolesEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -27,4 +28,5 @@ public interface UserRolesRepository extends JpaRepository<UserRolesEntity, UUID
     List<UserRolesEntity> findAllByUserId(UUID userId);
     List<UserRolesEntity> findAllByRoleId(UUID roleId);
     void deleteByUserIdAndRoleId(UUID userId, UUID roleId);
+    Optional<UserRolesEntity> findByUserIdAndRoleId(UUID userId, UUID roleId);
 }

@@ -33,4 +33,10 @@ public class BaseUserRoleService implements UserRoleService  {
     public UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType){
         return userRolesDao.assignRoleToUser(userId, roleId, entityId, entityType);
     }
+
+    @Override
+    public void unassignRoleFromUser(UUID userId, UUID roleId) {
+        userRolesDao.unassignRoleFromUser(userId, roleId);
+    }
+
 }

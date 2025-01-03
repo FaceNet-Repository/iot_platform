@@ -21,6 +21,7 @@ import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.dao.model.sql.PermissionEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PermissionDao {
@@ -29,4 +30,6 @@ public interface PermissionDao {
     Permission save(Permission permission);
     List<Permission> saveAll(List<Permission> permissions);
     void deleteById(UUID id);
+    Optional<PermissionEntity> findByNameIgnoreCase(String name, UUID tenantId);
+    PermissionEntity findByName(String name, UUID tenantId);
 }

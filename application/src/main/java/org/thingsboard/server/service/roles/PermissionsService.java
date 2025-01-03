@@ -37,8 +37,8 @@ public class PermissionsService {
         return permissionService.findAll(tenantId, name, pageLink);
     }
 
-    public Permission save(Permission permission){
-        return permissionService.save(permission);
+    public Permission save(Permission permission, UUID tenantId){
+        return permissionService.save(permission, tenantId);
     }
 
     public void deleteById(UUID id){
@@ -47,5 +47,8 @@ public class PermissionsService {
 
     public Permission findById(UUID id){
         return permissionService.findById(id);
+    }
+    public Permission findByName(String name, UUID tenantId){
+        return permissionService.findByName(name, tenantId);
     }
 }

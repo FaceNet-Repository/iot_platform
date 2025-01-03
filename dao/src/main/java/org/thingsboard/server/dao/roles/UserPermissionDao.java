@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserPermissionDao {
-    List<UserPermission> findByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
+    List<UserPermission> findByUserIdAndEntityIdAndAction(UUID userId, UUID action, UUID entityId);
     List<UserPermission> findByUserIdAndAction(UUID userId, UUID action);
     List<UserPermission> saveRoles(List<UserPermission> userPermissions);
     PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink);

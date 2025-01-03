@@ -86,7 +86,7 @@ public class PermissionController extends BaseController {
             TenantId tenantId = getCurrentUser().getTenantId();
             log.info("Saving permission: {} for tenant: {}", permission, tenantId);
             permission.setTenantId(tenantId.getId());
-            return permissionService.save(permission);
+            return permissionService.save(permission, tenantId.getId());
         } catch (Exception e) {
             log.error("Failed to save permission: {}", permission, e);
             throw handleException(e);

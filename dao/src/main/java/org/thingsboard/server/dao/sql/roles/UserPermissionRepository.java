@@ -31,12 +31,6 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
     List<UserPermissionEntity> findAllByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
     Page<UserPermissionEntity> findAllByUserId(UUID userId, Pageable pageable);
     boolean existsByAction(UUID actionId);
-    Page<UserPermissionEntity> findAllByUserIdAndNameEntityContainingIgnoreCaseOrActionNameContainingIgnoreCase(
-            UUID userId,
-            String nameEntity,
-            String actionName,
-            Pageable pageable
-    );
     List<UserPermissionEntity> findAllByUserIdAndAction(UUID userId, UUID action);
     List<UserPermissionEntity> findAllByAction(UUID action);
     @Query("SELECT r.entityId FROM UserPermissionEntity r WHERE r.userId = :userId AND r.action = :action AND r.entityType = :entityType")
@@ -44,4 +38,6 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
                                                            @Param("action") UUID action,
                                                            @Param("entityType") String entityType);
     void deleteByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
+    List<UserPermissionEntity> findAllByUserIdAndActionIn(UUID userId, List<UUID> permissionIds);
+
 }

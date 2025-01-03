@@ -61,5 +61,21 @@ public class UserPermissionController {
         return ResponseEntity.ok(pageData);
     }
 
-
+    /**
+     * API để xóa permission khỏi user permission
+     *
+     * @param userId      ID của user
+     * @param permissionId ID của permission cần xóa
+     * @param entityId ID của entity cần xóa
+     * @return ResponseEntity<Void> phản hồi thành công nếu xóa thành công
+     */
+    @DeleteMapping("/user-permissions")
+    public ResponseEntity<Void> deleteUserPermission(
+            @RequestParam UUID userId,
+            @RequestParam UUID entityId,
+            @RequestParam UUID permissionId) {
+        log.info("Received request to delete permission with ID: {} for user ID: {} with entity ID: {}", permissionId, userId, entityId);
+        userPermissionsService.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
+        return ResponseEntity.ok().build();
+    }
 }

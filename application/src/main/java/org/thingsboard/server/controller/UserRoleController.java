@@ -53,4 +53,20 @@ public class UserRoleController extends BaseController {
         UserRoles assignedRole = userRolesService.assignRoleToUser(userId, roleId, entityId, entityType);
         return ResponseEntity.ok(assignedRole);
     }
+
+    /**
+     * API to unassign a role from a user
+     *
+     * @param userId The ID of the user
+     * @param roleId The ID of the role to unassign
+     */
+    @DeleteMapping("/user-roles/unassign-role")
+    public ResponseEntity<Void> unassignRoleFromUser(
+            @RequestParam UUID userId,
+            @RequestParam UUID roleId) {
+        log.info("Unassigning role {} from user {}", roleId, userId);
+        userRolesService.unassignRoleFromUser(userId, roleId);
+        return ResponseEntity.ok().build();
+    }
+
 }

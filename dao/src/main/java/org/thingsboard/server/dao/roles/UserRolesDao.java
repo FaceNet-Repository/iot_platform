@@ -26,5 +26,5 @@ public interface UserRolesDao {
     List<UserRoles> findByUserId(UUID userId);
     UserRolesEntity save(UserRoles userRoles);
     UserRoles assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType);
-
+    void unassignRoleFromUser(UUID userId, UUID roleId);
 }

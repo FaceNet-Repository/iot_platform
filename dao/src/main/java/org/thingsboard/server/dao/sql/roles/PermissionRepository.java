@@ -24,11 +24,13 @@ import org.springframework.stereotype.Repository;
 import org.thingsboard.server.dao.model.sql.PermissionEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface PermissionRepository extends JpaRepository<PermissionEntity, UUID> {
     List<PermissionEntity> findAllByName(String name);
+    PermissionEntity findByNameAndTenantId(String name, UUID tenantId);
     Page<PermissionEntity> findAllByTenantId(UUID tenantId, Pageable pageable);
     Page<PermissionEntity> findByNameContainingIgnoreCaseAndTenantId(String name, UUID tenantId, Pageable pageable);
     @Query("SELECT p FROM PermissionEntity p JOIN RolePermissionEntity rp ON p.id = rp.permissionId " +
@@ -36,4 +38,5 @@ public interface PermissionRepository extends JpaRepository<PermissionEntity, UU
     Page<PermissionEntity> findByRoleIdAndNameContainingIgnoreCase(@Param("roleId") UUID roleId,
                                                                    @Param("searchText") String searchText,
                                                                    Pageable pageable);
+    Optional<PermissionEntity> findByNameIgnoreCaseAndTenantId(String name, UUID tenantId);
 }
