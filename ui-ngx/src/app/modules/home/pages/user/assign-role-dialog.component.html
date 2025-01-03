@@ -1,0 +1,110 @@
+<!--
+
+    Copyright © 2016-2024 The Thingsboard Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<!--<form [formGroup]="relationFormGroup" (ngSubmit)="save()" style="min-width: 600px;">-->
+<form style="min-width: 600px;" (ngSubmit)="save()">
+  <mat-toolbar fxLayout="row" color="primary">
+    <h2>Add</h2>
+    <span fxFlex></span>
+    <button mat-icon-button
+            mat-dialog-close
+            type="button">
+      <mat-icon class="material-icons">close</mat-icon>
+    </button>
+  </mat-toolbar>
+  <mat-progress-bar color="warn" mode="indeterminate" *ngIf="isLoading$ | async">
+  </mat-progress-bar>
+  <div style="height: 4px;" *ngIf="(isLoading$ | async) === false"></div>
+  <div mat-dialog-content>
+    <fieldset [disabled]="isLoading$ | async">
+      <mat-form-field style="width: 100%" appearance="fill">
+        <mat-label>Role selection</mat-label>
+        <mat-chip-grid #chipGrid aria-label="Roles selection">
+          <mat-chip-row *ngFor="let role of roles" (removed)="remove(role)">
+            {{ role.name }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + role">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+        </mat-chip-grid>
+        <input placeholder="Search roles" #textSearchInput [formControl]="textSearchCtrl"
+               [matChipInputFor]="chipGrid" [matAutocomplete]="auto"/>
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+          <mat-option *ngFor="let role of roleOptions$ | async" [value]="role.value">
+            {{ role.label }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+      <mat-form-field style="width: 100%" appearance="fill">
+        <mat-label>Entity type</mat-label>
+        <mat-select [formControl]="entityTypeCtrl" [errorStateMatcher]="matcher">
+          <mat-option *ngFor="let type of entityTypeOptions" [value]="type">{{ type }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field [fxShow]="entityTypeCtrl.value === EntityType.ASSET" style="width: 100%" appearance="fill">
+        <mat-label>Asset selection</mat-label>
+        <mat-chip-grid #assetChipGrid aria-label="Assets selection">
+          <mat-chip-row *ngFor="let asset of assets" (removed)="assetRemove(asset)">
+            {{ asset.name }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + asset">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+        </mat-chip-grid>
+        <input placeholder="Search assets" #assetSearchInput [formControl]="assetSearchCtrl"
+               [matChipInputFor]="assetChipGrid" [matAutocomplete]="assetAuto"/>
+        <mat-autocomplete #assetAuto="matAutocomplete" (optionSelected)="assetSelected($event)">
+          <mat-option *ngFor="let asset of assetOptions$ | async" [value]="asset.value">
+            {{ asset.label }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+      <mat-form-field [fxShow]="entityTypeCtrl.value === EntityType.DEVICE" style="width: 100%" appearance="fill">
+        <mat-label>Device selection</mat-label>
+        <mat-chip-grid #deviceChipGrid aria-label="Devices selection">
+          <mat-chip-row *ngFor="let device of devices" (removed)="deviceRemove(device)">
+            {{ device.name }}
+            <button matChipRemove [attr.aria-label]="'Remove ' + device">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+        </mat-chip-grid>
+        <input placeholder="Search devices" #deviceSearchInput [formControl]="deviceSearchCtrl"
+               [matChipInputFor]="deviceChipGrid" [matAutocomplete]="deviceAuto"/>
+        <mat-autocomplete #deviceAuto="matAutocomplete" (optionSelected)="deviceSelected($event)">
+          <mat-option *ngFor="let device of deviceOptions$ | async" [value]="device.value">
+            {{ device.label }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </fieldset>
+  </div>
+  <div mat-dialog-actions fxLayout="row">
+    <span fxFlex></span>
+    <button mat-button color="primary"
+            type="button"
+            mat-dialog-close
+            cdkFocusInitial>
+      {{ 'action.cancel' | translate }}
+    </button>
+    <button mat-button mat-raised-button color="primary"
+            [disabled]="(isLoading$ | async)"
+            type="submit">
+      {{ (isAdd ? 'action.assign' : 'action.save') | translate }}
+    </button>
+  </div>
+</form>

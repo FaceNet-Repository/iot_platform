@@ -47,7 +47,9 @@ export enum EntityType {
   NOTIFICATION_TEMPLATE = 'NOTIFICATION_TEMPLATE',
   OAUTH2_CLIENT = 'OAUTH2_CLIENT',
   DOMAIN = 'DOMAIN',
-  MOBILE_APP = 'MOBILE_APP'
+  MOBILE_APP = 'MOBILE_APP',
+  ROLE = 'ROLE',
+  PERMISSION = 'PERMISSION'
 }
 
 export enum AliasEntityType {
@@ -462,7 +464,35 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
         noEntities: 'admin.oauth2.no-mobile-apps',
         search: 'admin.oauth2.search-mobile-apps'
       }
-    ]
+    ],
+    [
+      EntityType.ROLE,
+      {
+        type: 'entity.type-role',
+        typePlural: 'entity.type-roles',
+        list: 'entity.list-of-roles',
+        nameStartsWith: 'entity.role-name-starts-with',
+        details: 'role.role-details',
+        add: 'role.add',
+        noEntities: 'role.no-roles-text',
+        search: 'role.search',
+        selectedEntities: 'role.selected-roles'
+      }
+    ],
+    [
+      EntityType.PERMISSION,
+      {
+        type: 'entity.type-permission',
+        typePlural: 'entity.type-permissions',
+        list: 'entity.list-of-permissions',
+        nameStartsWith: 'entity.permission-name-starts-with',
+        details: 'permission.permission-details',
+        add: 'permission.add',
+        noEntities: 'permission.no-permissions-text',
+        search: 'permission.search',
+        selectedEntities: 'permission.selected-permissions'
+      }
+    ],
   ]
 );
 
@@ -587,7 +617,19 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
       {
         helpLinkId: 'oauth2Settings'
       }
-    ]
+    ],
+    [
+      EntityType.ROLE,
+      {
+        helpLinkId: 'roles'
+      }
+    ],
+    [
+      EntityType.PERMISSION,
+      {
+        helpLinkId: 'permissions'
+      }
+    ],
   ]
 );
 
@@ -611,7 +653,9 @@ export const baseDetailsPageByEntityType = new Map<EntityType, string>([
   [EntityType.WIDGET_TYPE, '/resources/widgets-library/widget-types/details'],
   [EntityType.OAUTH2_CLIENT, '/security-settings/oauth2/clients/details'],
   [EntityType.DOMAIN, '/security-settings/oauth2/clients/details'],
-  [EntityType.MOBILE_APP, '/security-settings/oauth2/clients/details']
+  [EntityType.MOBILE_APP, '/security-settings/oauth2/clients/details'],
+  [EntityType.ROLE, '/roles'],
+  [EntityType.PERMISSION, '/permissions'],
 ]);
 
 export interface EntitySubtype {

@@ -45,6 +45,8 @@ import { NotificationModule } from '@home/pages/notification/notification.module
 import { AccountModule } from '@home/pages/account/account.module';
 import { ScadaSymbolModule } from '@home/pages/scada-symbol/scada-symbol.module';
 import { EntityManagementModule } from './entity-management/entity-management.module';
+import { RoleModule } from '@home/pages/role/role.module';
+import {PermissionModule} from "@home/pages/permission/permission.module";
 
 @NgModule({
   exports: [
@@ -76,7 +78,9 @@ import { EntityManagementModule } from './entity-management/entity-management.mo
     UserModule,
     VcModule,
     AccountModule,
-    ScadaSymbolModule
+    ScadaSymbolModule,
+    RoleModule,
+    PermissionModule,
   ]
 })
 export class HomePagesModule { }

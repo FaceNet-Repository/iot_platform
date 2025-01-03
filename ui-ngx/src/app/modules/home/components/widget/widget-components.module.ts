@@ -183,6 +183,9 @@ import {
 import {
   SmartHomeEntityDetailsComponent
 } from '@home/components/widget/lib/smart-home/smart-home-hierarchy/smart-home-entity-details.component';
+import {
+  ProvinceDistributionComponent
+} from '@home/components/widget/lib/smart-home/province-distribution.component';
 
 @NgModule({
   declarations: [
@@ -256,6 +259,7 @@ import {
     SmartHomeHierarchyComponent,
     SmartHomeEntityDetailsComponent,
     SmartHomeIconComponent,
+    ProvinceDistributionComponent,
   ],
   imports: [
     CommonModule,
@@ -357,6 +361,7 @@ import {
     SmartHomeHierarchyComponent,
     SmartHomeEntityDetailsComponent,
     SmartHomeIconComponent,
+    ProvinceDistributionComponent,
   ],
   providers: [
     {provide: WIDGET_COMPONENTS_MODULE_TOKEN, useValue: WidgetComponentsModule},

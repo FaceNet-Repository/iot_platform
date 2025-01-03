@@ -17,29 +17,29 @@
 import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {SharedModule} from '@shared/shared.module';
-import {UserComponent} from '@modules/home/pages/user/user.component';
-import {UserRoutingModule} from '@modules/home/pages/user/user-routing.module';
-import {AddUserDialogComponent} from '@modules/home/pages/user/add-user-dialog.component';
-import {ActivationLinkDialogComponent} from '@modules/home/pages/user/activation-link-dialog.component';
+import {HomeDialogsModule} from '../../dialogs/home-dialogs.module';
+import {RoleComponent} from './role.component';
+import {RoleTableHeaderComponent} from './role-table-header.component';
+import {RoleRoutingModule} from './role-routing.module';
 import {HomeComponentsModule} from '@modules/home/components/home-components.module';
-import {UserTabsComponent} from '@home/pages/user/user-tabs.component';
-import {UserRoleTableComponent} from '@home/pages/user/user-role-table.component';
-import {AssignRoleDialogComponent} from '@home/pages/user/assign-role-dialog.component';
+import {RoleTabsComponent} from '@home/pages/role/role-tabs.component';
+import {RolePermissionTableComponent} from '@home/pages/role/role-permission-table.component';
+import {AddPermissionDialogComponent} from '@home/pages/role/add-permission-dialog.component';
 
 @NgModule({
   declarations: [
-    UserComponent,
-    UserTabsComponent,
-    AddUserDialogComponent,
-    ActivationLinkDialogComponent,
-    UserRoleTableComponent,
-    AssignRoleDialogComponent,
+    RoleComponent,
+    RoleTabsComponent,
+    RoleTableHeaderComponent,
+    RolePermissionTableComponent,
+    AddPermissionDialogComponent,
   ],
   imports: [
     CommonModule,
     SharedModule,
     HomeComponentsModule,
-    UserRoutingModule
+    HomeDialogsModule,
+    RoleRoutingModule
   ]
 })
-export class UserModule { }
+export class RoleModule { }
