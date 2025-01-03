@@ -72,4 +72,44 @@ public class PermissionController extends BaseController {
             throw handleException(e);
         }
     }
+
+    /**
+     * Save or update a permission.
+     *
+     * @param permission the permission object to be saved or updated
+     * @return the saved or updated permission object
+     * @throws ThingsboardException if the save operation fails
+     */
+    @PostMapping("/tenant/permission")
+    public Permission savePermission(@RequestBody Permission permission) throws ThingsboardException {
+        try {
+            TenantId tenantId = getCurrentUser().getTenantId();
+            log.info("Saving permission: {} for tenant: {}", permission, tenantId);
+            permission.setTenantId(tenantId.getId());
+            return permissionService.save(permission);
+        } catch (Exception e) {
+            log.error("Failed to save permission: {}", permission, e);
+            throw handleException(e);
+        }
+    }
+
+    /**
+     * Find a permission by ID.
+     *
+     * @param permissionId the ID of the permission to retrieve
+     * @return the permission object with the given ID
+     * @throws ThingsboardException if the permission is not found or an error occurs
+     */
+    @GetMapping("/tenant/permission/{permissionId}")
+    public Permission findPermissionById(@PathVariable UUID permissionId) throws ThingsboardException {
+        try {
+            TenantId tenantId = getCurrentUser().getTenantId();
+            log.info("Fetching permission with ID: {} for tenant: {}", permissionId, tenantId);
+            return permissionService.findById(permissionId);
+        } catch (Exception e) {
+            log.error("Failed to fetch permission with ID: {}", permissionId, e);
+            throw handleException(e);
+        }
+    }
+
 }

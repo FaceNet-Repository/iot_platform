@@ -31,6 +31,9 @@ public interface PermissionRepository extends JpaRepository<PermissionEntity, UU
     List<PermissionEntity> findAllByName(String name);
     Page<PermissionEntity> findAllByTenantId(UUID tenantId, Pageable pageable);
     Page<PermissionEntity> findByNameContainingIgnoreCaseAndTenantId(String name, UUID tenantId, Pageable pageable);
-    @Query("SELECT p FROM PermissionEntity p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :searchText, '%'))")
-    List<PermissionEntity> findByNameContainingIgnoreCase(@Param("searchText") String searchText, Pageable pageable);
+    @Query("SELECT p FROM PermissionEntity p JOIN RolePermissionEntity rp ON p.id = rp.permissionId " +
+            "WHERE rp.roleId = :roleId AND LOWER(p.name) LIKE LOWER(CONCAT('%', :searchText, '%'))")
+    Page<PermissionEntity> findByRoleIdAndNameContainingIgnoreCase(@Param("roleId") UUID roleId,
+                                                                   @Param("searchText") String searchText,
+                                                                   Pageable pageable);
 }

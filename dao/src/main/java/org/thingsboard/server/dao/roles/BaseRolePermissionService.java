@@ -39,6 +39,10 @@ public class BaseRolePermissionService implements RolePermissionService {
     }
     @Override
     public void addPermissionToRole(UUID roleId, UUID permissionId) {
+        RolePermissionEntity existingRolePermission = rolePermissionDao.findByRoleIdAndPermissionId(roleId, permissionId);
+        if (existingRolePermission != null) {
+            throw new IllegalStateException("Permission is already assigned to the role!");
+        }
         RolePermission rolePermissionEntity = new RolePermission();
         rolePermissionEntity.setId(UUID.randomUUID());
         rolePermissionEntity.setRoleId(roleId);

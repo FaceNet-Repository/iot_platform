@@ -72,22 +72,19 @@ public class JpaRolePermissionDao implements RolePermissionDao {
     @Override
     public PageData<Permission> findPermissionsByRoleId(UUID roleId, String searchText, PageLink pageLink) {
         Pageable pageable = DaoUtil.toPageable(pageLink);
-        Page<RolePermissionEntity> rolePermissionEntities = rolePermissionRepository.findAllByRoleId(roleId, pageable);
-        List<UUID> permissionIds = rolePermissionEntities.stream()
-                .map(RolePermissionEntity::getPermissionId)
-                .collect(Collectors.toList());
-        if (permissionIds.isEmpty()) {
-            return new PageData<>(List.of(), 0, 0, false);
-        }
-        List<PermissionEntity> permissionEntities = permissionRepository.findAllById(permissionIds).stream()
-                .filter(p -> p.getName().toLowerCase().contains(searchText.toLowerCase()))
-                .collect(Collectors.toList());
-        List<Permission> permissions = permissionEntities.stream()
+
+        searchText = (searchText == null) ? "" : searchText;
+
+        Page<PermissionEntity> permissionEntitiesPage = permissionRepository.findByRoleIdAndNameContainingIgnoreCase(roleId, searchText, pageable);
+
+        List<Permission> permissions = permissionEntitiesPage.getContent().stream()
                 .map(PermissionEntity::toData)
                 .collect(Collectors.toList());
-        long totalElements = permissionEntities.size();
-        int totalPages = (int) Math.ceil((double) totalElements / pageLink.getPageSize());
-        return new PageData<>(permissions, totalPages, totalElements, pageable.getPageNumber() < totalPages - 1);
+
+        return new PageData<>(permissions,
+                permissionEntitiesPage.getTotalPages(),
+                permissionEntitiesPage.getTotalElements(),
+                permissionEntitiesPage.hasNext());
     }
 
     @Override

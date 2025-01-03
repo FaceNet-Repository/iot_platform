@@ -37,7 +37,15 @@ public class PermissionsService {
         return permissionService.findAll(tenantId, name, pageLink);
     }
 
+    public Permission save(Permission permission){
+        return permissionService.save(permission);
+    }
+
     public void deleteById(UUID id){
         permissionService.deleteById(id);
+    }
+
+    public Permission findById(UUID id){
+        return permissionService.findById(id);
     }
 }

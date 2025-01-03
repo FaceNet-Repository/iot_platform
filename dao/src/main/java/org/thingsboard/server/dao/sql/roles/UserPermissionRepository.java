@@ -30,6 +30,7 @@ import java.util.UUID;
 public interface UserPermissionRepository extends JpaRepository<UserPermissionEntity, Integer> {
     List<UserPermissionEntity> findAllByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
     Page<UserPermissionEntity> findAllByUserId(UUID userId, Pageable pageable);
+    boolean existsByAction(UUID actionId);
     Page<UserPermissionEntity> findAllByUserIdAndNameEntityContainingIgnoreCaseOrActionNameContainingIgnoreCase(
             UUID userId,
             String nameEntity,

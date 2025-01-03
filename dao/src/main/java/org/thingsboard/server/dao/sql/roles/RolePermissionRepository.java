@@ -31,6 +31,7 @@ public interface RolePermissionRepository extends JpaRepository<RolePermissionEn
     List<RolePermissionEntity> findAllByRoleId(UUID roleId);
     List<RolePermissionEntity> findAllByPermissionId(UUID permissionId);
     void deleteByRoleIdAndPermissionId(UUID roleId, UUID permissionId);
+    boolean existsByPermissionId(UUID permissionId);
     Page<RolePermissionEntity> findAllByRoleId(UUID roleId, Pageable pageable);
     @Query("SELECT rp FROM RolePermissionEntity rp WHERE rp.roleId = :roleId AND rp.permissionId = :permissionId")
     RolePermissionEntity findByRoleIdAndPermissionId(@Param("roleId") UUID roleId, @Param("permissionId") UUID permissionId);
