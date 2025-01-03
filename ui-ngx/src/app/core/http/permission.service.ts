@@ -16,7 +16,7 @@
 
 import {Injectable} from '@angular/core';
 import {defaultHttpOptionsFromConfig, RequestConfig} from './http-utils';
-import {Observable, of} from 'rxjs';
+import {Observable} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {PageLink} from '@shared/models/page/page-link';
 import {PageData} from '@shared/models/page/page-data';
@@ -46,20 +46,13 @@ export class PermissionService {
   }
 
   public getPermissionInfo(permissionId: string, config?: RequestConfig): Observable<PermissionInfo> {
-
-    // return this.http.get<RoleInfo>(`/api/role/info/${roleId}`, defaultHttpOptionsFromConfig(config));
-    const mockRoleInfo: PermissionInfo = {
-      id: {
-        id: permissionId,
-        entityType: EntityType.ROLE
-      },
-      name: 'delete_asset'
-    };
-    return of(mockRoleInfo);
+    return this.http.get<PermissionInfo>(`/api/tenant/permission/${permissionId}`, defaultHttpOptionsFromConfig(config));
   }
 
   public savePermission(permission: Permission, config?: RequestConfig): Observable<Permission> {
-    return this.http.post<Permission>('/api/tenant/permission', permission, defaultHttpOptionsFromConfig(config));
+    return this.http.post<any>('/api/tenant/permission', permission, defaultHttpOptionsFromConfig(config)).pipe(
+      map(res => ({...res, id: { id: res.id, entityType: EntityType.PERMISSION }}))
+    );
   }
 
   public deletePermission(permissionId: string, config?: RequestConfig) {
@@ -67,13 +60,13 @@ export class PermissionService {
   }
 
   public assignPermissionToRole(roleId: string, permissionId: string,
-                               config?: RequestConfig): Observable<Asset> {
-    return this.http.post<Asset>(`/api/role/${roleId}/permission/${permissionId}`, null, defaultHttpOptionsFromConfig(config));
+                               config?: RequestConfig) {
+    return this.http.post(`/api/tenant/role/${roleId}/permission/${permissionId}`, null, defaultHttpOptionsFromConfig(config));
   }
 
   public unassignPermissionFromRole(roleId: string, permissionId: string,
-                                config?: RequestConfig): Observable<Asset> {
-    return this.http.post<Asset>(`/api/role/${roleId}/permission/${permissionId}`, null, defaultHttpOptionsFromConfig(config));
+                                config?: RequestConfig) {
+    return this.http.delete(`/api/tenant/role/${roleId}/permission/${permissionId}`, defaultHttpOptionsFromConfig(config));
   }
 
   public getTenantAssetInfos(pageLink: PageLink, type: string = '', config?: RequestConfig): Observable<PageData<AssetInfo>> {

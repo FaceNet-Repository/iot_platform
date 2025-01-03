@@ -36,28 +36,27 @@ import {catchError, debounceTime, distinctUntilChanged, map, take, takeUntil, ta
 import {BehaviorSubject, forkJoin, Observable, of, ReplaySubject, Subject} from 'rxjs';
 import {hidePageSizePixelValue} from '@shared/models/constants';
 import {MatDialog} from '@angular/material/dialog';
-import {AddPermissionDialogComponent} from '@home/pages/role/add-permission-dialog.component';
 import {PermissionInfo} from '@shared/models/permission.models';
 import {RoleService} from '@core/http/role.service';
 import {DataSource, SelectionModel} from '@angular/cdk/collections';
 import {emptyPageData, PageData} from '@shared/models/page/page-data';
 import {DialogService} from '@core/services/dialog.service';
-import {PermissionService} from '@core/http/permission.service';
+import {AssignRoleDialogComponent} from '@home/pages/user/assign-role-dialog.component';
+import {RoleInfo} from '@shared/models/role.models';
 import {Router} from "@angular/router";
-import {RoleInfo} from "@shared/models/role.models";
 
 @Component({
-  selector: 'fn-role-permission-table',
-  templateUrl: './role-permission-table.component.html',
-  styleUrls: ['./role-permission-table.component.scss']
+  selector: 'fn-user-role-table',
+  templateUrl: './user-role-table.component.html',
+  styleUrls: ['./user-role-table.component.scss']
 })
-export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDestroy {
+export class UserRoleTableComponent implements OnInit, AfterViewInit, OnDestroy {
 
   displayedColumns = ['select', 'id', 'name', 'actions'];
   pageLink: PageLink;
   hidePageSize = false;
   textSearchMode = false;
-  dataSource: RolePermissionDataSource;
+  dataSource: UserRoleDataSource;
 
   activeValue = false;
   dirtyValue = false;
@@ -102,7 +101,6 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
   private destroy$ = new Subject<void>();
 
   constructor(public roleService: RoleService,
-              public permissionService: PermissionService,
               public translate: TranslateService,
               private dialogService: DialogService,
               private cd: ChangeDetectorRef,
@@ -114,7 +112,7 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
     this.dirtyValue = !this.activeValue;
     const sortOrder: SortOrder = { property: 'name', direction: Direction.ASC };
     this.pageLink = new PageLink(10, 0, '', sortOrder);
-    this.dataSource = new RolePermissionDataSource(this.roleService);
+    this.dataSource = new UserRoleDataSource(this.roleService);
   }
 
   ngOnInit() {
@@ -131,7 +129,7 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
   }
 
   ngAfterViewInit() {
-    this.loadPermissions();
+    this.loadRoles();
     this.textSearch.valueChanges.pipe(
       debounceTime(150),
       distinctUntilChanged((prev, current) => (this.pageLink.textSearch ?? '') === current.trim()),
@@ -139,7 +137,7 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
     ).subscribe((value) => {
       this.paginator.pageIndex = 0;
       this.pageLink.textSearch = value.trim();
-      this.loadPermissions();
+      this.loadRoles();
     });
 
     this.sort?.sortChange.subscribe(() => this.paginator.pageIndex = 0);
@@ -154,7 +152,7 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
     //
     this.viewsInited = true;
     if (this.activeValue && this.entityIdValue) {
-      this.loadPermissions();
+      this.loadRoles();
     }
   }
 
@@ -171,6 +169,7 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
     this.pageLink.pageSize = this.paginator.pageSize;
     this.pageLink.sortOrder.property = this.sort.active;
     this.pageLink.sortOrder.direction = Direction[this.sort.direction.toUpperCase()];
+    // this.dataSource.loadRelations(this.entityIdValue, this.pageLink, reload);
   }
 
   enterFilterMode() {
@@ -194,27 +193,25 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
     // this.sort.active = sortable.id;
     // this.sort.direction = 'asc';
     if (update) {
-      this.loadPermissions();
+      this.loadRoles();
     }
   }
 
   openDialog(): void {
-    this.dialog.open(AddPermissionDialogComponent, {
+    this.dialog.open(AssignRoleDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: this.entityIdValue,
     }).afterClosed().subscribe(
-      (selectedPermissions: PermissionInfo[]) => {
-        if (selectedPermissions?.length) {
-          this.loadPermissions();
-        }
+      () => {
+        this.loadRoles();
       }
     );
   }
 
   deletePermissions($event: Event) {
     const title = 'Are you sure you want to delete?';
-    const content = 'Be careful, after the confirmation permissions and all related data will become unrecoverable.';
+    const content = 'Be careful, after the confirmation roles and all related data will become unrecoverable.';
     this.dialogService.confirm(
       title,
       content,
@@ -224,23 +221,26 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
     ).subscribe((result) => {
       if (result) {
         const tasks = this.dataSource.selection.selected.map(selectedPermission =>
-          this.permissionService.unassignPermissionFromRole(this.entityIdValue.id, selectedPermission.id.id)
+          this.roleService.unassignRoleFromCustomer({
+            customerId: this.entityIdValue.id,
+            roleId: selectedPermission.roleId,
+          })
         );
         forkJoin(tasks).subscribe(
           () => {
-            this.loadPermissions();
+            this.loadRoles();
           }
         );
       }
     });
   }
 
-  deletePermission($event: Event, permission: PermissionInfo) {
+  deletePermission($event: Event, role: RoleInfo) {
     if ($event) {
       $event.stopPropagation();
     }
-    const title = this.translate.instant('permission.delete-permission-title', {entityName: permission.name});;
-    const content = this.translate.instant('permission.delete-permission-text', {entityName: permission.name});
+    const title = this.translate.instant('role.delete-role-title', {entityName: role.roleName});
+    const content = this.translate.instant('role.delete-role-text', {entityName: role.roleName});
     this.dialogService.confirm(
       title,
       content,
@@ -249,34 +249,37 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
       true
     ).subscribe((result) => {
       if (result) {
-        this.permissionService.unassignPermissionFromRole(this.entityIdValue.id, permission.id.id).subscribe(
+        this.roleService.unassignRoleFromCustomer({
+          customerId: this.entityIdValue.id,
+          roleId: role.roleId,
+        }).subscribe(
           () => {
-            this.loadPermissions();
+            this.loadRoles();
           }
         );
       }
     });
   }
 
-  navigatePermission($event: Event, permission: PermissionInfo) {
+  navigateRole($event: Event, role: RoleInfo) {
     if ($event) {
       $event.stopPropagation();
     }
-    this.router.navigateByUrl(`/permissions?textSearch=${permission.name}`);
+    this.router.navigateByUrl(`/roles?textSearch=${role.roleName}`)
   }
 
-  loadPermissions() {
-    this.dataSource.loadPermissions(this.entityIdValue, this.pageLink);
+  loadRoles() {
+    this.dataSource.load(this.entityIdValue, this.pageLink);
   }
 }
 
-class RolePermissionDataSource extends DataSource<PermissionInfo> {
-  private permissionsSubject = new BehaviorSubject<PermissionInfo[]>([]);
-  private pageDataSubject = new BehaviorSubject<PageData<PermissionInfo>>(emptyPageData<PermissionInfo>());
+class UserRoleDataSource extends DataSource<RoleInfo> {
+  private permissionsSubject = new BehaviorSubject<RoleInfo[]>([]);
+  private pageDataSubject = new BehaviorSubject<PageData<RoleInfo>>(emptyPageData<RoleInfo>());
 
   public pageData$ = this.pageDataSubject.asObservable();
 
-  public selection = new SelectionModel<PermissionInfo>(true, []);
+  public selection = new SelectionModel<RoleInfo>(true, []);
 
   private _loadingSubject = new ReplaySubject<boolean>();
   private _totalCountSubject = new ReplaySubject<number>();
@@ -287,7 +290,7 @@ class RolePermissionDataSource extends DataSource<PermissionInfo> {
     super();
   }
 
-  connect(): Observable<PermissionInfo[]> {
+  connect(): Observable<RoleInfo[]> {
     return this.permissionsSubject.asObservable();
   }
 
@@ -298,13 +301,13 @@ class RolePermissionDataSource extends DataSource<PermissionInfo> {
     this._totalCountSubject.complete();
   }
 
-  loadPermissions(entityId: EntityId, pageLink: PageLink, reload: boolean = false) {
+  load(entityId: EntityId, pageLink: PageLink, reload: boolean = false) {
     const result = new ReplaySubject<PageData<PermissionInfo>>();
-    this.fetchPermissions(entityId, pageLink).pipe(
+    this.fetch(entityId, pageLink).pipe(
       tap(() => {
         this.selection.clear();
       }),
-      catchError(() => of(emptyPageData<PermissionInfo>()))
+      catchError(() => of(emptyPageData<RoleInfo>()))
     ).subscribe(
       (pageData) => {
         this.permissionsSubject.next(pageData.data);
@@ -315,8 +318,8 @@ class RolePermissionDataSource extends DataSource<PermissionInfo> {
     return result;
   }
 
-  private fetchPermissions(entityId: EntityId, pageLink: PageLink) {
-    return this.roleService.getRolePermissionInfos(entityId.id, pageLink);
+  private fetch(entityId: EntityId, pageLink: PageLink) {
+    return this.roleService.getCustomerRoleInfos(entityId.id, pageLink);
   }
 
   isAllSelected(): Observable<boolean> {

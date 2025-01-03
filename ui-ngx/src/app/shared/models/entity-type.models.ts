@@ -468,29 +468,29 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
     [
       EntityType.ROLE,
       {
-        type: 'entity.type-device',
-        typePlural: 'entity.type-devices',
-        list: 'entity.list-of-devices',
-        nameStartsWith: 'entity.device-name-starts-with',
-        details: 'device.device-details',
-        add: 'device.add',
-        noEntities: 'device.no-devices-text',
-        search: 'device.search',
-        selectedEntities: 'device.selected-devices'
+        type: 'entity.type-role',
+        typePlural: 'entity.type-roles',
+        list: 'entity.list-of-roles',
+        nameStartsWith: 'entity.role-name-starts-with',
+        details: 'role.role-details',
+        add: 'role.add',
+        noEntities: 'role.no-roles-text',
+        search: 'role.search',
+        selectedEntities: 'role.selected-roles'
       }
     ],
     [
       EntityType.PERMISSION,
       {
-        type: 'entity.type-device',
-        typePlural: 'entity.type-devices',
-        list: 'entity.list-of-devices',
-        nameStartsWith: 'entity.device-name-starts-with',
-        details: 'device.device-details',
-        add: 'device.add',
-        noEntities: 'device.no-devices-text',
-        search: 'device.search',
-        selectedEntities: 'device.selected-devices'
+        type: 'entity.type-permission',
+        typePlural: 'entity.type-permissions',
+        list: 'entity.list-of-permissions',
+        nameStartsWith: 'entity.permission-name-starts-with',
+        details: 'permission.permission-details',
+        add: 'permission.add',
+        noEntities: 'permission.no-permissions-text',
+        search: 'permission.search',
+        selectedEntities: 'permission.selected-permissions'
       }
     ],
   ]

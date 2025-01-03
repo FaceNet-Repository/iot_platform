@@ -25,19 +25,19 @@ import {RoleService} from '@core/http/role.service';
 import {PermissionInfo} from '@shared/models/permission.models';
 
 export class RolePermissionDatasource implements DataSource<PermissionInfo> {
-
+  //
   private relationsSubject = new BehaviorSubject<PermissionInfo[]>([]);
   private pageDataSubject = new BehaviorSubject<PageData<PermissionInfo>>(emptyPageData<PermissionInfo>());
-
-  public pageData$ = this.pageDataSubject.asObservable();
-
-  public selection = new SelectionModel<PermissionInfo>(true, []);
-
-  private allRelations: Observable<Array<PermissionInfo>>;
-
-  constructor(private roleService: RoleService,
-              private translate: TranslateService) {}
-
+  //
+  // public pageData$ = this.pageDataSubject.asObservable();
+  //
+  // public selection = new SelectionModel<PermissionInfo>(true, []);
+  //
+  // private allRelations: Observable<Array<PermissionInfo>>;
+  //
+  // constructor(private roleService: RoleService,
+  //             private translate: TranslateService) {}
+  //
   connect(collectionViewer: CollectionViewer): Observable<PermissionInfo[] | ReadonlyArray<PermissionInfo>> {
     return this.relationsSubject.asObservable();
   }
@@ -46,82 +46,82 @@ export class RolePermissionDatasource implements DataSource<PermissionInfo> {
     this.relationsSubject.complete();
     this.pageDataSubject.complete();
   }
-
-  loadRelations(entityId: EntityId,
-                pageLink: PageLink, reload: boolean = false): Observable<PageData<PermissionInfo>> {
-    if (reload) {
-      this.allRelations = null;
-    }
-    const result = new ReplaySubject<PageData<PermissionInfo>>();
-    this.fetchRelations(entityId, pageLink).pipe(
-      tap(() => {
-        this.selection.clear();
-      }),
-      catchError(() => of(emptyPageData<PermissionInfo>())),
-    ).subscribe(
-      (pageData) => {
-        this.relationsSubject.next(pageData.data);
-        this.pageDataSubject.next(pageData);
-        result.next(pageData);
-      }
-    );
-    return result;
-  }
-
-  fetchRelations(entityId: EntityId,
-                 pageLink: PageLink): Observable<PageData<PermissionInfo>> {
-    return this.getAllRelations(entityId).pipe(
-      map((data) => pageLink.filterData(data))
-    );
-  }
-
-  getAllRelations(entityId: EntityId): Observable<Array<PermissionInfo>> {
-    if (!this.allRelations) {
-      const relationsObservable = this.roleService.getRolePermissionInfos(entityId.id);
-      this.allRelations = relationsObservable.pipe(
-        map(relations => {
-          console.log(relations);
-          return relations;
-        }),
-        publishReplay(1),
-        refCount()
-      );
-    }
-    return this.allRelations;
-  }
-
-  isAllSelected(): Observable<boolean> {
-    const numSelected = this.selection.selected.length;
-    return this.relationsSubject.pipe(
-      map((relations) => numSelected === relations.length)
-    );
-  }
-
-  isEmpty(): Observable<boolean> {
-    return this.relationsSubject.pipe(
-      map((relations) => !relations.length)
-    );
-  }
-
-  total(): Observable<number> {
-    return this.pageDataSubject.pipe(
-      map((pageData) => pageData.totalElements)
-    );
-  }
-
-  masterToggle() {
-    this.relationsSubject.pipe(
-      tap((relations) => {
-        const numSelected = this.selection.selected.length;
-        if (numSelected === relations.length) {
-          this.selection.clear();
-        } else {
-          relations.forEach(row => {
-            this.selection.select(row);
-          });
-        }
-      }),
-      take(1)
-    ).subscribe();
-  }
+  //
+  // loadRelations(entityId: EntityId,
+  //               pageLink: PageLink, reload: boolean = false): Observable<PageData<PermissionInfo>> {
+  //   if (reload) {
+  //     this.allRelations = null;
+  //   }
+  //   const result = new ReplaySubject<PageData<PermissionInfo>>();
+  //   this.fetchRelations(entityId, pageLink).pipe(
+  //     tap(() => {
+  //       this.selection.clear();
+  //     }),
+  //     catchError(() => of(emptyPageData<PermissionInfo>())),
+  //   ).subscribe(
+  //     (pageData) => {
+  //       this.relationsSubject.next(pageData.data);
+  //       this.pageDataSubject.next(pageData);
+  //       result.next(pageData);
+  //     }
+  //   );
+  //   return result;
+  // }
+  //
+  // fetchRelations(entityId: EntityId,
+  //                pageLink: PageLink): Observable<PageData<PermissionInfo>> {
+  //   return this.getAllRelations(entityId, pageLink).pipe(
+  //     map((data) => pageLink.filterData(data))
+  //   );
+  // }
+  //
+  // getAllRelations(entityId: EntityId, pageLink: PageLink): Observable<Array<PermissionInfo>> {
+  //   if (!this.allRelations) {
+  //     const relationsObservable = this.roleService.getRolePermissionInfos(entityId.id, pageLink);
+  //     this.allRelations = relationsObservable.pipe(
+  //       map(relations => {
+  //         console.log(relations);
+  //         return relations;
+  //       }),
+  //       publishReplay(1),
+  //       refCount()
+  //     );
+  //   }
+  //   return this.allRelations;
+  // }
+  //
+  // isAllSelected(): Observable<boolean> {
+  //   const numSelected = this.selection.selected.length;
+  //   return this.relationsSubject.pipe(
+  //     map((relations) => numSelected === relations.length)
+  //   );
+  // }
+  //
+  // isEmpty(): Observable<boolean> {
+  //   return this.relationsSubject.pipe(
+  //     map((relations) => !relations.length)
+  //   );
+  // }
+  //
+  // total(): Observable<number> {
+  //   return this.pageDataSubject.pipe(
+  //     map((pageData) => pageData.totalElements)
+  //   );
+  // }
+  //
+  // masterToggle() {
+  //   this.relationsSubject.pipe(
+  //     tap((relations) => {
+  //       const numSelected = this.selection.selected.length;
+  //       if (numSelected === relations.length) {
+  //         this.selection.clear();
+  //       } else {
+  //         relations.forEach(row => {
+  //           this.selection.select(row);
+  //         });
+  //       }
+  //     }),
+  //     take(1)
+  //   ).subscribe();
+  // }
 }

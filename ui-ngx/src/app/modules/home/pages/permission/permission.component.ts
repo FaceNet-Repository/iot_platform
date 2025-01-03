@@ -84,7 +84,7 @@ export class PermissionComponent extends EntityComponent<PermissionInfo> impleme
   prepareFormValue(formValue) {
     return {
       ...formValue,
-      tenantId: this.tenantId,
+      tenantId: this.tenantId.id,
     };
   }
 
@@ -95,7 +95,7 @@ export class PermissionComponent extends EntityComponent<PermissionInfo> impleme
   onAssetIdCopied($event) {
     this.store.dispatch(new ActionNotificationShow(
       {
-        message: this.translate.instant('asset.idCopiedMessage'),
+        message: this.translate.instant('permission.idCopiedMessage'),
         type: 'success',
         duration: 750,
         verticalPosition: 'bottom',

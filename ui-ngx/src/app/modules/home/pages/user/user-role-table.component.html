@@ -20,13 +20,13 @@
     <mat-toolbar class="mat-mdc-table-toolbar" [fxShow]="!textSearchMode && dataSource.selection.isEmpty()">
       <div class="mat-toolbar-tools">
         <div fxLayout="row" fxLayoutAlign="start center" class="title-container">
-          <span class="tb-entity-table-title">Permissions</span>
+          <span class="tb-entity-table-title">Roles</span>
         </div>
         <span fxFlex></span>
         <button mat-icon-button matTooltip="{{ 'action.add' | translate }}" matTooltipPosition="above" (click)="openDialog()">
           <mat-icon>add</mat-icon>
         </button>
-        <button mat-icon-button matTooltip="{{ 'action.refresh' | translate }}" matTooltipPosition="above" (click)="loadPermissions()">
+        <button mat-icon-button matTooltip="{{ 'action.refresh' | translate }}" matTooltipPosition="above" (click)="loadRoles()">
           <mat-icon>refresh</mat-icon>
         </button>
         <button mat-icon-button (click)="enterFilterMode()"
@@ -78,34 +78,34 @@
                           [indeterminate]="dataSource.selection.hasValue() && !(dataSource.isAllSelected() | async)">
             </mat-checkbox>
           </mat-header-cell>
-          <mat-cell *matCellDef="let permission">
+          <mat-cell *matCellDef="let role">
             <mat-checkbox (click)="$event.stopPropagation()"
-                          (change)="$event ? dataSource.selection.toggle(permission) : null"
-                          [checked]="dataSource.selection.isSelected(permission)">
+                          (change)="$event ? dataSource.selection.toggle(role) : null"
+                          [checked]="dataSource.selection.isSelected(role)">
             </mat-checkbox>
           </mat-cell>
         </ng-container>
         <ng-container matColumnDef="id">
           <mat-header-cell *matHeaderCellDef style="width: 50%">Id</mat-header-cell>
-          <mat-cell *matCellDef="let permission">{{ permission.id.id }}</mat-cell>
+          <mat-cell *matCellDef="let role">{{ role.roleId }}</mat-cell>
         </ng-container>
         <ng-container matColumnDef="name">
           <mat-header-cell *matHeaderCellDef style="width: 50%">Name</mat-header-cell>
-          <mat-cell *matCellDef="let permission">{{ permission.name }}</mat-cell>
+          <mat-cell *matCellDef="let role">{{ role.roleName }}</mat-cell>
         </ng-container>
         <ng-container matColumnDef="actions" stickyEnd>
           <mat-header-cell *matHeaderCellDef style="min-width: 80px; max-width: 80px; width: 80px"></mat-header-cell>
-          <mat-cell *matCellDef="let permisison">
+          <mat-cell *matCellDef="let role">
             <button mat-icon-button
                     matTooltip="Navigate"
                     matTooltipPosition="above"
-                    (click)="navigatePermission($event, permisison)">
+                    (click)="navigateRole($event, role)">
               <mat-icon>login</mat-icon>
             </button>
             <button mat-icon-button
-                    matTooltip="{{ 'permission.edit' | translate }}"
+                    matTooltip="{{ 'action.edit' | translate }}"
                     matTooltipPosition="above"
-                    (click)="deletePermission($event, permisison)">
+                    (click)="deletePermission($event, role)">
               <mat-icon>delete</mat-icon>
             </button>
           </mat-cell>
@@ -117,7 +117,7 @@
       </table>
       <span [fxShow]="dataSource.isEmpty() | async"
             fxLayoutAlign="center center"
-            class="no-data-found">{{ 'permission.no-permissions-text' | translate }}</span>
+            class="no-data-found">{{ 'role.no-roles-text' | translate }}</span>
     </div>
     <mat-divider></mat-divider>
     <mat-paginator [length]="dataSource.total() | async"

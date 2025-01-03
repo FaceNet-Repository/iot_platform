@@ -44,38 +44,12 @@ export class RoleComponent extends EntityComponent<RoleInfo> implements OnInit {
   entityType = EntityType;
 
   assetScope: 'tenant' | 'customer' | 'customer_user' | 'edge';
-  permissionsPageLink = new PageLink(2147483647, 0);
-  permissions$ = this.permissionService.getTenantPermissionInfos(this.permissionsPageLink).pipe(
-    map(res => res.data.map(permission => ({value: permission.id.id, label: permission.name})))
-  );
-  dumpList = [
-    {
-      value: '1',
-      label: '1'
-    },
-    {
-      value: '2',
-      label: '2'
-    }
-  ];
-  selectedPermissions: string[] = ['1'];
-  separatorKeysCodes: number[] = [ENTER, COMMA];
-  permissionCtrl = new FormControl('');
-  // filteredPermissions$ = this.permissionCtrl.valueChanges.pipe(
-  //   startWith(null),
-  //   switchMap(term => this.permissions$.pipe(
-  //     map(permissions => permissions.filter(permission =>
-  //       permission.label.toLowerCase().includes(term?.toLowerCase() || '')
-  //     ))
-  //   ))
-  // );
   tenantId$: any;
   tenantId: EntityId;
 
   @ViewChild('permissionInput') permissionInput: ElementRef<HTMLInputElement>;
 
   constructor(protected store: Store<AppState>,
-              private permissionService: PermissionService,
               protected translate: TranslateService,
               @Inject('entity') protected entityValue: RoleInfo,
               @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<RoleInfo>,
@@ -92,7 +66,6 @@ export class RoleComponent extends EntityComponent<RoleInfo> implements OnInit {
     )).subscribe(tenantId => {
       this.tenantId = tenantId;
     });
-    // this.permissions$.subscribe(res => console.log(res));
     super.ngOnInit();
   }
 
@@ -108,18 +81,15 @@ export class RoleComponent extends EntityComponent<RoleInfo> implements OnInit {
     return this.fb.group(
       {
         name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
-        permissions: [[], []],
       }
     );
   }
 
   updateForm(entity: RoleInfo) {
     this.entityForm.patchValue({name: entity.name});
-    this.entityForm.patchValue({permissions: entity.permissions.map(permission => permission.name)});
   }
 
   prepareFormValue(formValue) {
-    console.log('RoleComponent prepareFormValue', formValue);
     return {
       ...formValue,
       tenantId: this.tenantId,
@@ -129,33 +99,11 @@ export class RoleComponent extends EntityComponent<RoleInfo> implements OnInit {
   onAssetIdCopied($event) {
     this.store.dispatch(new ActionNotificationShow(
       {
-        message: this.translate.instant('asset.idCopiedMessage'),
+        message: this.translate.instant('role.idCopiedMessage'),
         type: 'success',
         duration: 750,
         verticalPosition: 'bottom',
         horizontalPosition: 'right'
       }));
-  }
-
-  add(e: MatChipInputEvent): void {
-    const value = (e.value || '').trim();
-    if (value) {
-      this.selectedPermissions.push(value);
-    }
-  }
-
-  remove(value: string): void {
-    this.selectedPermissions = this.selectedPermissions.filter(permission => permission !== value);
-  }
-
-  selected(e: MatAutocompleteSelectedEvent) {
-    this.selectedPermissions.push(e.option.viewValue);
-    this.permissionInput.nativeElement.value = '';
-    this.permissionCtrl.setValue(null);
-  }
-
-  private _filter(value: string): string[] {
-    const filterValue = value.toLowerCase();
-    return this.selectedPermissions.filter(permission => permission.toLowerCase().includes(filterValue));
   }
 }

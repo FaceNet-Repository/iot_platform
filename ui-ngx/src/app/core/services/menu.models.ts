@@ -665,7 +665,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'permission.permissions',
       type: 'link',
       path: '/permissions',
-      icon: 'app_registration'
+      icon: 'folder_supervised'
     }
   ],
   [

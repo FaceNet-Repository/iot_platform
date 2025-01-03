@@ -16,16 +16,27 @@
 
 import {Injectable} from '@angular/core';
 import {defaultHttpOptionsFromConfig, RequestConfig} from './http-utils';
-import {Observable, of} from 'rxjs';
+import {Observable} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {PageLink} from '@shared/models/page/page-link';
 import {PageData} from '@shared/models/page/page-data';
-import {EntitySubtype, EntityType} from '@shared/models/entity-type.models';
-import {Asset, AssetInfo, AssetSearchQuery} from '@shared/models/asset.models';
-import {BulkImportRequest, BulkImportResult} from '@shared/import-export/import-export.models';
+import {EntityType} from '@shared/models/entity-type.models';
+import {Asset} from '@shared/models/asset.models';
 import {Role, RoleInfo} from '@shared/models/role.models';
 import {map} from 'rxjs/operators';
 import {PermissionInfo} from '@shared/models/permission.models';
+
+type AssignRoleToCustomerParams = {
+  customerId: string;
+  roleId: string;
+  entityId: string;
+  entityType: string;
+};
+
+type UnassignRoleToCustomerParams = {
+  customerId: string;
+  roleId: string;
+};
 
 @Injectable({
   providedIn: 'root'
@@ -47,53 +58,15 @@ export class RoleService {
   }
 
   public getRoleInfo(roleId: string, config?: RequestConfig): Observable<RoleInfo> {
-    console.log('getRoleInfo', roleId);
-
-    // return this.http.get<RoleInfo>(`/api/role/info/${roleId}`, defaultHttpOptionsFromConfig(config));
-    const mockRoleInfo: RoleInfo = {
-      id: {
-        id: roleId,
-        entityType: EntityType.ROLE
-      },
-      tenantId: {
-        id: 'bcf09460-a65c-11ef-94ef-7f59564e7e98',
-        entityType: EntityType.TENANT
-      },
-      name: 'Chủ nhà',
-      createdTime: Date.now(),
-      version: 1,
-      permissions: [
-        {
-          id: {
-            id: roleId,
-            entityType: EntityType.ROLE
-          },
-          name: 'create_asset'
-        },
-        {
-          id: {
-            id: roleId,
-            entityType: EntityType.ROLE
-          },
-          name: 'read_asset'
-        },
-        {
-          id: {
-            id: roleId,
-            entityType: EntityType.ROLE
-          },
-          name: 'update_asset'
-        },
-        {
-          id: {
-            id: roleId,
-            entityType: EntityType.ROLE
-          },
-          name: 'delete_asset'
+    return this.http.get<any>(`/api/tenant/role/${roleId}`, defaultHttpOptionsFromConfig(config)).pipe(
+      map(res => ({
+        ...res,
+        id: {
+          id: res.id,
+          entityType: EntityType.ROLE,
         }
-      ]
-    };
-    return of(mockRoleInfo);
+      }))
+    );
   }
 
   public saveRole(role: Role, config?: RequestConfig): Observable<Role> {
@@ -107,7 +80,6 @@ export class RoleService {
       id: role?.id?.id,
       name: role.name,
       tenantId: role?.tenantId?.id,
-      permissions: role.permissions.map(permissionId => ({ id: permissionId })),
     };
   }
 
@@ -115,23 +87,46 @@ export class RoleService {
     return this.http.delete(`/api/tenant/role/${roleId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  public getRolePermissionInfos(roleId: string, config?: RequestConfig): Observable<PermissionInfo[]> {
-    return of([
-      {
-        name: 'Permission 1',
-        to: {
-          id: '12343567689',
-          entityType: 'ASSET'
-        }
-      },
-      {
-        name: 'Permission 2',
-        to: {
-          id: '12343567689',
-          entityType: 'ASSET'
-        }
+  public getRolePermissionInfos(roleId: string, pageLink: PageLink, config?: RequestConfig): Observable<PageData<PermissionInfo>> {
+    return this.http.get<PageData<any>>(`/api/tenant/role/${roleId}/permissions${pageLink.toQuery()}`,
+      defaultHttpOptionsFromConfig(config)).pipe(
+      map(res => ({
+        ...res,
+        data: res.data.map(({ id, ...rest }) => ({ ...rest, id: { id, entityType: EntityType.PERMISSION } })) as PermissionInfo[]
+      }))
+    );
+  }
+
+  public getCustomerRoleInfos(customerId: string, pageLink: PageLink, config?: RequestConfig): Observable<PageData<RoleInfo>> {
+    return this.http.get<PageData<any>>(`/api/user-roles/roles/${customerId}${pageLink.toQuery()}`,
+      defaultHttpOptionsFromConfig(config)).pipe(
+      map(res => ({
+        ...res,
+        data: res.data.map(({ id, ...rest }) => ({ ...rest, id: { id, entityType: EntityType.PERMISSION } })) as RoleInfo[]
+      }))
+    );
+  }
+
+  public assignRoleToCustomer(params: AssignRoleToCustomerParams, config?: RequestConfig) {
+    return this.http.post(`/api/user-roles/assign-role`, {}, {
+      ...defaultHttpOptionsFromConfig(config),
+      params: {
+        userId: params.customerId,
+        roleId: params.roleId,
+        entityId: params.entityId,
+        entityType: params.entityType,
       }
-    ]);
+    });
+  }
+
+  public unassignRoleFromCustomer(params: UnassignRoleToCustomerParams, config?: RequestConfig) {
+    return this.http.delete(`/api/user-roles/unassign-role`, {
+      ...defaultHttpOptionsFromConfig(config),
+      params: {
+        userId: params.customerId,
+        roleId: params.roleId,
+      }
+    });
   }
 
   public saveAsset(asset: Asset, config?: RequestConfig): Observable<Asset> {

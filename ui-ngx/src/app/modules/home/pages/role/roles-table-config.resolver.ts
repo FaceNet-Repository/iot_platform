@@ -149,13 +149,8 @@ export class RolesTableConfigResolver implements Resolve<EntityTableConfig<RoleI
   configureColumns(assetScope: string): Array<EntityTableColumn<AssetInfo>> {
     const columns: Array<EntityTableColumn<AssetInfo>> = [
       new DateEntityTableColumn<AssetInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<AssetInfo>('name', 'asset.name', '25%'),
+      new EntityTableColumn<AssetInfo>('name', 'role.name', '25%'),
     ];
-    if (assetScope === 'tenant') {
-      columns.push(
-        new EntityTableColumn<AssetInfo>('customerTitle', 'customer.customer', '25%'),
-      );
-    }
     return columns;
   }
 

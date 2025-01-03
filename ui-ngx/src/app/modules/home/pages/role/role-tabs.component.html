@@ -17,5 +17,5 @@
 -->
 <mat-tab *ngIf="entity"
          label="Permissions" #rolePermissionTab="matTab">
-  <fn-role-permission-table [entityId]="entity.id"/>
+  <fn-role-permission-table [active]="rolePermissionTab.isActive" [entityId]="entity.id"/>
 </mat-tab>

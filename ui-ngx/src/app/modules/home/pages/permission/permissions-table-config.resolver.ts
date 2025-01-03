@@ -93,12 +93,12 @@ export class PermissionsTableConfigResolver implements Resolve<EntityTableConfig
     this.config.deleteEntitiesTitle = count => this.translate.instant('permission.delete-permissions-title', {count});
     this.config.deleteEntitiesContent = () => this.translate.instant('permission.delete-permissions-text');
 
-    this.config.loadEntity = (id) => this.permissionService.getPermissionInfo(id as unknown as string);
+    this.config.loadEntity = (id) => this.permissionService.getPermissionInfo(id.id);
     this.config.saveEntity = (permission) => this.permissionService.savePermission(permission).pipe(
         tap(() => {
           this.broadcast.broadcast('permissionSaved');
         }),
-        mergeMap((savedRole) => this.permissionService.getPermissionInfo(savedRole.id.id)
+        mergeMap((savedPermission) => this.permissionService.getPermissionInfo(savedPermission.id.id)
         ));
     this.config.onEntityAction = action => this.onAssetAction(action, this.config);
     this.config.detailsReadonly = () => true;
@@ -149,13 +149,8 @@ export class PermissionsTableConfigResolver implements Resolve<EntityTableConfig
   configureColumns(assetScope: string): Array<EntityTableColumn<AssetInfo>> {
     const columns: Array<EntityTableColumn<AssetInfo>> = [
       new DateEntityTableColumn<AssetInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
-      new EntityTableColumn<AssetInfo>('name', 'asset.name', '25%'),
+      new EntityTableColumn<AssetInfo>('name', 'permission.name', '25%'),
     ];
-    if (assetScope === 'tenant') {
-      columns.push(
-        new EntityTableColumn<AssetInfo>('customerTitle', 'customer.customer', '25%'),
-      );
-    }
     return columns;
   }
 

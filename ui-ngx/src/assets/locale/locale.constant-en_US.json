@@ -4745,6 +4745,7 @@
         "idCopiedMessage": "Permission Id has been copied to clipboard",
         "select-permission": "Select permission",
         "no-permissions-matching": "No permissions matching '{{entity}}' were found.",
+        "no-permissions-text": "No permissions found",
         "permission-required": "Permission is required",
         "name-starts-with": "Permission name expression",
         "help-text": "Use '%' according to need: '%permission_name_contains%', '%permission_name_ends', 'permission_starts_with'.",
