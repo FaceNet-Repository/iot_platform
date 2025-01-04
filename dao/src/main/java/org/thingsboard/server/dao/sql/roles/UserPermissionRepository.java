@@ -43,7 +43,7 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
     List<UserPermissionEntity> findAllByUserIdAndRoleId(UUID userId, UUID roleId);
 
     @Query("""
-        SELECT new org.thingsboard.server.common.data.roles.UserPermission(
+        SELECT DISTINCT new org.thingsboard.server.common.data.roles.UserPermission(
             up.roleId,
             r.name
         )
@@ -51,7 +51,11 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
         JOIN RoleEntity r ON up.roleId = r.id
         WHERE up.userId = :userId
           AND up.roleId IS NOT NULL
+          AND LOWER(r.name) LIKE LOWER(CONCAT('%', :textSearch, '%'))
         ORDER BY r.name
     """)
-    Page<UserPermission> findUserPermissionsWithRoleNameByUserId(@Param("userId") UUID userId, Pageable pageable);
+    Page<UserPermission> findUserPermissionsWithRoleNameByUserId(
+            @Param("userId") UUID userId,
+            @Param("textSearch") String textSearch,
+            Pageable pageable);
 }
