@@ -83,11 +83,22 @@ public class JpaUserRolesDao implements UserRolesDao {
     @Override
     public PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink) {
         Pageable pageable = DaoUtil.toPageable(pageLink);
-        Page<UserPermission> userPermissionPage = userPermissionRepository.findUserPermissionsWithRoleNameByUserId(userId, pageLink.getTextSearch() ,pageable);
+        Page<UserPermission> userPermissionPage = userPermissionRepository.findUserPermissionsWithRoleNameByUserId(userId, pageLink.getTextSearch(), pageable);
+
+        List<UserPermission> distinctPermissions = userPermissionPage.getContent().stream()
+                .collect(Collectors.toMap(
+                        UserPermission::getRoleId,
+                        permission -> permission,
+                        (existing, replacement) -> existing
+                ))
+                .values()
+                .stream()
+                .collect(Collectors.toList());
+
         return new PageData<>(
-                userPermissionPage.getContent(),
+                distinctPermissions,
                 userPermissionPage.getTotalPages(),
-                userPermissionPage.getTotalElements(),
+                distinctPermissions.size(),
                 userPermissionPage.hasNext()
         );
     }
