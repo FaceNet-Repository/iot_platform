@@ -46,7 +46,15 @@ export class PermissionService {
   }
 
   public getPermissionInfo(permissionId: string, config?: RequestConfig): Observable<PermissionInfo> {
-    return this.http.get<PermissionInfo>(`/api/tenant/permission/${permissionId}`, defaultHttpOptionsFromConfig(config));
+    return this.http.get<any>(`/api/tenant/permission/${permissionId}`, defaultHttpOptionsFromConfig(config)).pipe(
+      map(res => ({
+        ...res,
+        id: {
+          id: res.id,
+          entityType: EntityType.ROLE,
+        }
+      }))
+    );
   }
 
   public savePermission(permission: Permission, config?: RequestConfig): Observable<Permission> {
