@@ -239,8 +239,8 @@ export class RolePermissionTableComponent implements OnInit, AfterViewInit, OnDe
     if ($event) {
       $event.stopPropagation();
     }
-    const title = this.translate.instant('permission.delete-permission-title', {entityName: permission.name});;
-    const content = this.translate.instant('permission.delete-permission-text', {entityName: permission.name});
+    const title = this.translate.instant('permission.delete-permission-title', {permissionName: permission.name});;
+    const content = this.translate.instant('permission.delete-permission-text', {permissionName: permission.name});
     this.dialogService.confirm(
       title,
       content,

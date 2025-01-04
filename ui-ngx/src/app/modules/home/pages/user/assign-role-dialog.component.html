@@ -32,7 +32,7 @@
   <div mat-dialog-content>
     <fieldset [disabled]="isLoading$ | async">
       <mat-form-field style="width: 100%" appearance="fill">
-        <mat-label>Role selection</mat-label>
+        <mat-label>Role selection *</mat-label>
         <mat-chip-grid #chipGrid aria-label="Roles selection">
           <mat-chip-row *ngFor="let role of roles" (removed)="remove(role)">
             {{ role.name }}
@@ -50,14 +50,14 @@
         </mat-autocomplete>
       </mat-form-field>
       <mat-form-field style="width: 100%" appearance="fill">
-        <mat-label>Entity type</mat-label>
+        <mat-label>Entity type *</mat-label>
         <mat-select [formControl]="entityTypeCtrl" [errorStateMatcher]="matcher">
           <mat-option *ngFor="let type of entityTypeOptions" [value]="type">{{ type }}</mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field [fxShow]="entityTypeCtrl.value === EntityType.ASSET" style="width: 100%" appearance="fill">
-        <mat-label>Asset selection</mat-label>
-        <mat-chip-grid #assetChipGrid aria-label="Assets selection">
+        <mat-label>Asset selection *</mat-label>
+        <mat-chip-grid #assetChipGrid aria-label="Assets selection *">
           <mat-chip-row *ngFor="let asset of assets" (removed)="assetRemove(asset)">
             {{ asset.name }}
             <button matChipRemove [attr.aria-label]="'Remove ' + asset">
@@ -74,7 +74,7 @@
         </mat-autocomplete>
       </mat-form-field>
       <mat-form-field [fxShow]="entityTypeCtrl.value === EntityType.DEVICE" style="width: 100%" appearance="fill">
-        <mat-label>Device selection</mat-label>
+        <mat-label>Device selection *</mat-label>
         <mat-chip-grid #deviceChipGrid aria-label="Devices selection">
           <mat-chip-row *ngFor="let device of devices" (removed)="deviceRemove(device)">
             {{ device.name }}

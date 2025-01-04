@@ -167,8 +167,8 @@ export class UserRoleTableComponent implements OnInit, AfterViewInit, OnDestroy 
   updateData(reload: boolean = false) {
     this.pageLink.page = this.paginator.pageIndex;
     this.pageLink.pageSize = this.paginator.pageSize;
-    this.pageLink.sortOrder.property = this.sort.active;
-    this.pageLink.sortOrder.direction = Direction[this.sort.direction.toUpperCase()];
+  /*  this.pageLink.sortOrder.property = this.sort.active;
+    this.pageLink.sortOrder.direction = Direction[this.sort.direction.toUpperCase()];*/
     // this.dataSource.loadRelations(this.entityIdValue, this.pageLink, reload);
   }
 
@@ -239,8 +239,8 @@ export class UserRoleTableComponent implements OnInit, AfterViewInit, OnDestroy 
     if ($event) {
       $event.stopPropagation();
     }
-    const title = this.translate.instant('role.delete-role-title', {entityName: role.roleName});
-    const content = this.translate.instant('role.delete-role-text', {entityName: role.roleName});
+    const title = this.translate.instant('role.delete-role-title', {roleName: role.roleName});
+    const content = this.translate.instant('role.delete-role-text', {roleName: role.roleName});
     this.dialogService.confirm(
       title,
       content,
