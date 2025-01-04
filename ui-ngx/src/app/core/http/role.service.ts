@@ -70,9 +70,17 @@ export class RoleService {
   }
 
   public saveRole(role: Role, config?: RequestConfig): Observable<Role> {
-    return this.http.post<Role>('/api/tenant/role/create-or-update',
+    return this.http.post<any>('/api/tenant/role/create-or-update',
       this.mapRoleToSaveRolePayload(role),
-      defaultHttpOptionsFromConfig(config));
+      defaultHttpOptionsFromConfig(config)).pipe(
+        map(res => ({
+          ...res,
+          id: {
+            id: res.id,
+            entityType: EntityType.ROLE
+          }
+        }))
+    );
   }
 
   private mapRoleToSaveRolePayload(role: Role): any {
