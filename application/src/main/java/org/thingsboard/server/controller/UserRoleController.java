@@ -76,17 +76,19 @@ public class UserRoleController extends BaseController {
      * API to get user permissions with role names
      *
      * @pathvariable userId    The ID of the user
-     * @param page
-     * @param pageSize pagination information (page size and page number)
+     * @param textSearch the text to search for (optional)
+     * @param page the page number (zero-based)
+     * @param pageSize the size of the page
      * @return A PageData of UserPermissions with role names
      */
     @GetMapping("/user-roles/roles/{userId}")
     public ResponseEntity<PageData<UserPermission>> getUserPermissionsWithRoleName(
             @PathVariable UUID userId,
+            @RequestParam(required = false) String textSearch,
             @RequestParam int page,
             @RequestParam int pageSize) {
         log.info("Fetching user permissions with role names for user {}", userId);
-        PageLink pageLink = new PageLink(pageSize, page);
+        PageLink pageLink = new PageLink(pageSize, page, textSearch);
         PageData<UserPermission> userPermissions = userRolesService.findUserPermissionsWithRoleName(userId, pageLink);
         return ResponseEntity.ok(userPermissions);
     }
