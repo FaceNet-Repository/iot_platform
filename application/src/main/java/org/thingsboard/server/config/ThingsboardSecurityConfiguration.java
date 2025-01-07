@@ -260,4 +260,15 @@ public class ThingsboardSecurityConfiguration {
             return new CorsFilter(source);
         }
     }
+
+    @Bean
+    @Order(1)
+    SecurityFilterChain noAuthFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatchers(matchers -> matchers.requestMatchers("/api/noauth/**"))
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        return http.build();
+    }
 }

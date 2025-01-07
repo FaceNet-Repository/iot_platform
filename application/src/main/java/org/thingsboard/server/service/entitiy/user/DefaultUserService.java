@@ -33,6 +33,7 @@ import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
+import org.thingsboard.server.service.otp.OTPService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.util.concurrent.TimeUnit;
@@ -46,6 +47,7 @@ public class DefaultUserService extends AbstractTbEntityService implements TbUse
     private final UserService userService;
     private final MailService mailService;
     private final SystemSecurityService systemSecurityService;
+    private final OTPService otpService;
 
     @Override
     public User save(TenantId tenantId, CustomerId customerId, User tbUser, boolean sendActivationMail,
@@ -67,6 +69,26 @@ public class DefaultUserService extends AbstractTbEntityService implements TbUse
             return savedUser;
         } catch (Exception e) {
             logEntityActionService.logEntityAction(tenantId, emptyId(EntityType.USER), tbUser, actionType, user, e);
+            throw e;
+        }
+    }
+
+    @Override
+    public User saveWithOTP(TenantId tenantId, CustomerId customerId, User tbUser, boolean sendOTP) throws ThingsboardException {
+        try {
+            boolean sendEmail = tbUser.getId() == null && sendOTP;
+            User savedUser = checkNotNull(userService.saveUser(tenantId, tbUser));
+            if (sendEmail) {
+                String otp = otpService.generateOTP(savedUser.getEmail());
+                saveActivationToken(tenantId, savedUser.getId(), otp);
+                boolean emailSent = mailService.sendOTPEmail(tenantId, savedUser.getEmail(), otp);
+                if (!emailSent) {
+                    userService.deleteUser(tenantId, savedUser);
+                    throw new ThingsboardException("Failed to send OTP email", ThingsboardErrorCode.GENERAL);
+                }
+            }
+            return savedUser;
+        } catch (Exception e) {
             throw e;
         }
     }
@@ -105,4 +127,15 @@ public class DefaultUserService extends AbstractTbEntityService implements TbUse
         }
     }
 
+    @Override
+    public void saveActivationToken(TenantId tenantId, UserId userId, String otp) throws ThingsboardException {
+        UserCredentials userCredentials = userService.findUserCredentialsByUserId(tenantId, userId);
+        if (!userCredentials.isEnabled()) {
+            userCredentials = userService.generateUserActivationTokenByOTP(userCredentials, otp);
+            userService.saveUserCredentials(tenantId, userCredentials);
+            log.debug("[{}][{}] Saved new activation token for user", tenantId, userId);
+        } else {
+            throw new ThingsboardException("User is already activated!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+    }
 }
