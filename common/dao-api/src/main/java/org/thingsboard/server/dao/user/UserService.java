@@ -106,5 +106,6 @@ public interface UserService extends EntityDaoService {
     MobileSessionInfo findMobileSession(TenantId tenantId, UserId userId, String mobileToken);
 
     void removeMobileSession(TenantId tenantId, String mobileToken);
+    UserCredentials generateUserActivationTokenByOTP(UserCredentials userCredentials, String otp);
 
 }

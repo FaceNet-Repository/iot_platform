@@ -29,6 +29,7 @@ public interface MailService {
     void updateMailConfiguration();
 
     void sendEmail(TenantId tenantId, String email, String subject, String message) throws ThingsboardException;
+    void sendEmailWithoutTenantId(String email, String subject, String message) throws ThingsboardException;
 
     void sendTestMail(JsonNode config, String email) throws ThingsboardException;
 
@@ -55,5 +56,5 @@ public interface MailService {
     void testConnection(TenantId tenantId) throws Exception;
 
     boolean isConfigured(TenantId tenantId);
-
+    boolean sendOTPEmail(TenantId tenantId, String email, String otp) throws ThingsboardException;
 }

@@ -301,6 +301,14 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     }
 
     @Override
+    public UserCredentials generateUserActivationTokenByOTP(UserCredentials userCredentials, String otp) {
+        userCredentials.setActivateToken(otp);
+        int ttlHours = securitySettingsService.getSecuritySettings().getUserActivationTokenTtl();
+        userCredentials.setActivateTokenExpTime(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(ttlHours));
+        return userCredentials;
+    }
+
+    @Override
     public UserCredentials replaceUserCredentials(TenantId tenantId, UserCredentials userCredentials) {
         log.trace("Executing replaceUserCredentials [{}]", userCredentials);
         userCredentialsValidator.validate(userCredentials, data -> tenantId);

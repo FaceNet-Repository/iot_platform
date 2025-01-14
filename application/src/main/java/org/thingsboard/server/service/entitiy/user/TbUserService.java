@@ -26,9 +26,9 @@ import org.thingsboard.server.common.data.id.UserId;
 public interface TbUserService {
 
     User save(TenantId tenantId, CustomerId customerId, User tbUser, boolean sendActivationMail, HttpServletRequest request, User user) throws ThingsboardException;
-
+    User saveWithOTP(TenantId tenantId, CustomerId customerId, User tbUser, boolean sendOTP) throws ThingsboardException;
     void delete(TenantId tenantId, CustomerId customerId, User user, User responsibleUser) throws ThingsboardException;
-
+    void saveActivationToken(TenantId tenantId, UserId userId, String otp) throws ThingsboardException;
     UserActivationLink getActivationLink(TenantId tenantId, CustomerId customerId, UserId userId, HttpServletRequest request) throws ThingsboardException;
 
 }

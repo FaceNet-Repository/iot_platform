@@ -77,7 +77,7 @@ public class DefaultMailService implements MailService {
     private final AdminSettingsService adminSettingsService;
     private final TbApiUsageReportClient apiUsageClient;
 
-    private static final long DEFAULT_TIMEOUT = 10_000;
+    private static final long DEFAULT_TIMEOUT = 500_000;
 
     @Lazy
     @Autowired
@@ -141,6 +141,13 @@ public class DefaultMailService implements MailService {
 
     @Override
     public void sendEmail(TenantId tenantId, String email, String subject, String message) throws ThingsboardException {
+        log.info("Sending mail to: {}", email);
+        sendMail(mailSender, mailFrom, email, subject, message, timeout);
+    }
+
+    @Override
+    public void sendEmailWithoutTenantId(String email, String subject, String message) throws ThingsboardException {
+        log.info("Sending mail to: {}", email);
         sendMail(mailSender, mailFrom, email, subject, message, timeout);
     }
 
@@ -437,7 +444,7 @@ public class DefaultMailService implements MailService {
             helper.setSubject(subject);
             helper.setText(message, true);
 
-            sendMailWithTimeout(mailSender, helper.getMimeMessage(), timeout);
+            sendMailWithTimeout(mailSender, helper.getMimeMessage(), 100000);
         } catch (Exception e) {
             throw handleException(e);
         }
@@ -477,6 +484,19 @@ public class DefaultMailService implements MailService {
         log.warn("Unable to send mail: {}", message);
         return new ThingsboardException(String.format("Unable to send mail: %s", message),
                 ThingsboardErrorCode.GENERAL);
+    }
+
+    @Override
+    public boolean sendOTPEmail(TenantId tenantId, String email, String otp) throws ThingsboardException {
+        String subject = "Your Activation OTP";
+        String message = String.format("Dear user,\n\nYour OTP for account activation is: %s\n\nThank you!", otp);
+        try {
+            sendEmail(tenantId, email, subject, message);
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to send OTP email to {}: {}", email, e.getMessage());
+            return false;
+        }
     }
 
 }

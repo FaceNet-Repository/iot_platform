@@ -113,6 +113,11 @@ public class OAuth2ClientEntity extends BaseSqlEntity<OAuth2Client> {
     @Convert(converter = JsonConverter.class)
     @Column(name = ModelConstants.OAUTH2_ADDITIONAL_INFO_PROPERTY)
     private JsonNode additionalInfo;
+    @Column(name = ModelConstants.CLIENT_TENANT_ID_COLUMN)
+    private UUID clientTenantId;
+
+
+
 
     public OAuth2ClientEntity() {
         super();
@@ -122,6 +127,9 @@ public class OAuth2ClientEntity extends BaseSqlEntity<OAuth2Client> {
         super(oAuth2Client);
         if (oAuth2Client.getTenantId() != null) {
             this.tenantId = oAuth2Client.getTenantId().getId();
+        }
+        if (oAuth2Client.getClientTenantId() != null) {
+            this.clientTenantId = oAuth2Client.getClientTenantId().getId();
         }
         this.title = oAuth2Client.getTitle();
         this.clientId = oAuth2Client.getClientId();
@@ -169,6 +177,7 @@ public class OAuth2ClientEntity extends BaseSqlEntity<OAuth2Client> {
         registration.setId(new OAuth2ClientId(id));
         registration.setCreatedTime(createdTime);
         registration.setTenantId(new TenantId(tenantId));
+        registration.setClientTenantId(new TenantId(clientTenantId));
         registration.setTitle(title);
         registration.setAdditionalInfo(additionalInfo);
         registration.setMapperConfig(
