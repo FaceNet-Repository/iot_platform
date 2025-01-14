@@ -47,12 +47,15 @@ import org.thingsboard.server.dao.oauth2.OAuth2User;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.user.UserService;
+import org.thingsboard.server.service.entitiy.customer.TbCustomerService;
 import org.thingsboard.server.service.entitiy.tenant.TbTenantService;
 import org.thingsboard.server.service.entitiy.user.TbUserService;
 import org.thingsboard.server.service.install.InstallScripts;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,6 +86,10 @@ public abstract class AbstractOAuth2ClientMapper {
 
     @Autowired
     private InstallScripts installScripts;
+
+    @Autowired
+    private TbCustomerService tbCustomerService;
+
 
     @Autowired
     private TbUserService tbUserService;
@@ -194,16 +201,21 @@ public abstract class AbstractOAuth2ClientMapper {
                 if (user == null) {
                     user = new User();
                     user.setAuthority(Authority.CUSTOMER_USER);
-
-                    TenantId tenantId = oauth2User.getTenantId() != null ?
-                            oauth2User.getTenantId() : getTenantId(oauth2User.getTenantName());
-                    user.setTenantId(tenantId);
-                    CustomerId customerId = oauth2User.getCustomerId() != null ?
-                            oauth2User.getCustomerId() : getCustomerId(user.getTenantId(), oauth2User.getCustomerName());
-                    user.setCustomerId(customerId);
                     user.setEmail(oauth2User.getEmail());
                     user.setFirstName(oauth2User.getFirstName());
                     user.setLastName(oauth2User.getLastName());
+                    TenantId tenantId = oAuth2Client.getClientTenantId() != null ?
+                            oAuth2Client.getClientTenantId() : getTenantId(oauth2User.getTenantName());
+                    user.setTenantId(tenantId);
+                    String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+                    String uniqueTitle = user.getEmail() + "-" + timestamp;
+                    Customer customer = new Customer();
+                    customer.setTenantId(user.getTenantId());
+                    customer.setTitle(uniqueTitle);
+                    customer.setEmail(user.getEmail());
+                    customer.setPhone(user.getPhone());
+                    CustomerId customerId = tbCustomerService.save(customer, user).getId();
+                    user.setCustomerId(customerId);
 
                     ObjectNode additionalInfo = JacksonUtil.newObjectNode();
 

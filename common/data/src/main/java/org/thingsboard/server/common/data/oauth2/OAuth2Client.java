@@ -93,6 +93,8 @@ public class OAuth2Client extends BaseDataWithAdditionalInfo<OAuth2ClientId> imp
     private List<PlatformType> platforms;
     @Schema(description = "Additional info of OAuth2 client (e.g. providerName)", requiredMode = Schema.RequiredMode.REQUIRED)
     private JsonNode additionalInfo;
+    @Schema(description = "Tenant Id of client")
+    private TenantId clientTenantId;
 
     public OAuth2Client() {
         super();
@@ -119,6 +121,7 @@ public class OAuth2Client extends BaseDataWithAdditionalInfo<OAuth2ClientId> imp
         this.loginButtonLabel = oAuth2Client.loginButtonLabel;
         this.loginButtonIcon = oAuth2Client.loginButtonIcon;
         this.platforms = oAuth2Client.platforms;
+        this.clientTenantId = oAuth2Client.clientTenantId;
     }
 
     @Override
