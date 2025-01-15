@@ -111,16 +111,21 @@ public class MultipleAssetsController extends BaseController {
         RelationTypeGroup typeGroup = parseRelationTypeGroup(strRelationTypeGroup, RelationTypeGroup.COMMON);
         List<EntityRelationInfo> entityRelationInfos = checkNotNull(filterRelationsByReadPermission(relationService.findInfoByFrom(getTenantId(), entityId, typeGroup).get()));
         List<EntityRelationInfo> result = new ArrayList<>();
-        for (EntityRelationInfo entityRelationInfo : entityRelationInfos){
-            if(profileName.isEmpty()){
-                entityRelationInfo.setAttributes(assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE));
-                result.add(entityRelationInfo);
-            } else {
-                if(assetDeviceRelationService.checkTypeAssetDevice(entityRelationInfo.getTo().getId(), entityRelationInfo.getTo().getEntityType(), profileName)){
-                    entityRelationInfo.setAttributes(assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE));
-                    result.add(entityRelationInfo);
-                }
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        for (EntityRelationInfo entityRelationInfo : entityRelationInfos) {
+            JsonNode clientAttributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.CLIENT_SCOPE);
+            JsonNode serverAttributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE);
+
+            ObjectNode mergedAttributes = objectMapper.createObjectNode();
+            if (clientAttributes != null && clientAttributes.isObject()) {
+                mergedAttributes.setAll((ObjectNode) clientAttributes);
             }
+            if (serverAttributes != null && serverAttributes.isObject()) {
+                mergedAttributes.setAll((ObjectNode) serverAttributes);
+            }
+            entityRelationInfo.setAttributes(mergedAttributes);
+            result.add(entityRelationInfo);
         }
         return result;
     }
