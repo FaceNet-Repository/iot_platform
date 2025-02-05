@@ -53,6 +53,9 @@ public class UserPermissionEntity implements ToData<UserPermission> {
     @Column(name = USER_PERMISSION_ROLE)
     UUID roleId;
 
+    @Column(name = API_URL)
+    String apiUrl;
+
     public UserPermissionEntity() {
     }
 
@@ -67,6 +70,7 @@ public class UserPermissionEntity implements ToData<UserPermission> {
         userPermission.setEntityType(this.entityType);
         userPermission.setPermissionName(this.actionName);
         userPermission.setRoleId(this.roleId);
+        userPermission.setApiUrl(this.apiUrl);
         return userPermission;
     }
 

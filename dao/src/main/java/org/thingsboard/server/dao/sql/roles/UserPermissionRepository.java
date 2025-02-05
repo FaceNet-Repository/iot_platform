@@ -41,6 +41,7 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
     void deleteByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
     List<UserPermissionEntity> findAllByUserIdAndActionIn(UUID userId, List<UUID> permissionIds);
     List<UserPermissionEntity> findAllByUserIdAndRoleId(UUID userId, UUID roleId);
+    List<UserPermissionEntity> findAllByUserIdAndApiUrl(UUID userId, String apiUrl);
 
     @Query("""
         SELECT new org.thingsboard.server.common.data.roles.UserPermission(

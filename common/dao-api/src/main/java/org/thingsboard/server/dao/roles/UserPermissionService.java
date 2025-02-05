@@ -27,4 +27,5 @@ public interface UserPermissionService {
     PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink);
     void deleteRoleByUserIdAndEntityIdAndAction(UUID userId,UUID entityId, UUID permissionId);
     List<UserPermission> findByUserIdAndEntityIdAndAction(UUID userId,UUID entityId, UUID permissionId);
+    List<UserPermission> findByUserIdAndApiUrl(UUID userId,String apiUrl);
 }

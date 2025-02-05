@@ -95,16 +95,35 @@ public class UserPermissionsService {
         userPermissionService.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
     }
 
-    public void checkUserPermission(UUID userId, UUID entityId, String permissionName, UUID tenantId) throws IllegalAccessException {
+    public void checkUserPermission(UUID userId, UUID entityId, String permissionName, UUID tenantId, String apiUrl) throws IllegalAccessException {
         Permission permissionOpt = permissionsService.findByName(permissionName, tenantId);
         if (permissionOpt == null) {
             throw new IllegalAccessException("Permission not found: " + permissionName);
         }
         UUID permissionId = permissionOpt.getId();
-        List<UserPermission> userPermissions = userPermissionService.findByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
-        if (userPermissions.isEmpty()) {
-            throw new IllegalAccessException("User does not have " + permissionName + " permission for this entity.");
+
+        List<UserPermission> userPermissions;
+
+        if (entityId != null) {
+            userPermissions = userPermissionService.findByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
+            if (!userPermissions.isEmpty()) {
+                return;
+            }
         }
+
+        if (apiUrl != null) {
+            userPermissions = userPermissionService.findByUserIdAndApiUrl(userId, apiUrl);
+            if (!userPermissions.isEmpty()) {
+                return;
+            }
+        }
+
+        if (entityId == null && apiUrl == null) {
+            throw new IllegalAccessException("Both entityId and apiUrl are null. Cannot check permissions.");
+        }
+
+        throw new IllegalAccessException("User does not have " + permissionName + " permission for the provided entity or API.");
     }
+
 
 }
