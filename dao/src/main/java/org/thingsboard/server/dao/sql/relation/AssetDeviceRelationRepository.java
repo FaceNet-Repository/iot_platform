@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @Repository
 public interface AssetDeviceRelationRepository extends JpaRepository<AssetDeviceRelationEntity, AssetDeviceRelationEntityId> {
-    List<AssetDeviceRelationEntity> findByAssetProfileFromAndTenantId(String assetProfileFrom, UUID tenantId);
+    List<AssetDeviceRelationEntity> findByAssetProfileFromAndTenantIdAAndCustomerId(String assetProfileFrom, UUID tenantId, UUID customerId);
     List<AssetDeviceRelationEntity> findByFromIdIn(List<UUID> fromIds);
     List<AssetDeviceRelationEntity> findByAssetProfileFromAndFromIdIn(String assetProfileFrom, List<UUID> fromIds);
     List<AssetDeviceRelationEntity> findByFromId(UUID fromId);

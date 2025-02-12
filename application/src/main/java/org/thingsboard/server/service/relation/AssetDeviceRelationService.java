@@ -62,11 +62,11 @@ public class AssetDeviceRelationService {
     @Autowired
     private AssetRepository assetRepository;
 
-    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId, UUID assetId) {
+    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId, UUID assetId, UUID customerId) {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
         List<AssetDeviceRelationEntity> parentEntities = new ArrayList<>();
         if(assetId == null) {
-            parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantId(profileFrom, tenantId);
+            parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantIdAAndCustomerId(profileFrom, tenantId, customerId);
         } else {
             parentEntities = assetDeviceRelationRepository.findByFromId(assetId);
         }

@@ -50,6 +50,13 @@ public class JpaUserPermissionDao implements UserPermissionDao {
     }
 
     @Override
+    public List<UserPermission> findByUserIdAndEntityId(UUID userId, UUID entityId) {
+        return userPermissionRepository.findAllByUserIdAndEntityId(userId, entityId).stream()
+                .map(UserPermissionEntity::toData)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<UserPermission> findByUserIdAndApiUrl(UUID userId, String apiUrl) {
         return userPermissionRepository.findAllByUserIdAndApiUrl(userId, apiUrl).stream()
                 .map(UserPermissionEntity::toData)

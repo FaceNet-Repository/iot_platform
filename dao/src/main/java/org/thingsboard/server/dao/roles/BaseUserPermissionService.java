@@ -55,6 +55,11 @@ public class BaseUserPermissionService implements UserPermissionService {
     }
 
     @Override
+    public List<UserPermission> findByUserIdAndEntityId(UUID userId, UUID entityId) {
+        return userPermissionDao.findByUserIdAndEntityId(userId, entityId);
+    }
+
+    @Override
     public List<UserPermission> findByUserIdAndApiUrl(UUID userId, String apiUrl) {
         return userPermissionDao.findByUserIdAndApiUrl(userId, apiUrl);
     }

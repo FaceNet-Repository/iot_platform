@@ -80,6 +80,7 @@ SELECT
     a.id AS from_id,
     a.name AS from_name,
     r.to_type AS relation_to,
+    a.customer_id,
     CASE
         WHEN r.to_type = 'ASSET' THEN ap_to.name
         WHEN r.to_type = 'DEVICE' THEN dp_to.name
@@ -127,6 +128,7 @@ SELECT
     d.id AS from_id,
     d.name AS from_name,
     r.to_type AS relation_to,
+    d.customer_id,
     CASE
         WHEN r.to_type = 'ASSET' THEN ap_to.name
         WHEN r.to_type = 'DEVICE' THEN dp_to.name
