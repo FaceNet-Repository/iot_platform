@@ -66,7 +66,7 @@ public class AssetDeviceRelationService {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
         List<AssetDeviceRelationEntity> parentEntities = new ArrayList<>();
         if(assetId == null) {
-            parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantIdAAndCustomerId(profileFrom, tenantId, customerId);
+            parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantIdAndCustomerId(profileFrom, tenantId, customerId);
         } else {
             parentEntities = assetDeviceRelationRepository.findByFromId(assetId);
         }
