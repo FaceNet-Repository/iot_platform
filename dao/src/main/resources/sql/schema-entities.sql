@@ -914,17 +914,13 @@ CREATE TABLE IF NOT EXISTS tb_role_permission (
 CREATE TABLE IF NOT EXISTS tb_user_permission (
                                     id UUID NOT NULL CONSTRAINT tb_user_permission_pkey PRIMARY KEY,
                                     user_id UUID NULL DEFAULT NULL,
-                                    action UUID NULL DEFAULT NULL,
+                                    permission_id UUID NULL DEFAULT NULL,
+                                    action_name VARCHAR(255) NULL DEFAULT NULL,
                                     entity_id UUID NULL DEFAULT NULL,
                                     created_time BIGINT NULL DEFAULT NULL,
-                                    entity_type VARCHAR(255) NULL DEFAULT NULL
-);
-
-CREATE TABLE IF NOT EXISTS tb_user_roles (
-                               id UUID NULL DEFAULT NULL,
-                               user_id UUID NULL DEFAULT NULL,
-                               role_id UUID NULL DEFAULT NULL,
-                               created_time BIGINT NULL DEFAULT NULL
+                                    entity_type VARCHAR(255) NULL DEFAULT NULL,
+                                    role_id UUID NULL DEFAULT NULL,
+                                    api_url VARCHAR(255) NULL DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tb_permission (

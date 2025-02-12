@@ -31,6 +31,7 @@ public class UserPermission {
     private String entityType;
     private UUID roleId;
     private String roleName;
+    private String apiUrl;
 
     public UserPermission(UUID roleId, String roleName) {
         this.roleId = roleId;

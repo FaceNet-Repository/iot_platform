@@ -102,6 +102,7 @@ public class ModelConstants {
     public static final String USER_PERMISSION_ROLE = "role_id";
     public static final String USER_PERMISSION_CREATED_TIME = CREATED_TIME_PROPERTY;
     public static final String USER_PERMISSION_ENTITY_TYPE = "entity_type";
+    public static final String API_URL = "api_url";
 
     /**
      * User Roles constants.

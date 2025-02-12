@@ -49,14 +49,17 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.dto.AssetHierarchyRequest;
 import org.thingsboard.server.dao.dto.RpcAssignHPC;
 import org.thingsboard.server.dao.model.sql.AssetDeviceRelationEntity;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.asset.TbAssetService;
+import org.thingsboard.server.service.entitiy.device.TbDeviceService;
 import org.thingsboard.server.service.entitiy.entity.relation.TbEntityRelationService;
 import org.thingsboard.server.service.relation.AssetDeviceRelationService;
+import org.thingsboard.server.service.roles.UserPermissionsService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
@@ -78,21 +81,32 @@ public class MultipleAssetsController extends BaseController {
     private final TbEntityRelationService tbEntityRelationService;
     private final TbAssetService tbAssetService;
     private final AssetDeviceRelationService assetDeviceRelationService;
+    private final TbDeviceService tbDeviceService;
     public static final String FROM_ID = "fromId";
     public static final String FROM_TYPE = "fromType";
 
     @GetMapping("/assets/asset-device-relations")
-    //@PreAuthorize("hasAnyAuthority('CREATE_ASSET')")
     public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
-        return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId(), null);
+        CustomerId customerId = getCurrentUser().getCustomerId();
+//        UUID userId = getCurrentUser().getId().getId();
+//        String apiUrl = "/assets/asset-device-relations";
+//
+//        try {
+//            userPermissionsService.checkUserPermission(userId, null, Arrays.asList("CREATE", "READ"), apiUrl);
+//        } catch (IllegalAccessException e) {
+//            throw new ThingsboardException(e.getMessage(), ThingsboardErrorCode.PERMISSION_DENIED);
+//        }
+
+        return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId(), null, customerId.getId());
     }
 
     @GetMapping("/assets/filter")
     public List<AssetDeviceRelationDTO> getAllFilter(@RequestParam String rootProfile, @RequestParam String assetId, @RequestParam String profileName) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
+        CustomerId customerId = getCurrentUser().getCustomerId();
         List<AssetDeviceRelationDTO> result = new ArrayList<>();
-        List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(rootProfile, 0, tenantId.getId(), UUID.fromString(assetId));
+        List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(rootProfile, 0, tenantId.getId(), UUID.fromString(assetId), customerId.getId());
         assetDeviceRelationService.filter(assetDeviceRelationDTOS, result, profileName);
         return result;
     }
@@ -212,6 +226,11 @@ public class MultipleAssetsController extends BaseController {
             throw new ThingsboardException("Failed to pair Cloud with HC!", ThingsboardErrorCode.GENERAL);
         }
 
+        // Gán thiết bị với user
+        if(getCurrentUser().getAuthority() == Authority.CUSTOMER_USER) {
+            tbDeviceService.assignDeviceToCustomer(getTenantId(), hcpId, checkCustomerId(getCurrentUser().getCustomerId(), Operation.READ), getCurrentUser());
+        }
+
         // Thiết lập quan hệ giữa nhà và MAC
         EntityRelation relation = new EntityRelation();
         relation.setFrom(homeAssetId); // Thực thể cha
@@ -242,6 +261,7 @@ public class MultipleAssetsController extends BaseController {
         checkEntity(asset.getId(), asset, Resource.ASSET);
         Asset savedAsset = tbAssetService.save(asset, getCurrentUser());
         savedAsset.setName(savedAsset.getId().toString());
+        savedAsset.setCustomerId(getCurrentUser().getCustomerId());
         savedAsset = tbAssetService.save(savedAsset, getCurrentUser());
         savedAssets.add(savedAsset);
 
@@ -278,6 +298,7 @@ public class MultipleAssetsController extends BaseController {
         checkEntity(childAsset.getId(), childAsset, Resource.ASSET);
         Asset savedChildAsset = tbAssetService.save(childAsset, getCurrentUser());
         savedChildAsset.setName(savedChildAsset.getId().toString());
+        savedChildAsset.setCustomerId(getCurrentUser().getCustomerId());
         savedChildAsset = tbAssetService.save(savedChildAsset, getCurrentUser());
         savedAssets.add(savedChildAsset);
 

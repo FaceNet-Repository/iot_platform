@@ -71,9 +71,11 @@ public class AssetDeviceRelationEntity {
     @Column(name = "relation_type")
     private String relationType;
 
+    @Column(name = "customer_id")
+    private UUID customerId;
     public AssetDeviceRelationEntity() {}
 
-    public AssetDeviceRelationEntity(String id, UUID fromId, UUID toId, String fromType, String assetProfileFrom, String fromName, String toType, String assetProfileTo, String toName, JsonNode additionalInfo, UUID tenantId, String relationType) {
+    public AssetDeviceRelationEntity(String id, UUID fromId, UUID toId, String fromType, String assetProfileFrom, String fromName, String toType, String assetProfileTo, String toName, JsonNode additionalInfo, UUID tenantId, String relationType, UUID customerId) {
         this.id = id;
         this.fromId = fromId;
         this.toId = toId;
@@ -86,6 +88,15 @@ public class AssetDeviceRelationEntity {
         this.additionalInfo = additionalInfo;
         this.tenantId = tenantId;
         this.relationType = relationType;
+        this.customerId = customerId;
+    }
+
+    public UUID getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(UUID customerId) {
+        this.customerId = customerId;
     }
 
     public UUID getFromId() {

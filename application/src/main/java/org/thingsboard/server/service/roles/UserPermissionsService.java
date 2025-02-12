@@ -95,16 +95,45 @@ public class UserPermissionsService {
         userPermissionService.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
     }
 
-    public void checkUserPermission(UUID userId, UUID entityId, String permissionName, UUID tenantId) throws IllegalAccessException {
-        Permission permissionOpt = permissionsService.findByName(permissionName, tenantId);
-        if (permissionOpt == null) {
-            throw new IllegalAccessException("Permission not found: " + permissionName);
+    public void checkUserPermission(UUID userId, UUID entityId, List<String> permissionNames, String apiUrl) throws IllegalAccessException {
+        if (permissionNames == null || permissionNames.isEmpty()) {
+            throw new IllegalArgumentException("Permission list cannot be null or empty.");
         }
-        UUID permissionId = permissionOpt.getId();
-        List<UserPermission> userPermissions = userPermissionService.findByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
-        if (userPermissions.isEmpty()) {
-            throw new IllegalAccessException("User does not have " + permissionName + " permission for this entity.");
+
+        List<UserPermission> userPermissions;
+
+        if (entityId != null) {
+            userPermissions = userPermissionService.findByUserIdAndEntityId(userId, entityId);
+            if (checkPermissionWithWildcard(userPermissions, permissionNames)) {
+                return;
+            }
         }
+
+        if (apiUrl != null) {
+            userPermissions = userPermissionService.findByUserIdAndApiUrl(userId, apiUrl);
+            if (checkPermissionWithWildcard(userPermissions, permissionNames)) {
+                return;
+            }
+        }
+
+        if (entityId == null && apiUrl == null) {
+            throw new IllegalAccessException("Both entityId and apiUrl are null. Cannot check permissions.");
+        }
+
+        throw new IllegalAccessException("User does not have any of the required permissions for the provided entity or API.");
     }
+
+    private boolean checkPermissionWithWildcard(List<UserPermission> userPermissions, List<String> requiredPermissions) {
+        for (UserPermission permission : userPermissions) {
+            String actionName = permission.getPermissionName();
+            for (String requiredPermission : requiredPermissions) {
+                if ("ALL".equalsIgnoreCase(actionName) || requiredPermission.equalsIgnoreCase(actionName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
 }

@@ -30,6 +30,7 @@ import java.util.UUID;
 @Repository
 public interface UserPermissionRepository extends JpaRepository<UserPermissionEntity, Integer> {
     List<UserPermissionEntity> findAllByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
+    List<UserPermissionEntity> findAllByUserIdAndEntityId(UUID userId, UUID entityId);
     Page<UserPermissionEntity> findAllByUserId(UUID userId, Pageable pageable);
     boolean existsByAction(UUID actionId);
     List<UserPermissionEntity> findAllByUserIdAndAction(UUID userId, UUID action);
@@ -41,6 +42,7 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
     void deleteByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
     List<UserPermissionEntity> findAllByUserIdAndActionIn(UUID userId, List<UUID> permissionIds);
     List<UserPermissionEntity> findAllByUserIdAndRoleId(UUID userId, UUID roleId);
+    List<UserPermissionEntity> findAllByUserIdAndApiUrl(UUID userId, String apiUrl);
 
     @Query("""
         SELECT new org.thingsboard.server.common.data.roles.UserPermission(
