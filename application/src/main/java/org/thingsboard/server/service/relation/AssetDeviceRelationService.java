@@ -150,10 +150,14 @@ public class AssetDeviceRelationService {
             }
         }
 
-        // Bước 6: Trả về danh sách các Building (loại bỏ các bản sao)
+        // Bước 6: Trả về danh sách loại bỏ các bản sao
         return relationMap.values().stream()
                 .filter(dto -> profileFrom.equals(dto.getProfile()))
-                .collect(Collectors.toList());
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(AssetDeviceRelationDTO::getId))),
+                        ArrayList::new
+                ));
+
     }
 
     private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level, UUID tenantId, Set<UUID> seenIds) {
