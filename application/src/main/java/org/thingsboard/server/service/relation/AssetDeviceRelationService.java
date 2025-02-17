@@ -153,11 +153,7 @@ public class AssetDeviceRelationService {
         // Bước 6: Trả về danh sách loại bỏ các bản sao
         return relationMap.values().stream()
                 .filter(dto -> profileFrom.equals(dto.getProfile()))
-                .collect(Collectors.collectingAndThen(
-                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(AssetDeviceRelationDTO::getId))),
-                        ArrayList::new
-                ));
-
+                .collect(Collectors.toList());
     }
 
     private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level, UUID tenantId, Set<UUID> seenIds) {
@@ -283,17 +279,21 @@ public class AssetDeviceRelationService {
         return null;
     }
 
-    public void filter(List <AssetDeviceRelationDTO> source, List <AssetDeviceRelationDTO> result, String type) {
+    public void filter(List<AssetDeviceRelationDTO> source, List<AssetDeviceRelationDTO> result, String type, Set<UUID> seenIds) {
         if (source == null || source.isEmpty()) {
             return;
         }
-        for (AssetDeviceRelationDTO dto: source) {
-            if (type.equals(dto.getProfile())) {
+        for (AssetDeviceRelationDTO dto : source) {
+            UUID dtoId = dto.getId();
+
+            if (type.equals(dto.getProfile()) && !seenIds.contains(dtoId)) {
                 result.add(dto);
+                seenIds.add(dtoId);
             }
             if (dto.getChildren() != null) {
-                filter(dto.getChildren(), result, type);
+                filter(dto.getChildren(), result, type, seenIds);
             }
         }
     }
+
 }
