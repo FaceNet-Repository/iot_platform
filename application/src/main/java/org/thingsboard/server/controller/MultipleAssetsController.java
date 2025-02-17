@@ -106,8 +106,9 @@ public class MultipleAssetsController extends BaseController {
         TenantId tenantId = getCurrentUser().getTenantId();
         CustomerId customerId = getCurrentUser().getCustomerId();
         List<AssetDeviceRelationDTO> result = new ArrayList<>();
+        Set<UUID> seenIds = new HashSet<>();
         List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(rootProfile, 0, tenantId.getId(), UUID.fromString(assetId), customerId.getId());
-        assetDeviceRelationService.filter(assetDeviceRelationDTOS, result, profileName);
+        assetDeviceRelationService.filter(assetDeviceRelationDTOS, result, profileName, seenIds);
         return result;
     }
 
