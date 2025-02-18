@@ -50,6 +50,16 @@ public class BaseUserPermissionService implements UserPermissionService {
     }
 
     @Override
+    public void deleteByEntityIdAndAction(UUID permissionId, UUID entityId) {
+        userPermissionDao.deleteByEntityIdAndAction(permissionId, entityId);
+    }
+
+    @Override
+    public void deleteByUserIdAndEntityId(UUID userId, UUID entityId) {
+        userPermissionDao.deleteByUserIdAndEntityId(userId, entityId);
+    }
+
+    @Override
     public List<UserPermission> findByUserIdAndEntityIdAndAction(UUID userId, UUID entityId, UUID permissionId) {
         return userPermissionDao.findByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
     }
@@ -62,6 +72,11 @@ public class BaseUserPermissionService implements UserPermissionService {
     @Override
     public List<UserPermission> findByUserIdAndApiUrl(UUID userId, String apiUrl) {
         return userPermissionDao.findByUserIdAndApiUrl(userId, apiUrl);
+    }
+
+    @Override
+    public List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType){
+        return userPermissionDao.findEntityIdsByUserIdAndActionAndEntityType(userId, action, entityType);
     }
 
 }

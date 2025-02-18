@@ -15,8 +15,18 @@
  */
 package org.thingsboard.server.service.roles;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Device;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.AssetId;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -25,27 +35,35 @@ import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.roles.UserPermissionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.entitiy.asset.TbAssetService;
+import org.thingsboard.server.service.relation.AssetDeviceRelationService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @TbCoreComponent
 public class UserPermissionsService {
+    private static final Logger log = LoggerFactory.getLogger(UserPermissionsService.class);
     private final UserPermissionService userPermissionService;
+    private final AssetDeviceRelationService assetDeviceRelationService;
     private final PermissionsService permissionsService;
     private final RolesService rolesService;
     private final AssetService assetService;
     private final DeviceService deviceService;
-
-    public UserPermissionsService(UserPermissionService userPermissionService, PermissionsService permissionsService, RolesService rolesService, AssetService assetService, DeviceService deviceService) {
+    private final TbAssetService tbAssetService;
+    public UserPermissionsService(UserPermissionService userPermissionService, AssetDeviceRelationService assetDeviceRelationService, PermissionsService permissionsService, RolesService rolesService, AssetService assetService, DeviceService deviceService, TbAssetService tbAssetService) {
         this.userPermissionService = userPermissionService;
+        this.assetDeviceRelationService = assetDeviceRelationService;
         this.permissionsService = permissionsService;
         this.rolesService = rolesService;
         this.assetService = assetService;
         this.deviceService = deviceService;
+        this.tbAssetService = tbAssetService;
     }
 
     public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
@@ -95,6 +113,14 @@ public class UserPermissionsService {
         userPermissionService.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
     }
 
+    @Transactional
+    public void unassignAllPermissionOfEntity(UUID entityId , String permissionName, TenantId tenantId, UUID userId) throws ThingsboardException {
+        Permission permission = permissionsService.findByName(permissionName, tenantId.getId());
+        assetService.unassignAssetFromCustomer(tenantId, new AssetId(entityId));
+        userPermissionService.deleteByEntityIdAndAction(permission.getId(), entityId);
+        userPermissionService.deleteByUserIdAndEntityId(userId, entityId);
+    }
+
     public void checkUserPermission(UUID userId, UUID entityId, List<String> permissionNames, String apiUrl) throws IllegalAccessException {
         if (permissionNames == null || permissionNames.isEmpty()) {
             throw new IllegalArgumentException("Permission list cannot be null or empty.");
@@ -104,6 +130,9 @@ public class UserPermissionsService {
 
         if (entityId != null) {
             userPermissions = userPermissionService.findByUserIdAndEntityId(userId, entityId);
+            for(UserPermission userPermission : userPermissions){
+                userPermission.setPermissionName(permissionsService.findById(userPermission.getPermissionId()).getName());
+            }
             if (checkPermissionWithWildcard(userPermissions, permissionNames)) {
                 return;
             }
@@ -135,5 +164,54 @@ public class UserPermissionsService {
         return false;
     }
 
+    public List<AssetDeviceRelationDTO> getAssetDeviceWithPermission(UUID userId, String permissionName, String entityType, TenantId tenantId, CustomerId customerId, String profileName) {
+        Permission permission = permissionsService.findByName(permissionName, tenantId.getId());
+        List<UUID> uuids = userPermissionService.findEntityIdsByUserIdAndActionAndEntityType(userId, permission.getId(), entityType);
+        List<AssetDeviceRelationDTO> result = new ArrayList<>();
+
+        try {
+            if (entityType.equalsIgnoreCase("ASSET")) {
+                List<AssetId> assetIds = uuids.stream().map(AssetId::new).toList();
+                ListenableFuture<List<Asset>> assetsFuture;
+
+                assetsFuture = assetService.findAssetsByTenantIdAndIdsAsync(tenantId, assetIds);
+
+
+                List<Asset> assets = assetsFuture.get();
+                for (Asset asset : assets) {
+                    if (profileName == null || asset.getType().equalsIgnoreCase(profileName)) {
+                        AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
+                        dto.setId(asset.getId().getId());
+                        dto.setName(asset.getName());
+                        dto.setProfile(asset.getType());
+                        dto.setAttributes(assetDeviceRelationService.getAllAttributes(tenantId, asset.getId()));
+                        result.add(dto);
+                    }
+                }
+
+            } else if (entityType.equalsIgnoreCase("DEVICE")) {
+                List<DeviceId> deviceIds = uuids.stream().map(DeviceId::new).toList();
+                ListenableFuture<List<Device>> devicesFuture;
+                devicesFuture = deviceService.findDevicesByTenantIdAndIdsAsync(tenantId, deviceIds);
+
+
+                List<Device> devices = devicesFuture.get();
+                for (Device device : devices) {
+                    if (profileName == null || device.getType().equalsIgnoreCase(profileName)) {
+                        AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
+                        dto.setId(device.getId().getId());
+                        dto.setName(device.getName());
+                        dto.setProfile(device.getType());
+                        dto.setAttributes(assetDeviceRelationService.getAllAttributes(tenantId, device.getId()));
+                        result.add(dto);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving assets/devices: {}", e.getMessage(), e);
+        }
+
+        return result;
+    }
 
 }

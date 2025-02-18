@@ -19,13 +19,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
+import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.roles.UserPermissionsService;
+import org.thingsboard.server.service.security.model.SecurityUser;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -79,4 +86,50 @@ public class UserPermissionController extends BaseController {
         userPermissionsService.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * API để lấy danh sách tài sản hoặc thiết bị mà người dùng có quyền truy cập
+     *
+     * @param permission  ID của quyền cần kiểm tra
+     * @param entityType  Loại entity ("ASSET" hoặc "DEVICE")
+     * @return danh sách các AssetDeviceRelationDTO
+     */
+    @GetMapping("/user-permissions/entities")
+    public ResponseEntity<List<AssetDeviceRelationDTO>> getUserEntitiesWithPermission(
+            @RequestParam String permission,
+            @RequestParam String entityType,
+            @RequestParam String profileName) throws ThingsboardException {
+        log.info("Received request to get {}s with permission {} for user {}", entityType, permission, getCurrentUser().getId());
+        SecurityUser user = getCurrentUser();
+        TenantId tenantId = user.getTenantId();
+        CustomerId customerId = user.getCustomerId();
+        List<AssetDeviceRelationDTO> result = userPermissionsService.getAssetDeviceWithPermission(
+                user.getId().getId(), permission, entityType, tenantId, customerId, profileName);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * API unassign + remove Permission
+     *
+     * @param permissionName name của permission cần xóa
+     * @param entityId ID của entity cần xóa
+     * @return ResponseEntity<Void> phản hồi thành công nếu xóa thành công
+     */
+    @DeleteMapping("/user-permissions/customer/unassign")
+    public ResponseEntity<Void> deleteUserPermissionFromCustomer(
+            @RequestParam UUID entityId,
+            @RequestParam String permissionName) throws ThingsboardException {
+        SecurityUser user = getCurrentUser();
+        TenantId tenantId = user.getTenantId();
+        if(user.getAuthority().equals(Authority.CUSTOMER_USER)){
+            try {
+                userPermissionsService.checkUserPermission(user.getId().getId(), entityId, Arrays.asList("DELETE", "ALL"), null);
+            } catch (IllegalAccessException e) {
+                throw new ThingsboardException(e.getMessage(), ThingsboardErrorCode.PERMISSION_DENIED);
+            }
+        }
+        userPermissionsService.unassignAllPermissionOfEntity(entityId, permissionName, tenantId, user.getId().getId());
+        return ResponseEntity.ok().build();
+    }
+
 }

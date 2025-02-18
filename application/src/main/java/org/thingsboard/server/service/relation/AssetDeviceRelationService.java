@@ -107,24 +107,7 @@ public class AssetDeviceRelationService {
                 dto.setName(child.getToName());
                 dto.setProfile(child.getAssetProfileTo());
                 if ("DEVICE".equals(child.getToType())){
-                    // Lấy cả thuộc tính CLIENT_SCOPE và SERVER_SCOPE
-                    JsonNode clientAttributes = getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.CLIENT_SCOPE);
-                    JsonNode serverAttributes = getAttributesAsJson(new TenantId(tenantId), new DeviceId(child.getToId()), AttributeScope.SERVER_SCOPE);
-
-                    // Tạo ObjectMapper để xử lý JsonNode
-                    ObjectMapper objectMapper = new ObjectMapper();
-
-                    // Hợp nhất hai JsonNode
-                    ObjectNode mergedAttributes = objectMapper.createObjectNode();
-                    if (clientAttributes != null && clientAttributes.isObject()) {
-                        mergedAttributes.setAll((ObjectNode) clientAttributes);
-                    }
-                    if (serverAttributes != null && serverAttributes.isObject()) {
-                        mergedAttributes.setAll((ObjectNode) serverAttributes);
-                    }
-
-                    // Đặt thuộc tính hợp nhất vào DTO
-                    dto.setAttributes(mergedAttributes);
+                    dto.setAttributes(getAllAttributes(new TenantId(tenantId), new DeviceId(child.getToId())));
                 } else {
                     dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
                 }
@@ -185,24 +168,7 @@ public class AssetDeviceRelationService {
                     subChildDTO.setName(entity.getToName());
                     subChildDTO.setProfile(entity.getAssetProfileTo());
                     if ("DEVICE".equals(entity.getToType())){
-                        // Lấy cả CLIENT_SCOPE và SERVER_SCOPE dưới dạng JsonNode
-                        JsonNode clientAttributes = getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.CLIENT_SCOPE);
-                        JsonNode serverAttributes = getAttributesAsJson(new TenantId(tenantId), new DeviceId(entity.getToId()), AttributeScope.SERVER_SCOPE);
-
-                        // Tạo ObjectMapper để xử lý JsonNode
-                        ObjectMapper objectMapper = new ObjectMapper();
-
-                        // Hợp nhất hai JsonNode
-                        ObjectNode mergedAttributes = objectMapper.createObjectNode();
-                        if (clientAttributes != null && clientAttributes.isObject()) {
-                            mergedAttributes.setAll((ObjectNode) clientAttributes);
-                        }
-                        if (serverAttributes != null && serverAttributes.isObject()) {
-                            mergedAttributes.setAll((ObjectNode) serverAttributes);
-                        }
-
-                        // Đặt thuộc tính hợp nhất vào DTO
-                        subChildDTO.setAttributes(mergedAttributes);
+                        subChildDTO.setAttributes(getAllAttributes(new TenantId(tenantId), new DeviceId(entity.getToId())));
                     } else {
                         subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
                     }
@@ -250,6 +216,27 @@ public class AssetDeviceRelationService {
 
         // Chuyển Map thành JsonNode
         return objectMapper.valueToTree(resultMap);
+    }
+
+    public JsonNode getAllAttributes(TenantId tenantId, EntityId entityId){
+        // Lấy cả CLIENT_SCOPE và SERVER_SCOPE dưới dạng JsonNode
+        JsonNode clientAttributes = getAttributesAsJson(tenantId, entityId, AttributeScope.CLIENT_SCOPE);
+        JsonNode serverAttributes = getAttributesAsJson(tenantId, entityId, AttributeScope.SERVER_SCOPE);
+        JsonNode sharedAttributes = getAttributesAsJson(tenantId, entityId, AttributeScope.SHARED_SCOPE);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        ObjectNode mergedAttributes = objectMapper.createObjectNode();
+        if (clientAttributes != null && clientAttributes.isObject()) {
+            mergedAttributes.setAll((ObjectNode) clientAttributes);
+        }
+        if (serverAttributes != null && serverAttributes.isObject()) {
+            mergedAttributes.setAll((ObjectNode) serverAttributes);
+        }
+        if (sharedAttributes != null && sharedAttributes.isObject()) {
+            mergedAttributes.setAll((ObjectNode) sharedAttributes);
+        }
+        return mergedAttributes;
     }
 
     public List<AttributeKvEntry> getAllAtributes(TenantId tenantId, EntityId entityId, AttributeScope attributeScope){

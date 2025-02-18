@@ -40,6 +40,8 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
                                                            @Param("action") UUID action,
                                                            @Param("entityType") String entityType);
     void deleteByUserIdAndActionAndEntityId(UUID userId, UUID action, UUID entityId);
+    void deleteAllByActionAndEntityId(UUID action, UUID entityId);
+    void deleteAllByUserIdAndEntityId(UUID userId, UUID entityId);
     List<UserPermissionEntity> findAllByUserIdAndActionIn(UUID userId, List<UUID> permissionIds);
     List<UserPermissionEntity> findAllByUserIdAndRoleId(UUID userId, UUID roleId);
     List<UserPermissionEntity> findAllByUserIdAndApiUrl(UUID userId, String apiUrl);

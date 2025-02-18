@@ -49,6 +49,7 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.dto.AssetHierarchyRequest;
@@ -126,20 +127,9 @@ public class MultipleAssetsController extends BaseController {
         RelationTypeGroup typeGroup = parseRelationTypeGroup(strRelationTypeGroup, RelationTypeGroup.COMMON);
         List<EntityRelationInfo> entityRelationInfos = checkNotNull(filterRelationsByReadPermission(relationService.findInfoByFrom(getTenantId(), entityId, typeGroup).get()));
         List<EntityRelationInfo> result = new ArrayList<>();
-        ObjectMapper objectMapper = new ObjectMapper();
 
         for (EntityRelationInfo entityRelationInfo : entityRelationInfos) {
-            JsonNode clientAttributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.CLIENT_SCOPE);
-            JsonNode serverAttributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE);
-
-            ObjectNode mergedAttributes = objectMapper.createObjectNode();
-            if (clientAttributes != null && clientAttributes.isObject()) {
-                mergedAttributes.setAll((ObjectNode) clientAttributes);
-            }
-            if (serverAttributes != null && serverAttributes.isObject()) {
-                mergedAttributes.setAll((ObjectNode) serverAttributes);
-            }
-            entityRelationInfo.setAttributes(mergedAttributes);
+            entityRelationInfo.setAttributes(assetDeviceRelationService.getAllAttributes(getTenantId(), entityRelationInfo.getTo()));
             result.add(entityRelationInfo);
         }
         return result;
@@ -263,6 +253,10 @@ public class MultipleAssetsController extends BaseController {
         Asset savedAsset = tbAssetService.save(asset, getCurrentUser());
         savedAsset.setName(savedAsset.getId().toString());
         savedAsset.setCustomerId(getCurrentUser().getCustomerId());
+        SecurityUser user = getCurrentUser();
+
+
+
         savedAsset = tbAssetService.save(savedAsset, getCurrentUser());
         savedAssets.add(savedAsset);
 
