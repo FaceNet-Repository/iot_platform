@@ -26,7 +26,10 @@ public interface UserPermissionService {
     List<UserPermission> saveRoles(List<UserPermission> userPermissions);
     PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink);
     void deleteRoleByUserIdAndEntityIdAndAction(UUID userId,UUID entityId, UUID permissionId);
+    void deleteByEntityIdAndAction(UUID action, UUID entityId);
+    void deleteByUserIdAndEntityId(UUID userId, UUID entityId);
     List<UserPermission> findByUserIdAndEntityIdAndAction(UUID userId,UUID entityId, UUID permissionId);
     List<UserPermission> findByUserIdAndEntityId(UUID userId,UUID entityId);
     List<UserPermission> findByUserIdAndApiUrl(UUID userId,String apiUrl);
+    List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType);
 }

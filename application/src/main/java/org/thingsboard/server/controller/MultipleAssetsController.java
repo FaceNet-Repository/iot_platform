@@ -49,6 +49,8 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.roles.Permission;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.dto.AssetHierarchyRequest;
@@ -59,8 +61,10 @@ import org.thingsboard.server.service.entitiy.asset.TbAssetService;
 import org.thingsboard.server.service.entitiy.device.TbDeviceService;
 import org.thingsboard.server.service.entitiy.entity.relation.TbEntityRelationService;
 import org.thingsboard.server.service.relation.AssetDeviceRelationService;
+import org.thingsboard.server.service.roles.PermissionsService;
 import org.thingsboard.server.service.roles.UserPermissionsService;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.permission.Action;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
 
@@ -81,7 +85,9 @@ public class MultipleAssetsController extends BaseController {
     private final TbEntityRelationService tbEntityRelationService;
     private final TbAssetService tbAssetService;
     private final AssetDeviceRelationService assetDeviceRelationService;
+    private final PermissionsService permissionsService;
     private final TbDeviceService tbDeviceService;
+    private final UserPermissionsService userPermissionsService;
     public static final String FROM_ID = "fromId";
     public static final String FROM_TYPE = "fromType";
 
@@ -126,20 +132,9 @@ public class MultipleAssetsController extends BaseController {
         RelationTypeGroup typeGroup = parseRelationTypeGroup(strRelationTypeGroup, RelationTypeGroup.COMMON);
         List<EntityRelationInfo> entityRelationInfos = checkNotNull(filterRelationsByReadPermission(relationService.findInfoByFrom(getTenantId(), entityId, typeGroup).get()));
         List<EntityRelationInfo> result = new ArrayList<>();
-        ObjectMapper objectMapper = new ObjectMapper();
 
         for (EntityRelationInfo entityRelationInfo : entityRelationInfos) {
-            JsonNode clientAttributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.CLIENT_SCOPE);
-            JsonNode serverAttributes = assetDeviceRelationService.getAttributesAsJson(getTenantId(), entityRelationInfo.getTo(), AttributeScope.SERVER_SCOPE);
-
-            ObjectNode mergedAttributes = objectMapper.createObjectNode();
-            if (clientAttributes != null && clientAttributes.isObject()) {
-                mergedAttributes.setAll((ObjectNode) clientAttributes);
-            }
-            if (serverAttributes != null && serverAttributes.isObject()) {
-                mergedAttributes.setAll((ObjectNode) serverAttributes);
-            }
-            entityRelationInfo.setAttributes(mergedAttributes);
+            entityRelationInfo.setAttributes(assetDeviceRelationService.getAllAttributes(getTenantId(), entityRelationInfo.getTo()));
             result.add(entityRelationInfo);
         }
         return result;
@@ -249,7 +244,7 @@ public class MultipleAssetsController extends BaseController {
 
     private void saveAssetRecursively(AssetHierarchyRequest assetRequest, List<Asset> savedAssets, AssetId parentAssetId) throws Exception {
         Asset asset = new Asset();
-
+        SecurityUser user = getCurrentUser();
         // Thiết lập các thông tin cần thiết cho asset
         asset.setTenantId(getTenantId());
         asset.setName(assetRequest.getName() + " " + Uuids.timeBased());
@@ -257,14 +252,24 @@ public class MultipleAssetsController extends BaseController {
         asset.setLabel(assetRequest.getLabel());
         asset.setVersion(1L);
         asset.setAdditionalInfo(assetRequest.getAdditionalInfo());
+        asset.setCustomerId(user.getCustomerId());
 
         // Lưu asset và nhận về asset đã được gán id
         checkEntity(asset.getId(), asset, Resource.ASSET);
-        Asset savedAsset = tbAssetService.save(asset, getCurrentUser());
-        savedAsset.setName(savedAsset.getId().toString());
-        savedAsset.setCustomerId(getCurrentUser().getCustomerId());
-        savedAsset = tbAssetService.save(savedAsset, getCurrentUser());
+        Asset savedAsset = tbAssetService.save(asset, user);
+//        savedAsset.setName(savedAsset.getId().toString());
+//        savedAsset.setCustomerId(getCurrentUser().getCustomerId());
+//        savedAsset = tbAssetService.save(savedAsset, getCurrentUser());
         savedAssets.add(savedAsset);
+
+        Permission permission = permissionsService.findByName(Action.ALL.name(), user.getTenantId().getId());
+        UserPermission userPermission = new UserPermission();
+        userPermission.setEntityName("ASSET");
+        userPermission.setUserId(user.getId().getId());
+        userPermission.setEntityId(savedAsset.getId().getId());
+        userPermission.setPermissionId(permission.getId());
+        List<UserPermission> userPermissions = Collections.singletonList(userPermission);
+        userPermissionsService.saveRoles(userPermissions);
 
         // Nếu có `parentAssetId`, thiết lập quan hệ cha-con
         if (parentAssetId != null) {
@@ -311,7 +316,7 @@ public class MultipleAssetsController extends BaseController {
         // Đệ quy lưu các tài sản con của tài sản con (nếu có)
         if (childRequest.getChildren() != null) {
             for (AssetHierarchyRequest grandChildRequest : childRequest.getChildren()) {
-                saveChildAssetRecursively(grandChildRequest, savedChildAsset.getId(), savedAssets);  // Tăng level cho các tài sản con tiếp theo
+                saveChildAssetRecursively(grandChildRequest, savedChildAsset.getId(), savedAssets);
             }
         }
     }
@@ -368,10 +373,6 @@ public class MultipleAssetsController extends BaseController {
             String baseUrl = getBaseUrl();
             String rpcUrl = String.format("%s/api/rpc/twoway/%s", baseUrl, hcpId.getId().toString());
             log.info(rpcUrl);
-            // Dữ liệu RPC
-//            ObjectNode params = new ObjectMapper().createObjectNode();
-//            params.put("mac", mac);
-//            params.put("dormitory", homeId);
 
             ObjectNode rpcRequest = new ObjectMapper().createObjectNode();
             rpcRequest.put("method", "registerHC");

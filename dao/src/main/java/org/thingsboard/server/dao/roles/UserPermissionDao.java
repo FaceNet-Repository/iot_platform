@@ -31,5 +31,7 @@ public interface UserPermissionDao {
     List<UserPermission> saveRoles(List<UserPermission> userPermissions);
     PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink);
     void deleteRoleByUserIdAndEntityIdAndAction(UUID userId, UUID action, UUID entityId);
+    void deleteByEntityIdAndAction(UUID action, UUID entityId);
+    void deleteByUserIdAndEntityId(UUID userId, UUID entityId);
     List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType);
 }
