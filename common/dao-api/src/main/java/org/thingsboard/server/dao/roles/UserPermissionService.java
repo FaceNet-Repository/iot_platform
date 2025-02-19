@@ -24,6 +24,7 @@ import java.util.UUID;
 
 public interface UserPermissionService {
     List<UserPermission> saveRoles(List<UserPermission> userPermissions);
+    UserPermission saveRole(UserPermission userPermission);
     PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink);
     void deleteRoleByUserIdAndEntityIdAndAction(UUID userId,UUID entityId, UUID permissionId);
     void deleteByEntityIdAndAction(UUID action, UUID entityId);

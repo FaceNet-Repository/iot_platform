@@ -40,6 +40,11 @@ public class BaseUserPermissionService implements UserPermissionService {
     }
 
     @Override
+    public UserPermission saveRole(UserPermission userPermission){
+        return userPermissionDao.saveRole(userPermission);
+    }
+
+    @Override
     public PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink){
         return userPermissionDao.findByUserId(userId, pageLink);
     }

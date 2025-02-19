@@ -125,4 +125,21 @@ public class JpaUserPermissionDao implements UserPermissionDao {
     public List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType){
         return userPermissionRepository.findEntityIdsByUserIdAndActionAndEntityType(userId, action, entityType);
     }
+
+    @Override
+    public UserPermission saveRole(UserPermission userPermission) {
+        UserPermissionEntity entity = new UserPermissionEntity();
+        entity.setId(Uuids.timeBased());
+        entity.setUserId(userPermission.getUserId());
+        entity.setRoleId(userPermission.getRoleId());
+        entity.setAction(userPermission.getPermissionId());
+        entity.setEntityId(userPermission.getEntityId());
+        entity.setCreatedTime(System.currentTimeMillis());
+        entity.setEntityType(userPermission.getEntityType());
+        entity.setActionName(userPermission.getPermissionName());
+
+        UserPermissionEntity savedEntity = userPermissionRepository.save(entity);
+        return savedEntity.toData();
+    }
+
 }
