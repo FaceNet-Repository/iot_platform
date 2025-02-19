@@ -247,7 +247,7 @@ public class MultipleAssetsController extends BaseController {
         SecurityUser user = getCurrentUser();
         // Thiết lập các thông tin cần thiết cho asset
         asset.setTenantId(getTenantId());
-        asset.setName(assetRequest.getName() + " " + Uuids.timeBased());
+        asset.setName(assetRequest.getName());
         asset.setType(assetRequest.getType());
         asset.setLabel(assetRequest.getLabel());
         asset.setVersion(1L);
@@ -258,7 +258,6 @@ public class MultipleAssetsController extends BaseController {
         checkEntity(asset.getId(), asset, Resource.ASSET);
         Asset savedAsset = tbAssetService.save(asset, user);
 //        savedAsset.setName(savedAsset.getId().toString());
-//        savedAsset.setCustomerId(getCurrentUser().getCustomerId());
 //        savedAsset = tbAssetService.save(savedAsset, getCurrentUser());
         savedAssets.add(savedAsset);
 
