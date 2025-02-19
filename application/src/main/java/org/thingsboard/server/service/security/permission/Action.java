@@ -16,7 +16,7 @@
 package org.thingsboard.server.service.security.permission;
 
 public enum Action {
-    CREATE, READ, UPDATE, DELETE;
+    CREATE, READ, UPDATE, DELETE, ALL;
     public static Action fromString(String action) {
         try {
             return Action.valueOf(action.toUpperCase());

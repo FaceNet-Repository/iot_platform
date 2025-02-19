@@ -55,15 +55,13 @@ public class UserPermissionsService {
     private final RolesService rolesService;
     private final AssetService assetService;
     private final DeviceService deviceService;
-    private final TbAssetService tbAssetService;
-    public UserPermissionsService(UserPermissionService userPermissionService, AssetDeviceRelationService assetDeviceRelationService, PermissionsService permissionsService, RolesService rolesService, AssetService assetService, DeviceService deviceService, TbAssetService tbAssetService) {
+    public UserPermissionsService(UserPermissionService userPermissionService, AssetDeviceRelationService assetDeviceRelationService, PermissionsService permissionsService, RolesService rolesService, AssetService assetService, DeviceService deviceService) {
         this.userPermissionService = userPermissionService;
         this.assetDeviceRelationService = assetDeviceRelationService;
         this.permissionsService = permissionsService;
         this.rolesService = rolesService;
         this.assetService = assetService;
         this.deviceService = deviceService;
-        this.tbAssetService = tbAssetService;
     }
 
     public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
