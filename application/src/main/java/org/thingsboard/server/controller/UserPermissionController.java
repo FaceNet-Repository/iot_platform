@@ -25,12 +25,15 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.roles.PermissionsService;
 import org.thingsboard.server.service.roles.UserPermissionsService;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.permission.Action;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +46,7 @@ import java.util.UUID;
 @Slf4j
 public class UserPermissionController extends BaseController {
     private final UserPermissionsService userPermissionsService;
+    private final PermissionsService permissionsService;
 
     /**
      * API để lưu danh sách các UserPermission
@@ -51,10 +55,31 @@ public class UserPermissionController extends BaseController {
      * @return danh sách các UserPermission đã được lưu
      */
     @PostMapping("/user-permissions")
-    public ResponseEntity<List<UserPermission>> saveUserPermissions(@RequestBody List<UserPermission> userPermissions) {
+    public ResponseEntity<List<UserPermission>> saveUserPermissions(@RequestBody List<UserPermission> userPermissions) throws ThingsboardException {
         log.info("Received request to save user permissions: {}", userPermissions);
-        List<UserPermission> savedPermissions = userPermissionsService.saveRoles(userPermissions);
+        List<UserPermission> savedPermissions = userPermissionsService.saveRoles(userPermissions, getCurrentUser().getTenantId());
         return ResponseEntity.ok(savedPermissions);
+    }
+
+    /**
+     * API để lưu  UserPermission
+     *
+     * @param userPermission UserPermission được gửi từ client
+     * @return UserPermission đã được lưu
+     */
+    @PostMapping("/user-permission")
+    public ResponseEntity<UserPermission> saveUserPermission(@RequestBody UserPermission userPermission) throws ThingsboardException {
+        log.info("Received request to save user permission: {}", userPermission);
+        SecurityUser user = getCurrentUser();
+        if(user.getAuthority().equals(Authority.CUSTOMER_USER)){
+            try {
+                userPermissionsService.checkUserPermission(user.getId().getId(), userPermission.getEntityId(), Arrays.asList(Action.ALL.name(), Action.ASSIGN.name()), null);
+            } catch (IllegalAccessException e) {
+                throw new ThingsboardException(e.getMessage(), ThingsboardErrorCode.PERMISSION_DENIED);
+            }
+        }
+        UserPermission savedPermission = userPermissionsService.saveRole(userPermission, getCurrentUser().getTenantId());
+        return ResponseEntity.ok(savedPermission);
     }
 
     @GetMapping("/user-permissions")
@@ -81,9 +106,44 @@ public class UserPermissionController extends BaseController {
     public ResponseEntity<Void> deleteUserPermission(
             @RequestParam UUID userId,
             @RequestParam UUID entityId,
-            @RequestParam UUID permissionId) {
+            @RequestParam UUID permissionId) throws ThingsboardException {
         log.info("Received request to delete permission with ID: {} for user ID: {} with entity ID: {}", permissionId, userId, entityId);
+        SecurityUser user = getCurrentUser();
+        if(user.getAuthority().equals(Authority.CUSTOMER_USER)){
+            try {
+                userPermissionsService.checkUserPermission(user.getId().getId(), entityId, Arrays.asList(Action.DELETE.name(), Action.ALL.name()), null);
+            } catch (IllegalAccessException e) {
+                throw new ThingsboardException(e.getMessage(), ThingsboardErrorCode.PERMISSION_DENIED);
+            }
+        }
         userPermissionsService.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permissionId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * API để xóa permission khỏi user permission
+     *
+     * @param userId      ID của user
+     * @param permissionName Name của permission cần xóa
+     * @param entityId ID của entity cần xóa
+     * @return ResponseEntity<Void> phản hồi thành công nếu xóa thành công
+     */
+    @DeleteMapping("/user-permissions/delete-by-permission-name")
+    public ResponseEntity<Void> deleteUserPermission(
+            @RequestParam UUID userId,
+            @RequestParam UUID entityId,
+            @RequestParam String permissionName) throws ThingsboardException {
+        log.info("Received request to delete permission with name: {} for user ID: {} with entity ID: {}", permissionName, userId, entityId);
+        SecurityUser user = getCurrentUser();
+        if(user.getAuthority().equals(Authority.CUSTOMER_USER)){
+            try {
+                userPermissionsService.checkUserPermission(user.getId().getId(), entityId, Arrays.asList(Action.DELETE.name(), Action.ALL.name()), null);
+            } catch (IllegalAccessException e) {
+                throw new ThingsboardException(e.getMessage(), ThingsboardErrorCode.PERMISSION_DENIED);
+            }
+        }
+        Permission permission = permissionsService.findByName(permissionName, user.getTenantId().getId());
+        userPermissionsService.deleteRoleByUserIdAndEntityIdAndAction(userId, entityId, permission.getId());
         return ResponseEntity.ok().build();
     }
 
@@ -123,7 +183,7 @@ public class UserPermissionController extends BaseController {
         TenantId tenantId = user.getTenantId();
         if(user.getAuthority().equals(Authority.CUSTOMER_USER)){
             try {
-                userPermissionsService.checkUserPermission(user.getId().getId(), entityId, Arrays.asList("DELETE", "ALL"), null);
+                userPermissionsService.checkUserPermission(user.getId().getId(), entityId, Arrays.asList(Action.DELETE.name(), Action.ALL.name()), null);
             } catch (IllegalAccessException e) {
                 throw new ThingsboardException(e.getMessage(), ThingsboardErrorCode.PERMISSION_DENIED);
             }
@@ -131,5 +191,7 @@ public class UserPermissionController extends BaseController {
         userPermissionsService.unassignAllPermissionOfEntity(entityId, permissionName, tenantId, user.getId().getId());
         return ResponseEntity.ok().build();
     }
+
+
 
 }

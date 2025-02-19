@@ -268,8 +268,7 @@ public class MultipleAssetsController extends BaseController {
         userPermission.setUserId(user.getId().getId());
         userPermission.setEntityId(savedAsset.getId().getId());
         userPermission.setPermissionId(permission.getId());
-        List<UserPermission> userPermissions = Collections.singletonList(userPermission);
-        userPermissionsService.saveRoles(userPermissions);
+        userPermissionsService.saveRole(userPermission, user.getTenantId());
 
         // Nếu có `parentAssetId`, thiết lập quan hệ cha-con
         if (parentAssetId != null) {

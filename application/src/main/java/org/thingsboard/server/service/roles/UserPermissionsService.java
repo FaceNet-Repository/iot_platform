@@ -64,8 +64,23 @@ public class UserPermissionsService {
         this.deviceService = deviceService;
     }
 
-    public List<UserPermission> saveRoles(List<UserPermission> userPermissions){
+    public List<UserPermission> saveRoles(List<UserPermission> userPermissions, TenantId tenantId){
+        for (UserPermission userPermission : userPermissions){
+            if(userPermission.getPermissionId() == null){
+                Permission permission = permissionsService.findByName(userPermission.getPermissionName(), tenantId.getId());
+                userPermission.setPermissionId(permission.getId());
+            }
+        }
         return userPermissionService.saveRoles(userPermissions);
+    }
+
+    public UserPermission saveRole(UserPermission userPermission, TenantId tenantId){
+        if(userPermission.getPermissionId() == null){
+            Permission permission = permissionsService.findByName(userPermission.getPermissionName(), tenantId.getId());
+            userPermission.setPermissionId(permission.getId());
+        }
+
+        return userPermissionService.saveRole(userPermission);
     }
 
     public PageData<UserPermission> findByUserId(UUID userId, PageLink pageLink, TenantId tenantId) {
