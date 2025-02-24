@@ -19,15 +19,18 @@ package org.thingsboard.server.service.relation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
+import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.dao.attributes.AttributesDao;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.model.sql.AssetDeviceRelationEntity;
@@ -37,8 +40,10 @@ import org.thingsboard.server.dao.sql.asset.AssetRepository;
 import org.thingsboard.server.dao.sql.attributes.AttributeKvRepository;
 import org.thingsboard.server.dao.sql.device.DeviceRepository;
 import org.thingsboard.server.dao.sql.relation.AssetDeviceRelationRepository;
+import org.thingsboard.server.dao.timeseries.TimeseriesService;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,6 +66,9 @@ public class AssetDeviceRelationService {
 
     @Autowired
     private AssetRepository assetRepository;
+
+    @Autowired
+    private TimeseriesService tsService;
 
     public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId, UUID assetId, UUID customerId) {
         // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
@@ -108,6 +116,7 @@ public class AssetDeviceRelationService {
                 dto.setProfile(child.getAssetProfileTo());
                 if ("DEVICE".equals(child.getToType())){
                     dto.setAttributes(getAllAttributes(new TenantId(tenantId), new DeviceId(child.getToId())));
+                    dto.setTelemetry(getTelemetry(new TenantId(tenantId), new DeviceId(child.getFromId())));
                 } else {
                     dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
                 }
@@ -169,6 +178,7 @@ public class AssetDeviceRelationService {
                     subChildDTO.setProfile(entity.getAssetProfileTo());
                     if ("DEVICE".equals(entity.getToType())){
                         subChildDTO.setAttributes(getAllAttributes(new TenantId(tenantId), new DeviceId(entity.getToId())));
+                        subChildDTO.setTelemetry(getTelemetry(new TenantId(tenantId), new DeviceId(entity.getFromId())));
                     } else {
                         subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
                     }
@@ -281,6 +291,39 @@ public class AssetDeviceRelationService {
                 filter(dto.getChildren(), result, type, seenIds);
             }
         }
+    }
+
+    public JsonNode getTelemetry(TenantId tenantId, EntityId entityId) {
+        ListenableFuture<List<TsKvEntry>> future;
+        future = tsService.findAllLatest(tenantId, entityId);
+
+        try {
+            List<TsKvEntry> telemetryEntries = future.get();
+            ObjectNode telemetryJson = objectMapper.createObjectNode();
+
+            for (TsKvEntry entry : telemetryEntries) {
+                telemetryJson.set(entry.getKey(), objectMapper.valueToTree(getTsKvValue(entry)));
+            }
+
+            return telemetryJson;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Error retrieving telemetry data", e);
+        }
+    }
+
+    private Object getTsKvValue(TsKvEntry entry) {
+        if (entry.getStrValue().isPresent()) {
+            return entry.getStrValue().get();
+        } else if (entry.getBooleanValue().isPresent()) {
+            return entry.getBooleanValue().get();
+        } else if (entry.getLongValue().isPresent()) {
+            return entry.getLongValue().get();
+        } else if (entry.getDoubleValue().isPresent()) {
+            return entry.getDoubleValue().get();
+        } else if (entry.getJsonValue().isPresent()) {
+            return entry.getJsonValue().get();
+        }
+        return null;
     }
 
 }

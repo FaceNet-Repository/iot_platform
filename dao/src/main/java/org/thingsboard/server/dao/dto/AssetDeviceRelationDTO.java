@@ -31,5 +31,6 @@ public class AssetDeviceRelationDTO {
     private String name;
     private String profile;
     private JsonNode attributes;
+    private JsonNode telemetry;
     private List<AssetDeviceRelationDTO> children;
 }
