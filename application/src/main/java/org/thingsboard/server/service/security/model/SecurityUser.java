@@ -41,6 +41,8 @@ public class SecurityUser extends User {
     private String sessionId = UUID.randomUUID().toString();
     @Getter @Setter
     private List<String> roles;
+    @Getter @Setter
+    private String nonceOauth2;
 
     public SecurityUser() {
         super();
