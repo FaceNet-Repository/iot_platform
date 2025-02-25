@@ -25,7 +25,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.cache.OAuth2TokenCache;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.StringUtils;
@@ -96,6 +98,9 @@ public abstract class AbstractOAuth2ClientMapper {
 
     @Autowired
     protected TbTenantProfileCache tenantProfileCache;
+
+    @Autowired
+    private OAuth2TokenCache tokenCache;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
@@ -256,7 +261,13 @@ public abstract class AbstractOAuth2ClientMapper {
             // Lấy giá trị của key 'roles' từ attributes
             Map<String, Object> attributes = token.getPrincipal().getAttributes();
             Object rolesObject = attributes.get("roles");
-
+            if (token.getPrincipal() instanceof OidcUser oidcUser) {
+                String idToken = oidcUser.getIdToken().getTokenValue();
+                String nonce = oidcUser.getIdToken().getClaims().get("nonce").toString();
+                String email = user.getEmail();
+                tokenCache.saveToken(email, nonce, idToken);
+                securityUser.setNonceOauth2(nonce);
+            }
             // Kiểm tra và ép kiểu giá trị của 'roles'
             if (rolesObject instanceof List<?>) {
                 // Ép kiểu sang List<String>

@@ -22,6 +22,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.server.cache.OAuth2TokenCache;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.OAuth2ClientId;
@@ -45,14 +48,12 @@ import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.oauth2.OAuth2Configuration;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.oauth2client.TbOauth2ClientService;
+import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
 import org.thingsboard.server.utils.MiscUtils;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
@@ -70,6 +71,7 @@ public class OAuth2Controller extends BaseController {
     private final OAuth2Configuration oAuth2Configuration;
 
     private final TbOauth2ClientService tbOauth2ClientService;
+    private final OAuth2TokenCache tokenCache;
 
 
     @ApiOperation(value = "Get OAuth2 clients (getOAuth2Clients)", notes = "Get the list of OAuth2 clients " +
@@ -170,6 +172,43 @@ public class OAuth2Controller extends BaseController {
     public String getLoginProcessingUrl() throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.OAUTH2_CLIENT, Operation.READ);
         return "\"" + oAuth2Configuration.getLoginProcessingUrl() + "\"";
+    }
+
+    @ApiOperation(value = "Get OAuth2 Token", notes = "Retrieve the ID Token using email and nonce. If not found, returns 404.")
+    @GetMapping("/token")
+    public ResponseEntity<?> getToken() throws ThingsboardException {
+        SecurityUser user = getCurrentUser();
+        String email = user.getEmail();
+        String nonce = user.getNonceOauth2();
+        log.info("Fetching token for email: {} and nonce: {}", email, nonce);
+
+        String idToken = tokenCache.getToken(email, nonce);
+        if (idToken == null) {
+            log.warn("Token not found for email: {} and nonce: {}", email, nonce);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Token not found"));
+        }
+
+        return ResponseEntity.ok(Map.of("idToken", idToken));
+    }
+
+    @ApiOperation(value = "Delete OAuth2 Token", notes = "Removes the stored ID Token from cache using email and nonce.")
+    @DeleteMapping("/token")
+    public ResponseEntity<?> deleteToken() throws ThingsboardException {
+        SecurityUser user = getCurrentUser();
+        String email = user.getEmail();
+        String nonce = user.getNonceOauth2();
+        log.info("Deleting token for email: {} and nonce: {}", email, nonce);
+
+        String idToken = tokenCache.getToken(email, nonce);
+        if (idToken == null) {
+            log.warn("Token not found for deletion: email={}, nonce={}", email, nonce);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Token not found"));
+        }
+
+        tokenCache.removeToken(email, nonce);
+        log.info("Token successfully deleted for email: {} and nonce: {}", email, nonce);
+
+        return ResponseEntity.ok(Map.of("message", "Token deleted successfully"));
     }
 
 }

@@ -183,7 +183,10 @@ public class JwtTokenFactory {
         if (claims.get(SESSION_ID, String.class) != null) {
             securityUser.setSessionId(claims.get(SESSION_ID, String.class));
         }
-
+        String nonce = claims.get("nonce", String.class);
+        if (nonce != null) {
+            securityUser.setNonceOauth2(nonce);
+        }
         UserPrincipal principal;
         if (securityUser.getAuthority() != Authority.PRE_VERIFICATION_TOKEN) {
             securityUser.setFirstName(claims.get(FIRST_NAME, String.class));
@@ -259,6 +262,10 @@ public class JwtTokenFactory {
                 .add(SCOPES, scopes);
         if (securityUser.getSessionId() != null) {
             claimsBuilder.add(SESSION_ID, securityUser.getSessionId());
+        }
+
+        if (StringUtils.isNotBlank(securityUser.getNonceOauth2())) {
+            claimsBuilder.add("nonce", securityUser.getNonceOauth2());
         }
 
         ZonedDateTime currentTime = ZonedDateTime.now();
