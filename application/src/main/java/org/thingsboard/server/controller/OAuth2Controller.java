@@ -175,7 +175,7 @@ public class OAuth2Controller extends BaseController {
     }
 
     @ApiOperation(value = "Get OAuth2 Token", notes = "Retrieve the ID Token using email and nonce. If not found, returns 404.")
-    @GetMapping("/token")
+    @GetMapping("/oauth2/token")
     public ResponseEntity<?> getToken() throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         String email = user.getEmail();
@@ -192,7 +192,7 @@ public class OAuth2Controller extends BaseController {
     }
 
     @ApiOperation(value = "Delete OAuth2 Token", notes = "Removes the stored ID Token from cache using email and nonce.")
-    @DeleteMapping("/token")
+    @DeleteMapping("/oauth2/token")
     public ResponseEntity<?> deleteToken() throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         String email = user.getEmail();
