@@ -107,6 +107,27 @@ public class MultipleAssetsController extends BaseController {
         return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId(), null, customerId.getId());
     }
 
+    @DeleteMapping("/assets/delete-parent-child/{id}")
+    public void deleteAssetsParentAndChild(@PathVariable String id) throws ThingsboardException {
+        UUID parentId = UUID.fromString(id);
+        deleteRecursively(parentId);
+    }
+
+    private void deleteRecursively(UUID parentId) throws ThingsboardException {
+        List<AssetDeviceRelationEntity> assetDeviceRelationEntities = assetDeviceRelationService.findByParentId(parentId);
+
+        for (AssetDeviceRelationEntity relation : assetDeviceRelationEntities) {
+            if ("ASSET".equals(relation.getToType())) {
+                UUID childId = relation.getToId();
+                deleteRecursively(childId);
+            }
+        }
+
+        AssetId assetId = new AssetId(parentId);
+        Asset asset = checkAssetId(assetId, Operation.DELETE);
+        tbAssetService.delete(asset, getCurrentUser());
+    }
+
     @GetMapping("/assets/filter")
     public List<AssetDeviceRelationDTO> getAllFilter(@RequestParam String rootProfile, @RequestParam String assetId, @RequestParam String profileName) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
