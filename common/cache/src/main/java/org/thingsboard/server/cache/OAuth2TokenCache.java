@@ -18,11 +18,12 @@ package org.thingsboard.server.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.oauth2.OAuth2TokenInfo;
 
 @Component
 public class OAuth2TokenCache {
 
-    private final Cache<String, String> tokenCache;
+    private final Cache<String, OAuth2TokenInfo> tokenCache;
 
     public OAuth2TokenCache() {
         this.tokenCache = Caffeine.newBuilder().build();
@@ -32,12 +33,12 @@ public class OAuth2TokenCache {
         return email + ":" + nonce;
     }
 
-    public void saveToken(String email, String nonce, String idToken) {
+    public void saveToken(String email, String nonce, String idToken, String userId) {
         String key = generateKey(email, nonce);
-        tokenCache.put(key, idToken);
+        tokenCache.put(key, new OAuth2TokenInfo(idToken, userId));
     }
 
-    public String getToken(String email, String nonce) {
+    public OAuth2TokenInfo getTokenInfo(String email, String nonce) {
         String key = generateKey(email, nonce);
         return tokenCache.getIfPresent(key);
     }

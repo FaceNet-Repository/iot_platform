@@ -38,10 +38,7 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.oauth2.OAuth2Client;
-import org.thingsboard.server.common.data.oauth2.OAuth2ClientInfo;
-import org.thingsboard.server.common.data.oauth2.OAuth2ClientLoginInfo;
-import org.thingsboard.server.common.data.oauth2.PlatformType;
+import org.thingsboard.server.common.data.oauth2.*;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.config.annotations.ApiOperation;
@@ -182,13 +179,19 @@ public class OAuth2Controller extends BaseController {
         String nonce = user.getNonceOauth2();
         log.info("Fetching token for email: {} and nonce: {}", email, nonce);
 
-        String idToken = tokenCache.getToken(email, nonce);
+        OAuth2TokenInfo oAuth2TokenInfo = tokenCache.getTokenInfo(email, nonce);
+        String idToken = oAuth2TokenInfo.getIdToken();
+        String userId = oAuth2TokenInfo.getUserId();
         if (idToken == null) {
             log.warn("Token not found for email: {} and nonce: {}", email, nonce);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Token not found"));
         }
 
-        return ResponseEntity.ok(Map.of("idToken", idToken));
+        if (userId == null) {
+            log.warn("User ID is null for email: {} and nonce: {}", email, nonce);
+        }
+
+        return ResponseEntity.ok(oAuth2TokenInfo);
     }
 
     @ApiOperation(value = "Delete OAuth2 Token", notes = "Removes the stored ID Token from cache using email and nonce.")
@@ -199,7 +202,8 @@ public class OAuth2Controller extends BaseController {
         String nonce = user.getNonceOauth2();
         log.info("Deleting token for email: {} and nonce: {}", email, nonce);
 
-        String idToken = tokenCache.getToken(email, nonce);
+        OAuth2TokenInfo oAuth2TokenInfo = tokenCache.getTokenInfo(email, nonce);
+        String idToken = oAuth2TokenInfo.getIdToken();
         if (idToken == null) {
             log.warn("Token not found for deletion: email={}, nonce={}", email, nonce);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Token not found"));
