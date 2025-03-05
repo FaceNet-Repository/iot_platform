@@ -218,7 +218,11 @@ public abstract class AbstractOAuth2ClientMapper {
                     customer.setTenantId(user.getTenantId());
                     customer.setTitle(uniqueTitle);
                     customer.setEmail(user.getEmail());
-                    customer.setPhone(user.getPhone());
+                    if (token.getPrincipal() instanceof OidcUser oidcUser) {
+                        Map<String, Object> claims = oidcUser.getIdToken().getClaims();
+                        String phone = claims.get("phone_number") != null ? claims.get("phone_number").toString() : null;
+                        customer.setPhone(phone);
+                    }
                     CustomerId customerId = tbCustomerService.save(customer, user).getId();
                     user.setCustomerId(customerId);
 
@@ -263,9 +267,11 @@ public abstract class AbstractOAuth2ClientMapper {
             Object rolesObject = attributes.get("roles");
             if (token.getPrincipal() instanceof OidcUser oidcUser) {
                 String idToken = oidcUser.getIdToken().getTokenValue();
-                String nonce = oidcUser.getIdToken().getClaims().get("nonce").toString();
+                Map<String, Object> claims = oidcUser.getIdToken().getClaims();
+                String nonce = claims.get("nonce") != null ? claims.get("nonce").toString() : null;
+                String userId = claims.get("user_id") != null ? claims.get("user_id").toString() : null;
                 String email = user.getEmail();
-                tokenCache.saveToken(email, nonce, idToken);
+                tokenCache.saveToken(email, nonce, idToken, userId);
                 securityUser.setNonceOauth2(nonce);
             }
             // Kiểm tra và ép kiểu giá trị của 'roles'
