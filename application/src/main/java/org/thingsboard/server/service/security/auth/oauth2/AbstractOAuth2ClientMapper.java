@@ -269,7 +269,10 @@ public abstract class AbstractOAuth2ClientMapper {
                 String idToken = oidcUser.getIdToken().getTokenValue();
                 Map<String, Object> claims = oidcUser.getIdToken().getClaims();
                 String nonce = claims.get("nonce") != null ? claims.get("nonce").toString() : null;
-                String userId = claims.get("user_id") != null ? claims.get("user_id").toString() : null;
+                String userId = null;
+                if (oidcUser.getUserInfo() != null && oidcUser.getUserInfo().getClaims() != null) {
+                    userId = (String) oidcUser.getUserInfo().getClaims().get("user_id");
+                }
                 log.info(claims.toString());
                 log.info("User Id Oauth2: {}", userId);
                 String email = user.getEmail();
