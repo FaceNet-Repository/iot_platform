@@ -150,6 +150,7 @@ public class DeviceController extends BaseController {
         DeviceId deviceId = new DeviceId(toUUID(strDeviceId));
         Device device = checkDeviceId(deviceId, Operation.READ);
         device.setAttributes(assetDeviceRelationService.getAllAttributes(getCurrentUser().getTenantId(), deviceId));
+        device.setTelemetry(assetDeviceRelationService.getTelemetry(getCurrentUser().getTenantId(), deviceId));
         return device;
     }
 
