@@ -73,6 +73,7 @@ import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.device.DeviceBulkImportService;
 import org.thingsboard.server.service.entitiy.device.TbDeviceService;
+import org.thingsboard.server.service.relation.AssetDeviceRelationService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
@@ -133,6 +134,8 @@ public class DeviceController extends BaseController {
 
     private final TbDeviceService tbDeviceService;
 
+    private final AssetDeviceRelationService assetDeviceRelationService;
+
     @ApiOperation(value = "Get Device (getDeviceById)",
             notes = "Fetch the Device object based on the provided Device Id. " +
                     "If the user has the authority of 'TENANT_ADMIN', the server checks that the device is owned by the same tenant. " +
@@ -145,7 +148,9 @@ public class DeviceController extends BaseController {
                                 @PathVariable(DEVICE_ID) String strDeviceId) throws ThingsboardException {
         checkParameter(DEVICE_ID, strDeviceId);
         DeviceId deviceId = new DeviceId(toUUID(strDeviceId));
-        return checkDeviceId(deviceId, Operation.READ);
+        Device device = checkDeviceId(deviceId, Operation.READ);
+        device.setAttributes(assetDeviceRelationService.getAllAttributes(getCurrentUser().getTenantId(), deviceId));
+        return device;
     }
 
     @ApiOperation(value = "Get Device Info (getDeviceInfoById)",

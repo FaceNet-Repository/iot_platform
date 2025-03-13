@@ -66,6 +66,8 @@ public class Device extends BaseDataWithAdditionalInfo<DeviceId> implements HasL
     private OtaPackageId softwareId;
 
     @Getter @Setter
+    private JsonNode attributes;
+    @Getter @Setter
     private DeviceId externalId;
     @Getter @Setter
     private Long version;
@@ -90,6 +92,7 @@ public class Device extends BaseDataWithAdditionalInfo<DeviceId> implements HasL
         this.firmwareId = device.getFirmwareId();
         this.softwareId = device.getSoftwareId();
         this.externalId = device.getExternalId();
+        this.attributes = device.getAttributes();
         this.version = device.getVersion();
     }
 

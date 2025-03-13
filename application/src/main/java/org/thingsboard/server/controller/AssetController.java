@@ -52,6 +52,7 @@ import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.asset.AssetBulkImportService;
 import org.thingsboard.server.service.entitiy.asset.TbAssetService;
+import org.thingsboard.server.service.relation.AssetDeviceRelationService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
@@ -91,6 +92,7 @@ import static org.thingsboard.server.controller.EdgeController.EDGE_ID;
 public class AssetController extends BaseController {
     private final AssetBulkImportService assetBulkImportService;
     private final TbAssetService tbAssetService;
+    private final AssetDeviceRelationService assetDeviceRelationService;
     public static final String ASSET_ID = "assetId";
     @ApiOperation(value = "Get Asset (getAssetById)",
             notes = "Fetch the Asset object based on the provided Asset Id. " +
@@ -104,7 +106,9 @@ public class AssetController extends BaseController {
                               @PathVariable(ASSET_ID) String strAssetId) throws ThingsboardException {
         checkParameter(ASSET_ID, strAssetId);
         AssetId assetId = new AssetId(toUUID(strAssetId));
-        return checkAssetId(assetId, Operation.READ);
+        Asset asset = checkAssetId(assetId, Operation.READ);
+        asset.setAttributes(assetDeviceRelationService.getAllAttributes(getCurrentUser().getTenantId(), assetId));
+        return asset;
     }
 
     @ApiOperation(value = "Get Asset Info (getAssetInfoById)",
