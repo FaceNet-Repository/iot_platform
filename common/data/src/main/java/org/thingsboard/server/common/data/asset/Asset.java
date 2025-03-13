@@ -56,6 +56,8 @@ public class Asset extends BaseDataWithAdditionalInfo<AssetId> implements HasLab
     private AssetProfileId assetProfileId;
 
     @Getter @Setter
+    private JsonNode attributes;
+    @Getter @Setter
     private AssetId externalId;
     @Getter @Setter
     private Long version;
@@ -77,6 +79,7 @@ public class Asset extends BaseDataWithAdditionalInfo<AssetId> implements HasLab
         this.label = asset.getLabel();
         this.assetProfileId = asset.getAssetProfileId();
         this.externalId = asset.getExternalId();
+        this.attributes = asset.getAttributes();
         this.version = asset.getVersion();
     }
 
