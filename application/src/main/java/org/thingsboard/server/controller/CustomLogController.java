@@ -89,7 +89,7 @@ public class CustomLogController {
                     row.getString("content"),
                     row.getString("function"),
                     row.getString("file"),
-                    row.getInt("line")
+                    row.getLong("line")
             ));
         }
 
@@ -102,9 +102,9 @@ public class CustomLogController {
         public String content;
         public String function;
         public String file;
-        public int line;
+        public long line;
 
-        public LogEntry(UUID entity_id, long time, String content, String function, String file, int line) {
+        public LogEntry(UUID entity_id, long time, String content, String function, String file, long line) {
             this.entity_id = entity_id;
             this.time = time;
             this.content = content;
