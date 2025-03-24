@@ -16,13 +16,11 @@
 package org.thingsboard.server.controller;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.BoundStatement;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.datastax.oss.driver.api.core.cql.Row;
-import lombok.RequiredArgsConstructor;
+import com.datastax.oss.driver.api.core.cql.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.thingsboard.server.dao.cassandra.CassandraCluster;
+import org.thingsboard.server.dao.cassandra.guava.GuavaSession;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.ArrayList;
@@ -32,10 +30,14 @@ import java.util.UUID;
 @RestController
 @TbCoreComponent
 @RequestMapping("/api/custom")
-public class CustomLogController extends BaseController {
+public class CustomLogController {
 
-    @Autowired(required = false)
-    private CqlSession cassandraSession;
+    @Autowired
+    private CassandraCluster cassandraCluster;
+
+    private GuavaSession getSession() {
+        return cassandraCluster.getSession();
+    }
 
     @GetMapping("/logs")
     public List<LogEntry> getLogs(
@@ -44,33 +46,40 @@ public class CustomLogController extends BaseController {
             @RequestParam(required = false) Long startTime,
             @RequestParam(required = false) Long endTime) {
 
-        if (cassandraSession == null) {
-            throw new RuntimeException("Cassandra is not enabled in this environment.");
+        GuavaSession session = getSession();
+        if (session == null) {
+            throw new RuntimeException("Cassandra session is not available.");
         }
 
         StringBuilder queryBuilder = new StringBuilder("SELECT * FROM thingsboard.cs_tb_log WHERE entity_id = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(entityId);
 
         if (content != null) {
             queryBuilder.append(" AND content LIKE ?");
+            params.add("%" + content + "%");
         }
         if (startTime != null && endTime != null) {
             queryBuilder.append(" AND time >= ? AND time <= ?");
+            params.add(startTime);
+            params.add(endTime);
         }
         queryBuilder.append(" ALLOW FILTERING;");
 
-        PreparedStatement preparedStatement = cassandraSession.prepare(queryBuilder.toString());
-        BoundStatement boundStatement = preparedStatement.bind(entityId);
+        PreparedStatement preparedStatement = session.prepare(queryBuilder.toString());
+        BoundStatementBuilder boundStmt = preparedStatement.boundStatementBuilder();
 
-        int paramIndex = 1;
-        if (content != null) {
-            boundStatement = boundStatement.setString(paramIndex++, "%" + content + "%");
-        }
-        if (startTime != null && endTime != null) {
-            boundStatement = boundStatement.setLong(paramIndex++, startTime);
-            boundStatement = boundStatement.setLong(paramIndex++, endTime);
+        for (int i = 0; i < params.size(); i++) {
+            if (params.get(i) instanceof String) {
+                boundStmt.setString(i, (String) params.get(i));
+            } else if (params.get(i) instanceof Long) {
+                boundStmt.setLong(i, (Long) params.get(i));
+            } else if (params.get(i) instanceof UUID) {
+                boundStmt.setUuid(i, (UUID) params.get(i));
+            }
         }
 
-        ResultSet resultSet = cassandraSession.execute(boundStatement);
+        ResultSet resultSet = session.execute(boundStmt.build());
 
         List<LogEntry> logs = new ArrayList<>();
         for (Row row : resultSet) {
