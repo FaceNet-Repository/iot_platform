@@ -1,0 +1,53 @@
+.toolbar {
+  display: flex;
+  justify-content: flex-start;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.filter-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px;
+  background: #e3f2fd;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table-container {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+th.mat-header-cell {
+  background: #e3f2fd;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.mat-icon {
+  vertical-align: middle;
+}
+
+.mat-paginator {
+  margin-top: 16px;
+  background: white;
+  border-radius: 8px;
+}
