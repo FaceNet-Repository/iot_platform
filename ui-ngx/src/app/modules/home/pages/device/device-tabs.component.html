@@ -55,3 +55,6 @@
                       (versionRestored)="entitiesTableConfig.updateData()"
                       [active]="versionControlTab.isActive" [entityId]="entity.id" [entityName]="entity.name" [externalEntityId]="entity.externalId || entity.id"></tb-version-control>
 </mat-tab>
+<mat-tab label="Custom log" #logTableTab="matTab">
+       <app-log-table *ngIf="logTableTab.isActive" [entityId]="entity.id"></app-log-table>
+</mat-tab>

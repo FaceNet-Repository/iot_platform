@@ -17,7 +17,7 @@
 import { Injectable } from '@angular/core';
 import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
 import { Observable, ReplaySubject } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient,HttpParams } from '@angular/common/http';
 import { PageLink } from '@shared/models/page/page-link';
 import { PageData } from '@shared/models/page/page-data';
 import {
@@ -218,5 +218,21 @@ export class DeviceService {
 
   public downloadGatewayDockerComposeFile(deviceId: string): Observable<any> {
     return this.resourcesService.downloadResource(`/api/device-connectivity/gateway-launch/${deviceId}/docker-compose/download`);
+  }
+  public getLogs(entityId: string, content?: string, startTime?: number, endTime?: number): Observable<any> {
+    let baseUrl = '/api/custom/logs';
+    let params = new HttpParams().set('entityId', entityId);
+
+    if (content && content.trim()) {
+      params = params.set('content', content);
+    }
+    if (startTime) {
+      params = params.set('startTime', startTime.toString());
+    }
+    if (endTime) {
+      params = params.set('endTime', endTime.toString());
+    }
+
+    return this.http.get<any>(baseUrl, { params });
   }
 }
