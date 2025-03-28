@@ -506,31 +506,11 @@ public class DeviceApiController implements TbTransportService {
         private final int chunkSize;
         private final int chunk;
 
-//        @Override
-//        public void onSuccess(TransportProtos.GetOtaPackageResponseMsg otaPackageResponseMsg) {
-//            if (!TransportProtos.ResponseStatus.SUCCESS.equals(otaPackageResponseMsg.getResponseStatus())) {
-//                responseWriter.setResult(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-//            } else if (title.equals(otaPackageResponseMsg.getTitle()) && version.equals(otaPackageResponseMsg.getVersion())) {
-//                String otaPackageId = new UUID(otaPackageResponseMsg.getOtaPackageIdMSB(), otaPackageResponseMsg.getOtaPackageIdLSB()).toString();
-//                ByteArrayResource resource = new ByteArrayResource(transportContext.getOtaPackageDataCache().get(otaPackageId, chunkSize, chunk));
-//                ResponseEntity<ByteArrayResource> response = ResponseEntity.ok()
-//                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + otaPackageResponseMsg.getFileName())
-//                        .header("x-filename", otaPackageResponseMsg.getFileName())
-//                        .contentLength(resource.contentLength())
-//                        .contentType(parseMediaType(otaPackageResponseMsg.getContentType()))
-//                        .body(resource);
-//                responseWriter.setResult(response);
-//            } else {
-//                responseWriter.setResult(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
-//            }
-//        }
-
-        //Cho phép thiết bị download tất cả
         @Override
         public void onSuccess(TransportProtos.GetOtaPackageResponseMsg otaPackageResponseMsg) {
             if (!TransportProtos.ResponseStatus.SUCCESS.equals(otaPackageResponseMsg.getResponseStatus())) {
                 responseWriter.setResult(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-            } else {
+            } else if (title.equals(otaPackageResponseMsg.getTitle()) && version.equals(otaPackageResponseMsg.getVersion())) {
                 String otaPackageId = new UUID(otaPackageResponseMsg.getOtaPackageIdMSB(), otaPackageResponseMsg.getOtaPackageIdLSB()).toString();
                 ByteArrayResource resource = new ByteArrayResource(transportContext.getOtaPackageDataCache().get(otaPackageId, chunkSize, chunk));
                 ResponseEntity<ByteArrayResource> response = ResponseEntity.ok()
@@ -540,6 +520,8 @@ public class DeviceApiController implements TbTransportService {
                         .contentType(parseMediaType(otaPackageResponseMsg.getContentType()))
                         .body(resource);
                 responseWriter.setResult(response);
+            } else {
+                responseWriter.setResult(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
             }
         }
 
