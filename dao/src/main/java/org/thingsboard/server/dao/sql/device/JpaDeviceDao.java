@@ -287,4 +287,10 @@ public class JpaDeviceDao extends JpaAbstractDao<DeviceEntity, Device> implement
         return EntityType.DEVICE;
     }
 
+    @Override
+    public Optional<Device> findDeviceByAccessToken(String accessToken) {
+        return deviceRepository.findByAccessToken(accessToken).map(DaoUtil::getData);
+    }
+
+
 }

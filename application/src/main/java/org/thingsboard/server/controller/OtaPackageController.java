@@ -15,14 +15,18 @@
  */
 package org.thingsboard.server.controller;
 
+import com.google.gson.JsonParseException;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,24 +36,36 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
-import org.thingsboard.server.common.data.OtaPackage;
-import org.thingsboard.server.common.data.OtaPackageInfo;
-import org.thingsboard.server.common.data.SaveOtaPackageInfoRequest;
+import org.thingsboard.server.common.data.*;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.ota.ChecksumAlgorithm;
 import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.transport.TransportContext;
+import org.thingsboard.server.common.transport.TransportServiceCallback;
+import org.thingsboard.server.common.transport.auth.SessionInfoCreator;
+import org.thingsboard.server.common.transport.auth.ValidateDeviceCredentialsResponse;
 import org.thingsboard.server.config.annotations.ApiOperation;
+import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.ota.TbOtaPackageService;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
+import org.thingsboard.server.gen.transport.TransportProtos.ValidateDeviceTokenRequestMsg;
+import org.thingsboard.server.transport.http.HttpTransportContext;
 
 import java.io.IOException;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.thingsboard.server.controller.ControllerConstants.DEVICE_PROFILE_ID_PARAM_DESCRIPTION;
@@ -77,6 +93,12 @@ public class OtaPackageController extends BaseController {
 
     public static final String OTA_PACKAGE_ID = "otaPackageId";
     public static final String CHECKSUM_ALGORITHM = "checksumAlgorithm";
+    @Autowired
+    private HttpTransportContext transportContext;
+    @Autowired
+    private DeviceService deviceService;
+    @Autowired
+    private OtaPackageService otaPackageService;
 
     @ApiOperation(value = "Download OTA Package (downloadOtaPackage)", notes = "Download OTA Package based on the provided OTA Package Id." + TENANT_AUTHORITY_PARAGRAPH)
     //@PreAuthorize("hasAnyAuthority( 'TENANT_ADMIN')")
@@ -99,6 +121,49 @@ public class OtaPackageController extends BaseController {
                 .contentLength(resource.contentLength())
                 .contentType(parseMediaType(otaPackage.getContentType()))
                 .body(resource);
+    }
+
+    @ApiOperation(value = "Download OTA Package (downloadOtaPackage)", notes = "Download OTA Package based on the provided OTA Package title and version." + TENANT_AUTHORITY_PARAGRAPH)
+    @RequestMapping(value = "/noauth/otaPackage/{deviceToken}/{title}/{version}/download", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<? extends org.springframework.core.io.Resource> downloadOtaPackageWithAccessTokenDevice(
+            @PathVariable("title") String title,
+            @PathVariable("version") String version,
+            @Parameter(description = "Your device access token.", required = true, schema = @Schema(defaultValue = "YOUR_DEVICE_ACCESS_TOKEN"))
+            @PathVariable("deviceToken") String deviceToken) throws ThingsboardException {
+
+        Optional<Device> device = deviceService.getDeviceByAccessToken(deviceToken);
+        if (device.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        TenantId tenantId = device.get().getTenantId();
+        Optional<OtaPackageInfo> otaPackageInfoOpt = otaPackageService.findOtaPackageByTitleAndVersion(tenantId, title, version);
+
+        if (otaPackageInfoOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        UUID strOtaPackageId = otaPackageInfoOpt.get().getId().getId();
+        OtaPackageId otaPackageId = new OtaPackageId(strOtaPackageId);
+        OtaPackage otaPackage = otaPackageService.findOtaPackageById(tenantId, otaPackageId);
+
+        if (otaPackage == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        if (otaPackage.hasUrl()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        ByteArrayResource resource = new ByteArrayResource(otaPackage.getData().array());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + otaPackage.getFileName())
+                .header("x-filename", otaPackage.getFileName())
+                .contentLength(resource.contentLength())
+                .contentType(parseMediaType(otaPackage.getContentType()))
+                .body((org.springframework.core.io.Resource) resource);
     }
 
     @ApiOperation(value = "Get OTA Package Info (getOtaPackageInfoById)",
@@ -227,6 +292,34 @@ public class OtaPackageController extends BaseController {
         OtaPackageId otaPackageId = new OtaPackageId(toUUID(strOtaPackageId));
         OtaPackageInfo otaPackageInfo = checkOtaPackageInfoId(otaPackageId, Operation.DELETE);
         tbOtaPackageService.delete(otaPackageInfo, getCurrentUser());
+    }
+
+    @RequiredArgsConstructor
+    static class DeviceAuthCallback implements TransportServiceCallback<ValidateDeviceCredentialsResponse> {
+        private final TransportContext transportContext;
+        private final DeferredResult<ResponseEntity> responseWriter;
+        private final Consumer<TransportProtos.SessionInfoProto> onSuccess;
+
+        @Override
+        public void onSuccess(ValidateDeviceCredentialsResponse msg) {
+            if (msg.hasDeviceInfo()) {
+                onSuccess.accept(SessionInfoCreator.create(msg, transportContext, UUID.randomUUID()));
+            } else {
+                responseWriter.setResult(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+            }
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            String body = null;
+            if (e instanceof HttpMessageNotReadableException || e instanceof JsonParseException) {
+                body = e.getMessage();
+                log.debug("Failed to process request in DeviceAuthCallback: {}", body);
+            } else {
+                log.warn("Failed to process request in DeviceAuthCallback", e);
+            }
+            responseWriter.setResult(new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR));
+        }
     }
 
 }
