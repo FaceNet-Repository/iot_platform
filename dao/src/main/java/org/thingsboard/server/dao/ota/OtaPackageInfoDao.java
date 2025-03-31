@@ -32,4 +32,5 @@ public interface OtaPackageInfoDao extends Dao<OtaPackageInfo> {
 
     boolean isOtaPackageUsed(OtaPackageId otaPackageId, OtaPackageType otaPackageType, DeviceProfileId deviceProfileId);
 
+    OtaPackageInfo findOtaPackageByTitleAndVersion(String title, String version);
 }

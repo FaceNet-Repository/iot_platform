@@ -264,4 +264,15 @@ public class BaseOtaPackageService extends AbstractCachedEntityService<OtaPackag
         return EntityType.OTA_PACKAGE;
     }
 
+    @Override
+    public Optional<OtaPackageInfo> findOtaPackageByTitleAndVersion(TenantId tenantId, String title, String version) {
+        log.trace("Executing findOtaPackageByTitleAndVersion, tenantId [{}], title [{}], version [{}]", tenantId, title, version);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        if (StringUtils.isEmpty(title) || StringUtils.isEmpty(version)) {
+            throw new DataValidationException("Title and version must be specified!");
+        }
+        return Optional.ofNullable(otaPackageInfoDao.findOtaPackageByTitleAndVersion(title, version));
+    }
+
+
 }
