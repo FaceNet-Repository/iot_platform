@@ -26,6 +26,7 @@ import org.thingsboard.server.dao.model.sql.DeviceEntity;
 import org.thingsboard.server.dao.model.sql.DeviceInfoEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface DeviceRepository extends JpaRepository<DeviceEntity, UUID>, ExportableEntityRepository<DeviceEntity> {
@@ -234,5 +235,12 @@ public interface DeviceRepository extends JpaRepository<DeviceEntity, UUID>, Exp
             @Param("profileId") UUID profileId,
             @Param("startTime") Long startTime,
             @Param("endTime") Long endTime);
+
+    @Query("SELECT d FROM DeviceEntity d " +
+            "JOIN DeviceCredentialsEntity dc ON d.id = dc.deviceId " +
+            "WHERE dc.credentialsId = :accessToken")
+    Optional<DeviceEntity> findByAccessToken(@Param("accessToken") String accessToken);
+
+
 
 }

@@ -709,4 +709,9 @@ public class DeviceServiceImpl extends CachedVersionedEntityService<DeviceCacheK
         return EntityType.DEVICE;
     }
 
+    @Override
+    public Optional<Device> getDeviceByAccessToken(String accessToken) {
+        return deviceDao.findDeviceByAccessToken(accessToken);
+    }
+
 }

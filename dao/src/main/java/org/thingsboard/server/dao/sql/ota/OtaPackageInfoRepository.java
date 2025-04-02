@@ -56,4 +56,11 @@ public interface OtaPackageInfoRepository extends JpaRepository<OtaPackageInfoEn
             "OR ('SOFTWARE' = :type AND (dp.software_id = :otaPackageId or d.software_id = :otaPackageId))))", nativeQuery = true)
     boolean isOtaPackageUsed(@Param("otaPackageId") UUID otaPackageId, @Param("deviceProfileId") UUID deviceProfileId, @Param("type") String type);
 
+
+    @Query("SELECT new OtaPackageInfoEntity(f.id, f.createdTime, f.tenantId, f.deviceProfileId, f.type, f.title, f.version, f.tag, f.url, f.fileName, f.contentType, f.checksumAlgorithm, f.checksum, f.dataSize, f.additionalInfo, CASE WHEN (f.data IS NOT NULL OR f.url IS NOT NULL) THEN true ELSE false END) " +
+            "FROM OtaPackageEntity f " +
+            "WHERE f.title = :title AND f.version = :version")
+    OtaPackageInfoEntity findOtaPackageByTitleAndVersion(@Param("title") String title,
+                                                         @Param("version") String version);
+
 }
