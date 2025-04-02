@@ -40,6 +40,7 @@ import { Subscription } from 'rxjs';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { PageLink } from '@shared/models/page/page-link';
 import { coerceBoolean } from '@app/shared/decorators/coercion';
+import { ClientTenantId, EntityType } from '@app/shared/public-api';
 
 @Component({
   selector: 'tb-client',
@@ -110,6 +111,10 @@ export class ClientComponent extends EntityComponent<OAuth2Client, PageLink, OAu
 
   buildForm(entity: OAuth2Client): UntypedFormGroup {
     return this.fb.group({
+      clientTenantId:this.fb.group({
+        id: [entity?.clientTenantId?.id || '', Validators.required],
+        entityType: EntityType.TENANT
+      }),
       title: [entity?.title ? entity.title : '', [Validators.required, Validators.maxLength(100)]],
       additionalInfo: this.fb.group({
         providerName: [entity?.additionalInfo?.providerName ? entity?.additionalInfo?.providerName : '', Validators.required]
@@ -140,6 +145,9 @@ export class ClientComponent extends EntityComponent<OAuth2Client, PageLink, OAu
 
   updateForm(entity: OAuth2Client) {
     this.entityForm.patchValue({
+      clientTenantId:{
+        id:entity.clientTenantId.id
+      },
       title: entity.title,
       additionalInfo: {
         providerName: entity.additionalInfo.providerName

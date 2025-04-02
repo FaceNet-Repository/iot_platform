@@ -16,7 +16,7 @@
 
 import { OAuth2ClientId } from '@shared/models/id/oauth2-client-id';
 import { BaseData } from '@shared/models/base-data';
-import { TenantId } from '@shared/models/id/tenant-id';
+import { ClientTenantId, TenantId } from '@shared/models/id/tenant-id';
 import { HasTenantId } from './entity.models';
 import { DomainId } from './id/domain-id';
 import { HasUUID } from '@shared/models/id/has-uuid';
@@ -116,6 +116,7 @@ export interface OAuth2Client extends BaseData<OAuth2ClientId>, HasTenantId {
   loginButtonIcon?: string;
   platforms?: Array<PlatformType>;
   additionalInfo: any;
+  clientTenantId?: ClientTenantId; 
 }
 
 export interface OAuth2MapperConfig {
