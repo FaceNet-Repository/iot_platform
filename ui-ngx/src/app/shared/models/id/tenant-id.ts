@@ -24,3 +24,10 @@ export class TenantId implements EntityId {
     this.id = id;
   }
 }
+export class ClientTenantId implements EntityId {
+  entityType = EntityType.TENANT;
+  id: string;
+  constructor(id: string) {
+    this.id = id;
+  }
+}

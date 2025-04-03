@@ -18,6 +18,18 @@
 <section class="tb-form-panel no-gap no-border" [class.no-padding]="isAdd" [formGroup]="entityForm">
   <div class="tb-form-row tb-standard-fields no-border no-padding">
     <mat-form-field class="flex">
+      <mat-label translate>tenantId</mat-label>
+      <div formGroupName="clientTenantId">
+        <input matInput formControlName="id" placeholder="Nhập Tenant ID">
+   
+      </div>
+      <mat-error *ngIf="entityForm.get('clientTenantId.id').hasError('required')">
+        Tenant ID không được để trống.
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <div class="tb-form-row tb-standard-fields no-border no-padding"> 
+    <mat-form-field class="flex">
       <mat-label translate>admin.oauth2.title</mat-label>
       <input matInput formControlName="title">
       <mat-error *ngIf="entityForm.get('title').hasError('required')">
