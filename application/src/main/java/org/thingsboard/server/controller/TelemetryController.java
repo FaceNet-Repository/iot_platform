@@ -643,7 +643,7 @@ public class TelemetryController extends BaseController {
         }
     }
 
-    private DeferredResult<ResponseEntity> saveTelemetry(TenantId curTenantId, EntityId entityIdSrc, String requestBody, long ttl) throws ThingsboardException {
+    public DeferredResult<ResponseEntity> saveTelemetry(TenantId curTenantId, EntityId entityIdSrc, String requestBody, long ttl) throws ThingsboardException {
         Map<Long, List<KvEntry>> telemetryRequest;
         JsonElement telemetryJson;
         try {
