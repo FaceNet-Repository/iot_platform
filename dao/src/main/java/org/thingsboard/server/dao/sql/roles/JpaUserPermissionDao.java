@@ -122,6 +122,11 @@ public class JpaUserPermissionDao implements UserPermissionDao {
     }
 
     @Override
+    public List<UUID> findUserIdsByEntityIdAndAction(UUID entityId, UUID action) {
+        return userPermissionRepository.findUserIdsByEntityIdAndAction(entityId, action);
+    }
+
+    @Override
     public List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType){
         return userPermissionRepository.findEntityIdsByUserIdAndActionAndEntityType(userId, action, entityType);
     }

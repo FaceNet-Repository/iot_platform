@@ -34,5 +34,6 @@ public interface UserPermissionDao {
     void deleteRoleByUserIdAndEntityIdAndAction(UUID userId, UUID action, UUID entityId);
     void deleteByEntityIdAndAction(UUID action, UUID entityId);
     void deleteByUserIdAndEntityId(UUID userId, UUID entityId);
+    List<UUID> findUserIdsByEntityIdAndAction(UUID entityId, UUID action);
     List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType);
 }

@@ -66,13 +66,7 @@ import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.dao.sql.JpaExecutorService;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.thingsboard.server.common.data.StringUtils.generateSafeToken;
@@ -599,6 +593,11 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     @Override
     public EntityType getEntityType() {
         return EntityType.USER;
+    }
+
+    @Override
+    public PageData<User> findByIds(List<UUID> userIds, PageLink pageLink){
+        return userDao.findByIds(userIds, pageLink);
     }
 
 }

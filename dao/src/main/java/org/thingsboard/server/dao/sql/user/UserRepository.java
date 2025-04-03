@@ -71,4 +71,10 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     Long countByTenantId(UUID tenantId);
 
+    @Query("SELECT u FROM UserEntity u WHERE u.id IN :ids " +
+            "AND (:searchText IS NULL OR ilike(u.email, CONCAT('%', :searchText, '%')) = true)")
+    Page<UserEntity> findByIds(@Param("ids") Collection<UUID> ids,
+                               @Param("searchText") String searchText,
+                               Pageable pageable);
+
 }

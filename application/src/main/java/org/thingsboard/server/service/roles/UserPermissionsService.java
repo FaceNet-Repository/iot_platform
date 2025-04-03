@@ -18,6 +18,7 @@ package org.thingsboard.server.service.roles;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.Customer;
@@ -225,6 +226,11 @@ public class UserPermissionsService {
         }
 
         return result;
+    }
+
+    public List<UUID> findUserIdsByEntityIdAndAction(UUID entityId, String permissionName, TenantId tenantId) {
+        Permission permission = permissionsService.findByName(permissionName, tenantId.getId());
+        return userPermissionService.findUserIdsByEntityIdAndAction(entityId, permission.getId());
     }
 
 }
