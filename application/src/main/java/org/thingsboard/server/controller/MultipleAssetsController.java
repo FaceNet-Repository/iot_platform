@@ -174,6 +174,8 @@ public class MultipleAssetsController extends BaseController {
         if (parentAssetId != null) {
             AssetId assetId = new AssetId(UUID.fromString(parentAssetId));
             saveAssetRecursively(assetHierarchyRequest, savedAssets, assetId);
+            String requestBody = "{\"updated\": \"" + System.currentTimeMillis() + "\"}";
+            telemetryController.saveTelemetry(getTenantId(), assetId, requestBody, 0L);
         } else {
             saveAssetRecursively(assetHierarchyRequest, savedAssets, null);
         }
