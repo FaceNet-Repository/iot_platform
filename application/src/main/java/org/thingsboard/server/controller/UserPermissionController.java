@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -192,6 +193,38 @@ public class UserPermissionController extends BaseController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * API để lấy danh sách người dùng có quyền cụ thể trên một entity
+     *
+     * @param entityId       ID của entity cần kiểm tra
+     * @param permissionName Tên quyền cần kiểm tra
+     * @return danh sách người dùng có quyền này trên entity
+     */
+    @GetMapping("/user-permissions/users")
+    public ResponseEntity<PageData<User>> getUsersWithPermission(
+            @RequestParam UUID entityId,
+            @RequestParam String permissionName,
+            @RequestParam int page,
+            @RequestParam int pageSize,
+            @RequestParam(required = false) String textSearch) throws ThingsboardException {
+        log.info("Received request to get users with permission '{}' for entity '{}'", permissionName, entityId);
+        PageLink pageLink = new PageLink(pageSize, page, textSearch);
+        SecurityUser user = getCurrentUser();
+        TenantId tenantId = user.getTenantId();
+
+        if (user.getAuthority().equals(Authority.CUSTOMER_USER)) {
+            try {
+                userPermissionsService.checkUserPermission(
+                        user.getId().getId(), entityId,
+                        Arrays.asList(Action.READ.name(), Action.ALL.name()), null);
+            } catch (IllegalAccessException e) {
+                throw new ThingsboardException(e.getMessage(), ThingsboardErrorCode.PERMISSION_DENIED);
+            }
+        }
+        List<UUID> uuids = userPermissionsService.findUserIdsByEntityIdAndAction(entityId, permissionName, tenantId);
+        PageData<User> users = userService.findByIds(uuids, pageLink);
+        return ResponseEntity.ok(users);
+    }
 
 
 }

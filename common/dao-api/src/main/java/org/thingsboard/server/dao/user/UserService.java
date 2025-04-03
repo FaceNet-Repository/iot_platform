@@ -30,6 +30,7 @@ import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public interface UserService extends EntityDaoService {
 
@@ -107,5 +108,6 @@ public interface UserService extends EntityDaoService {
 
     void removeMobileSession(TenantId tenantId, String mobileToken);
     UserCredentials generateUserActivationTokenByOTP(UserCredentials userCredentials, String otp);
+    PageData<User> findByIds(List<UUID> userIds, PageLink pageLink);
 
 }

@@ -33,4 +33,5 @@ public interface UserPermissionService {
     List<UserPermission> findByUserIdAndEntityId(UUID userId,UUID entityId);
     List<UserPermission> findByUserIdAndApiUrl(UUID userId,String apiUrl);
     List<UUID> findEntityIdsByUserIdAndActionAndEntityType(UUID userId, UUID action, String entityType);
+    List<UUID> findUserIdsByEntityIdAndAction(UUID entityId, UUID action);
 }

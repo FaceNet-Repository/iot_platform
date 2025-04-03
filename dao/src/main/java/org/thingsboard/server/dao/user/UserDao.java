@@ -100,5 +100,5 @@ public interface UserDao extends Dao<User>, TenantEntityDao {
     PageData<User> findByAuthorityAndTenantsIds(Authority authority, List<TenantId> tenantsIds, PageLink pageLink);
 
     PageData<User> findByAuthorityAndTenantProfilesIds(Authority authority, List<TenantProfileId> tenantProfilesIds, PageLink pageLink);
-
+    PageData<User> findByIds(List<UUID> userIds, PageLink pageLink);
 }
