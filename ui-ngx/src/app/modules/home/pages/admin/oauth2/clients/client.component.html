@@ -16,19 +16,20 @@
 
 -->
 <section class="tb-form-panel no-gap no-border" [class.no-padding]="isAdd" [formGroup]="entityForm">
-  <div class="tb-form-row tb-standard-fields no-border no-padding">
+  <div *ngIf="entityForm.get('additionalInfo.providerName').value === 'Custom'"
+    class="tb-form-row tb-standard-fields no-border no-padding">
     <mat-form-field class="flex">
       <mat-label translate>tenantId</mat-label>
       <div formGroupName="clientTenantId">
         <input matInput formControlName="id" placeholder="Nhập Tenant ID">
-   
+
       </div>
       <mat-error *ngIf="entityForm.get('clientTenantId.id').hasError('required')">
         Tenant ID không được để trống.
       </mat-error>
     </mat-form-field>
   </div>
-  <div class="tb-form-row tb-standard-fields no-border no-padding"> 
+  <div class="tb-form-row tb-standard-fields no-border no-padding">
     <mat-form-field class="flex">
       <mat-label translate>admin.oauth2.title</mat-label>
       <input matInput formControlName="title">
@@ -98,7 +99,7 @@
           </tb-toggle-select>
         </div>
         <section class="tb-form-panel no-gap no-border no-padding" style="padding-bottom: 16px"
-                 *ngIf="generalSettingsMode">
+          *ngIf="generalSettingsMode">
           <div class="tb-form-row tb-standard-fields no-border no-padding column-xs">
             <mat-form-field class="flex">
               <mat-label translate>admin.oauth2.access-token-uri</mat-label>
@@ -142,7 +143,7 @@
               <mat-label translate>admin.oauth2.client-authentication-method</mat-label>
               <mat-select formControlName="clientAuthenticationMethod">
                 <mat-option *ngFor="let clientAuthenticationMethod of clientAuthenticationMethods"
-                            [value]="clientAuthenticationMethod">
+                  [value]="clientAuthenticationMethod">
                   {{ clientAuthenticationMethod | uppercase }}
                 </mat-option>
               </mat-select>
@@ -152,7 +153,7 @@
             <mat-form-field class="flex" floatLabel="always">
               <mat-label translate>admin.oauth2.login-button-label</mat-label>
               <input matInput formControlName="loginButtonLabel"
-                     placeholder="{{ 'admin.oauth2.login-button-label-placeholder' | translate }}">
+                placeholder="{{ 'admin.oauth2.login-button-label-placeholder' | translate }}">
               <mat-error *ngIf="entityForm.get('loginButtonLabel').hasError('required')">
                 {{ 'admin.oauth2.login-button-label-required' | translate }}
               </mat-error>
@@ -174,11 +175,8 @@
               </mat-slide-toggle>
             </div>
           </section>
-          <tb-string-items-list
-            formControlName="scope"
-            label="{{ 'admin.oauth2.scope' | translate }}"
-            requiredText="{{ 'admin.oauth2.scope-required' | translate }}"
-            required>
+          <tb-string-items-list formControlName="scope" label="{{ 'admin.oauth2.scope' | translate }}"
+            requiredText="{{ 'admin.oauth2.scope-required' | translate }}" required>
           </tb-string-items-list>
         </section>
         <section class="tb-form-panel no-border no-padding no-gap" *ngIf="!generalSettingsMode">
@@ -196,26 +194,23 @@
               <mat-form-field class="flex">
                 <mat-label translate>admin.oauth2.type</mat-label>
                 <mat-select formControlName="type">
-                  <mat-option *ngFor="let mapperType of mapperTypes"
-                              [value]="mapperType">
+                  <mat-option *ngFor="let mapperType of mapperTypes" [value]="mapperType">
                     {{ mapperType }}
                   </mat-option>
                 </mat-select>
               </mat-form-field>
             </div>
             <section class="tb-form-panel no-border no-padding no-gap" formGroupName="basic"
-                     *ngIf="entityForm.get('mapperConfig.type').value !== mapperType.CUSTOM && entityForm.get('mapperConfig.basic')">
+              *ngIf="entityForm.get('mapperConfig.type').value !== mapperType.CUSTOM && entityForm.get('mapperConfig.basic')">
               <div class="tb-form-row tb-standard-fields no-border no-padding"
-                   *ngIf="entityForm.get('mapperConfig.type').value !== mapperType.GITHUB">
+                *ngIf="entityForm.get('mapperConfig.type').value !== mapperType.GITHUB">
                 <mat-form-field class="flex">
                   <mat-label translate>admin.oauth2.email-attribute-key</mat-label>
                   <input matInput formControlName="emailAttributeKey">
-                  <mat-error
-                    *ngIf="entityForm.get('mapperConfig.basic.emailAttributeKey').hasError('required')">
+                  <mat-error *ngIf="entityForm.get('mapperConfig.basic.emailAttributeKey').hasError('required')">
                     {{ 'admin.oauth2.email-attribute-key-required' | translate }}
                   </mat-error>
-                  <mat-error
-                    *ngIf="entityForm.get('mapperConfig.basic.emailAttributeKey').hasError('maxlength')">
+                  <mat-error *ngIf="entityForm.get('mapperConfig.basic.emailAttributeKey').hasError('maxlength')">
                     {{ 'admin.oauth2.email-attribute-key-max-length' | translate }}
                   </mat-error>
                 </mat-form-field>
@@ -240,23 +235,20 @@
                 <mat-form-field class="flex">
                   <mat-label translate>admin.oauth2.tenant-name-strategy</mat-label>
                   <mat-select formControlName="tenantNameStrategy">
-                    <mat-option *ngFor="let tenantNameStrategy of tenantNameStrategies"
-                                [value]="tenantNameStrategy">
+                    <mat-option *ngFor="let tenantNameStrategy of tenantNameStrategies" [value]="tenantNameStrategy">
                       {{ tenantNameStrategy }}
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
                 <mat-form-field class="flex"
-                                [fxShow]="entityForm.get('mapperConfig.basic.tenantNameStrategy').value === 'CUSTOM'">
+                  [fxShow]="entityForm.get('mapperConfig.basic.tenantNameStrategy').value === 'CUSTOM'">
                   <mat-label translate>admin.oauth2.tenant-name-pattern</mat-label>
                   <input matInput formControlName="tenantNamePattern"
-                         [required]="entityForm.get('mapperConfig.basic.tenantNameStrategy').value === 'CUSTOM'">
-                  <mat-error
-                    *ngIf="entityForm.get('mapperConfig.basic.tenantNamePattern').hasError('required')">
+                    [required]="entityForm.get('mapperConfig.basic.tenantNameStrategy').value === 'CUSTOM'">
+                  <mat-error *ngIf="entityForm.get('mapperConfig.basic.tenantNamePattern').hasError('required')">
                     {{ 'admin.oauth2.tenant-name-pattern-required' | translate }}
                   </mat-error>
-                  <mat-error
-                    *ngIf="entityForm.get('mapperConfig.basic.tenantNamePattern').hasError('maxlength')">
+                  <mat-error *ngIf="entityForm.get('mapperConfig.basic.tenantNamePattern').hasError('maxlength')">
                     {{ 'admin.oauth2.tenant-name-pattern-max-length' | translate }}
                   </mat-error>
                 </mat-form-field>
@@ -279,13 +271,13 @@
                   </mat-error>
                 </mat-form-field>
                 <mat-slide-toggle class="tb-flex mat-slide" style="margin-bottom: 16px"
-                                  formControlName="alwaysFullScreen">
+                  formControlName="alwaysFullScreen">
                   {{ 'admin.oauth2.always-fullscreen' | translate}}
                 </mat-slide-toggle>
               </div>
             </section>
             <section class="tb-form-panel no-border no-padding no-gap" formGroupName="custom"
-                     *ngIf="entityForm.get('mapperConfig.type').value === mapperType.CUSTOM && entityForm.get('mapperConfig.custom')">
+              *ngIf="entityForm.get('mapperConfig.type').value === mapperType.CUSTOM && entityForm.get('mapperConfig.custom')">
               <div class="tb-form-row tb-standard-fields no-border no-padding">
                 <mat-form-field class="flex">
                   <mat-label translate>admin.oauth2.url</mat-label>
@@ -317,8 +309,7 @@
                   </mat-error>
                 </mat-form-field>
               </div>
-              <mat-slide-toggle class="tb-flex mat-slide" style="margin-bottom: 16px"
-                                formControlName="sendToken">
+              <mat-slide-toggle class="tb-flex mat-slide" style="margin-bottom: 16px" formControlName="sendToken">
                 {{ 'admin.oauth2.send-token' | translate}}
               </mat-slide-toggle>
             </section>
