@@ -30,4 +30,5 @@ public interface AssetDeviceRelationRepository extends JpaRepository<AssetDevice
     List<AssetDeviceRelationEntity> findByFromIdIn(List<UUID> fromIds);
     List<AssetDeviceRelationEntity> findByAssetProfileFromAndFromIdIn(String assetProfileFrom, List<UUID> fromIds);
     List<AssetDeviceRelationEntity> findByFromId(UUID fromId);
+    List<AssetDeviceRelationEntity> findByToId(UUID toId);
 }
