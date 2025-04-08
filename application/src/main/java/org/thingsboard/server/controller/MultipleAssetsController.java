@@ -110,22 +110,32 @@ public class MultipleAssetsController extends BaseController {
     @DeleteMapping("/assets/delete-parent-child/{id}")
     public void deleteAssetsParentAndChild(@PathVariable String id) throws ThingsboardException {
         UUID parentId = UUID.fromString(id);
-        deleteRecursively(parentId);
+        UUID root = findRootParent(parentId);
+        deleteRecursively(parentId, root);
     }
 
-    private void deleteRecursively(UUID parentId) throws ThingsboardException {
+    private void deleteRecursively(UUID parentId, UUID root) throws ThingsboardException {
         List<AssetDeviceRelationEntity> assetDeviceRelationEntities = assetDeviceRelationService.findByParentId(parentId);
-
         for (AssetDeviceRelationEntity relation : assetDeviceRelationEntities) {
             if ("ASSET".equals(relation.getToType())) {
                 UUID childId = relation.getToId();
-                deleteRecursively(childId);
+                deleteRecursively(childId, root);
             }
         }
-
-        AssetId assetId = new AssetId(parentId);
-        Asset asset = checkAssetId(assetId, Operation.DELETE);
+        AssetId assetIdCurrent = new AssetId(parentId);
+        AssetId assetIdRoot = new AssetId(root);
+        Asset asset = checkAssetId(assetIdCurrent, Operation.DELETE);
         tbAssetService.delete(asset, getCurrentUser());
+        String requestBody = "{\"UPDATED " + asset.getType() + "\": \"" + System.currentTimeMillis() + "\"}";
+        telemetryController.saveTelemetry(getTenantId(), assetIdRoot, requestBody, 0L);
+    }
+
+    public UUID findRootParent(UUID currentId) {
+        List<AssetDeviceRelationEntity> parents = assetDeviceRelationService.findByToId(currentId);
+        if (parents == null || parents.isEmpty() || parents.get(0).getFromId().equals(currentId)) {
+            return currentId;
+        }
+        return findRootParent(parents.get(0).getFromId());
     }
 
     @GetMapping("/assets/filter")
@@ -172,10 +182,12 @@ public class MultipleAssetsController extends BaseController {
 
         // Nếu có `parentAssetId`, lưu quan hệ cha-con
         if (parentAssetId != null) {
+            UUID rootId = findRootParent(UUID.fromString(parentAssetId));
+            AssetId assetIdRoot = new AssetId(rootId);
             AssetId assetId = new AssetId(UUID.fromString(parentAssetId));
             saveAssetRecursively(assetHierarchyRequest, savedAssets, assetId);
             String requestBody = "{\"UPDATED " + assetHierarchyRequest.getType() + "\": \"" + System.currentTimeMillis() + "\"}";
-            telemetryController.saveTelemetry(getTenantId(), assetId, requestBody, 0L);
+            telemetryController.saveTelemetry(getTenantId(), assetIdRoot, requestBody, 0L);
         } else {
             saveAssetRecursively(assetHierarchyRequest, savedAssets, null);
         }

@@ -200,6 +200,10 @@ public class AssetDeviceRelationService {
         return assetDeviceRelationRepository.findByFromId(id);
     }
 
+    public List<AssetDeviceRelationEntity> findByToId(UUID id){
+        return assetDeviceRelationRepository.findByToId(id);
+    }
+
     public boolean checkTypeAssetDevice(UUID id, EntityType entityType, String type){
         if(entityType == EntityType.DEVICE){
             DeviceInfoEntity deviceInfoEntity = deviceRepository.findDeviceInfoById(id);
