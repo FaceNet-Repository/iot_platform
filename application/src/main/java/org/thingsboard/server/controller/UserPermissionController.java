@@ -33,6 +33,7 @@ import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.roles.PermissionsService;
 import org.thingsboard.server.service.roles.UserPermissionsService;
+import org.thingsboard.server.service.roles.UserRolesService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Action;
 
@@ -47,6 +48,7 @@ import java.util.UUID;
 @Slf4j
 public class UserPermissionController extends BaseController {
     private final UserPermissionsService userPermissionsService;
+    private final UserRolesService userRolesService;
     private final PermissionsService permissionsService;
 
     /**
@@ -223,6 +225,10 @@ public class UserPermissionController extends BaseController {
         }
         List<UUID> uuids = userPermissionsService.findUserIdsByEntityIdAndAction(entityId, permissionName, tenantId);
         PageData<User> users = userService.findByIds(uuids, pageLink);
+        for (User user1 : users.getData()){
+            List<UserPermission> userPermissions = userRolesService.findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(user1.getUuidId(), entityId, null);
+            user1.setRolePermission(userPermissions);
+        }
         return ResponseEntity.ok(users);
     }
 

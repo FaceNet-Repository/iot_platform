@@ -38,6 +38,13 @@ public class UserPermission {
         this.roleName = roleName;
     }
 
+    public UserPermission(UUID userId, UUID entityId, UUID roleId, String roleName) {
+        this.userId = userId;
+        this.entityId = entityId;
+        this.roleId = roleId;
+        this.roleName = roleName;
+    }
+
     public UserPermission() {
 
     }

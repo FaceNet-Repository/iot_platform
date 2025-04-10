@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.limit.LimitedApi;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.common.data.security.event.UserCredentialsInvalidationEvent;
 import org.thingsboard.server.common.data.security.event.UserSessionInvalidationEvent;
@@ -48,6 +49,7 @@ import org.thingsboard.server.common.data.security.model.UserPasswordPolicy;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.roles.UserRolesService;
 import org.thingsboard.server.service.security.auth.rest.RestAuthenticationDetails;
 import org.thingsboard.server.service.security.model.ActivateUserRequest;
 import org.thingsboard.server.service.security.model.ChangePasswordRequest;
@@ -57,6 +59,9 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @TbCoreComponent
@@ -73,6 +78,7 @@ public class AuthController extends BaseController {
     private final SystemSecurityService systemSecurityService;
     private final SecuritySettingsService securitySettingsService;
     private final RateLimitService rateLimitService;
+    private final UserRolesService userRolesService;
     private final ApplicationEventPublisher eventPublisher;
 
 
@@ -83,6 +89,22 @@ public class AuthController extends BaseController {
     public User getUser() throws ThingsboardException {
         SecurityUser securityUser = getCurrentUser();
         return userService.findUserById(securityUser.getTenantId(), securityUser.getId());
+    }
+
+    @ApiOperation(value = "Get current User (getUser)",
+            notes = "Get the information about the User which credentials are used to perform this REST API call.")
+    //@PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PostMapping(value = "/auth/user")
+    public User getUserWithRoles(@RequestParam(required = false) UUID entityId) throws ThingsboardException {
+        SecurityUser securityUser = getCurrentUser();
+        User user = userService.findUserById(securityUser.getTenantId(), securityUser.getId());
+
+        List<UserPermission> userPermissions =
+                userRolesService.findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(
+                        user.getUuidId(), entityId, null);
+
+        user.setRolePermission(userPermissions);
+        return user;
     }
 
     @ApiOperation(value = "Logout (logout)",

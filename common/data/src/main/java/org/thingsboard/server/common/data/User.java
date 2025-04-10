@@ -27,9 +27,12 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.notification.targets.NotificationRecipient;
+import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
+
+import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -54,6 +57,9 @@ public class User extends BaseDataWithAdditionalInfo<UserId> implements HasName,
 
     @Getter @Setter
     private Long version;
+
+    @Getter @Setter
+    private List<UserPermission> rolePermission;
 
     public User() {
         super();

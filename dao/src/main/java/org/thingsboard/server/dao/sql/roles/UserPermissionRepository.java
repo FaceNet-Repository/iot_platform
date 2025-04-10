@@ -65,4 +65,24 @@ public interface UserPermissionRepository extends JpaRepository<UserPermissionEn
             @Param("userId") UUID userId,
             @Param("textSearch") String textSearch,
             Pageable pageable);
+
+    @Query("""
+        SELECT new org.thingsboard.server.common.data.roles.UserPermission(
+            up.userId,
+            up.entityId,
+            up.roleId,
+            r.name
+        )
+        FROM UserPermissionEntity up
+        JOIN RoleEntity r ON up.roleId = r.id
+        WHERE up.userId = :userId
+          AND up.roleId IS NOT NULL
+          AND (:entityId IS NULL OR up.entityId = :entityId)
+          AND (:textSearch IS NULL OR ilike(r.name, CONCAT('%', :textSearch, '%')) = true)
+        ORDER BY r.name
+    """)
+    List<UserPermission> findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(
+            @Param("userId") UUID userId,
+            @Param("entityId") UUID entityId,
+            @Param("textSearch") String textSearch);
 }

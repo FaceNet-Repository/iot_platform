@@ -135,6 +135,10 @@ public class UserPermissionsService {
         userPermissionService.deleteByUserIdAndEntityId(userId, entityId);
     }
 
+    public List<UserPermission> findByUserIdAndEntityId(UUID userId, UUID entityId){
+        return userPermissionService.findByUserIdAndEntityId(userId, entityId);
+    }
+
     public void checkUserPermission(UUID userId, UUID entityId, List<String> permissionNames, String apiUrl) throws IllegalAccessException {
         if (permissionNames == null || permissionNames.isEmpty()) {
             throw new IllegalArgumentException("Permission list cannot be null or empty.");
