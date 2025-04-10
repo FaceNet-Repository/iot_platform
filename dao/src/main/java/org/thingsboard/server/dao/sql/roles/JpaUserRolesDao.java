@@ -75,8 +75,8 @@ public class JpaUserRolesDao implements UserRolesDao {
     }
 
     @Override
-    public void unassignRoleFromUser(UUID userId, UUID roleId) {
-        List<UserPermissionEntity> userPermissions = userPermissionRepository.findAllByUserIdAndRoleId(userId, roleId);
+    public void unassignRoleFromUser(UUID userId, UUID roleId, UUID entityId) {
+        List<UserPermissionEntity> userPermissions = userPermissionRepository.findAllByUserIdAndRoleIdAndEntityId(userId, roleId, entityId);
         userPermissionRepository.deleteAll(userPermissions);
     }
 

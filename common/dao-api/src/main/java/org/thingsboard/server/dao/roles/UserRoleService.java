@@ -24,6 +24,6 @@ import java.util.UUID;
 
 public interface UserRoleService {
     void assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType);
-    void unassignRoleFromUser(UUID userId, UUID roleId);
+    void unassignRoleFromUser(UUID userId, UUID roleId, UUID entityId);
     PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink);
 }
