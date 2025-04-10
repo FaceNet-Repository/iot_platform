@@ -26,12 +26,14 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.common.data.roles.Role;
 import org.thingsboard.server.dao.DaoUtil;
+import org.thingsboard.server.dao.exception.DatabaseException;
 import org.thingsboard.server.dao.model.sql.*;
 import org.thingsboard.server.dao.roles.RoleDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -61,8 +63,8 @@ public class JpaRoleDao implements RoleDao {
     }
 
     @Override
-    public List<Role> findByTenantId(UUID tenantId) {
-        return null;
+    public Optional<Role> findByTenantIdAndName(UUID tenantId, String name) {
+        return roleRepository.findByTenantIdAndName(tenantId, name).map(RoleEntity::toData);
     }
 
     @Override
@@ -130,6 +132,14 @@ public class JpaRoleDao implements RoleDao {
 
     @Override
     public Role createOrUpdateRoleWithPermissions(Role role) {
+        // Kiểm tra trùng tên Role trong cùng tenant
+        Optional<RoleEntity> roleWithSameName = roleRepository.findByTenantIdAndName(role.getTenantId(), role.getName());
+        if (roleWithSameName.isPresent()) {
+            // Nếu là cập nhật, cho phép nếu đó chính là role hiện tại
+            if (role.getId() == null || !roleWithSameName.get().getId().equals(role.getId())) {
+                throw new DatabaseException("Role name '" + role.getName() + "' already exists!");
+            }
+        }
         // Kiểm tra nếu Role đã tồn tại
         RoleEntity existingRole;
         if(role.getId() != null){

@@ -23,6 +23,7 @@ import org.thingsboard.server.common.data.roles.Role;
 import org.thingsboard.server.dao.roles.RoleService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
+import java.util.Optional;
 import java.util.UUID;
 @Service
 @TbCoreComponent
@@ -43,6 +44,9 @@ public class RolesService {
 
     public void deleteById(UUID id){
         roleService.deleteById(id);
+    }
+    public Optional<Role> findByTenantIdAndName(UUID tenantId, String name){
+        return roleService.findByTenantIdAndName(tenantId, name);
     }
 
     public Role findById(UUID id){

@@ -19,10 +19,12 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Role;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface RoleService {
     PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink);
+    Optional<Role> findByTenantIdAndName(UUID tenantId, String name);
     Role createOrUpdateRoleWithPermissions(Role role);
     void deleteById(UUID id);
     Role findById(UUID id);

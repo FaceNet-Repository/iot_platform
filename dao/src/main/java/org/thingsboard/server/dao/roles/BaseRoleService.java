@@ -21,6 +21,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.Role;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -35,6 +36,11 @@ public class BaseRoleService implements RoleService{
     @Override
     public PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink) {
         return roleDao.findAll(tenantId, name, pageLink);
+    }
+
+    @Override
+    public Optional<Role> findByTenantIdAndName(UUID tenantId, String name){
+        return roleDao.findByTenantIdAndName(tenantId, name);
     }
 
     @Override

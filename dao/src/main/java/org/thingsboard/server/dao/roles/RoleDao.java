@@ -21,11 +21,12 @@ import org.thingsboard.server.common.data.roles.Role;
 import org.thingsboard.server.dao.model.sql.RoleEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface RoleDao {
     Role findById(UUID id);
-    List<Role> findByTenantId(UUID tenantId);
+    Optional<Role> findByTenantIdAndName(UUID tenantId, String name);
     RoleEntity save(Role role);
     void deleteById(UUID id);
     PageData<Role> findAll(UUID tenantId, String name, PageLink pageLink);
