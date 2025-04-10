@@ -98,9 +98,10 @@ public class UserRoleController extends BaseController {
     @DeleteMapping("/user-roles/unassign-role")
     public ResponseEntity<Void> unassignRoleFromUser(
             @RequestParam UUID userId,
-            @RequestParam UUID roleId) {
+            @RequestParam UUID roleId,
+            @RequestParam UUID entityid) {
         log.info("Unassigning role {} from user {}", roleId, userId);
-        userRolesService.unassignRoleFromUser(userId, roleId);
+        userRolesService.unassignRoleFromUser(userId, roleId, entityid);
         return ResponseEntity.ok().build();
     }
 
@@ -113,7 +114,8 @@ public class UserRoleController extends BaseController {
     @DeleteMapping("/user-roles/unassign-role-by-name")
     public ResponseEntity<Void> unassignRoleFromUser(
             @RequestParam UUID userId,
-            @RequestParam String roleName) throws ThingsboardException {
+            @RequestParam String roleName,
+            @RequestParam UUID entityId) throws ThingsboardException {
         log.info("Unassigning role {} from user {}", roleName, userId);
         Optional<Role> roleOpt = rolesService.findByTenantIdAndName(getTenantId().getId(), roleName);
         if (roleOpt.isEmpty()) {
@@ -121,7 +123,7 @@ public class UserRoleController extends BaseController {
                     ThingsboardErrorCode.ITEM_NOT_FOUND);
         }
         Role role = roleOpt.get();
-        userRolesService.unassignRoleFromUser(userId, role.getId());
+        userRolesService.unassignRoleFromUser(userId, role.getId(), entityId);
         return ResponseEntity.ok().build();
     }
 

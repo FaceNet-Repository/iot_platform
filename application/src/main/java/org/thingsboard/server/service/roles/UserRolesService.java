@@ -38,8 +38,8 @@ public class UserRolesService {
         userRoleService.assignRoleToUser(userId, roleId, entityId, entityType);
     }
 
-    public void  unassignRoleFromUser(UUID userId, UUID roleId){
-        userRoleService.unassignRoleFromUser(userId, roleId);
+    public void  unassignRoleFromUser(UUID userId, UUID roleId, UUID entityId){
+        userRoleService.unassignRoleFromUser(userId, roleId, entityId);
     }
 
     public PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink){

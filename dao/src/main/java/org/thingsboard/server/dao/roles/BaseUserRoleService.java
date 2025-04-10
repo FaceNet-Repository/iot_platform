@@ -37,8 +37,8 @@ public class BaseUserRoleService implements UserRoleService  {
         userRolesDao.assignRoleToUser(userId, roleId, entityId, entityType);
     }
     @Override
-    public void unassignRoleFromUser(UUID userId, UUID roleId) {
-        userRolesDao.unassignRoleFromUser(userId, roleId);
+    public void unassignRoleFromUser(UUID userId, UUID roleId, UUID entityId) {
+        userRolesDao.unassignRoleFromUser(userId, roleId, entityId);
     }
 
     @Override
