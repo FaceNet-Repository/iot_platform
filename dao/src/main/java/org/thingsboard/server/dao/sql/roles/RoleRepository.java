@@ -22,10 +22,12 @@ import org.thingsboard.server.dao.model.sql.RoleEntity;
 
 import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
     Page<RoleEntity> findAllByTenantId(UUID tenantId, Pageable pageable);
     Page<RoleEntity> findByNameContainingIgnoreCaseAndTenantId(String name, UUID tenantId, Pageable pageable);
+    Optional<RoleEntity> findByTenantIdAndName(UUID tenantId, String name);
 }

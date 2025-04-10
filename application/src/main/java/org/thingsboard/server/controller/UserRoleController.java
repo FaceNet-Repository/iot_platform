@@ -19,13 +19,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.roles.Role;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.roles.UserRoles;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.roles.RolesService;
 import org.thingsboard.server.service.roles.UserRolesService;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -36,6 +41,7 @@ import java.util.UUID;
 public class UserRoleController extends BaseController {
 
     private final UserRolesService userRolesService;
+    private final RolesService rolesService;
 
     /**
      * API to assign a role to a user
@@ -58,6 +64,32 @@ public class UserRoleController extends BaseController {
     }
 
     /**
+     * API to assign a role to a user
+     *
+     * @param userId    The ID of the user
+     * @param roleName    The name of the role to assign
+     * @param entityId  The ID of the associated entity
+     * @param entityType The type of the associated entity
+     * @return The UserRoles entity representing the assigned role
+     */
+    @PostMapping("/user-roles/assign-role-by-name")
+    public ResponseEntity<UserRoles> assignRoleToUser(
+            @RequestParam UUID userId,
+            @RequestParam String roleName,
+            @RequestParam UUID entityId,
+            @RequestParam String entityType) throws ThingsboardException {
+        log.info("Assigning role {} to user {} for entity {} of type {}", roleName, userId, entityId, entityType);
+        Optional<Role> roleOpt = rolesService.findByTenantIdAndName(getTenantId().getId(), roleName);
+        if (roleOpt.isEmpty()) {
+            throw new ThingsboardException("Role with name '" + roleName + "' not found",
+                    ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        Role role = roleOpt.get();
+        userRolesService.assignRoleToUser(userId, role.getId(), entityId, entityType);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * API to unassign a role from a user
      *
      * @param userId The ID of the user
@@ -69,6 +101,27 @@ public class UserRoleController extends BaseController {
             @RequestParam UUID roleId) {
         log.info("Unassigning role {} from user {}", roleId, userId);
         userRolesService.unassignRoleFromUser(userId, roleId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * API to unassign a role from a user
+     *
+     * @param userId The ID of the user
+     * @param roleName The name of the role to unassign
+     */
+    @DeleteMapping("/user-roles/unassign-role-by-name")
+    public ResponseEntity<Void> unassignRoleFromUser(
+            @RequestParam UUID userId,
+            @RequestParam String roleName) throws ThingsboardException {
+        log.info("Unassigning role {} from user {}", roleName, userId);
+        Optional<Role> roleOpt = rolesService.findByTenantIdAndName(getTenantId().getId(), roleName);
+        if (roleOpt.isEmpty()) {
+            throw new ThingsboardException("Role with name '" + roleName + "' not found",
+                    ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        Role role = roleOpt.get();
+        userRolesService.unassignRoleFromUser(userId, role.getId());
         return ResponseEntity.ok().build();
     }
 
