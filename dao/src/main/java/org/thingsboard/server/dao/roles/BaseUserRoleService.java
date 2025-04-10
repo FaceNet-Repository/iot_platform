@@ -22,6 +22,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.roles.UserRoles;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -44,6 +45,11 @@ public class BaseUserRoleService implements UserRoleService  {
     @Override
     public PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink){
         return userRolesDao.findUserPermissionsWithRoleName(userId, pageLink);
+    }
+
+    @Override
+    public List<UserPermission> findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(UUID userId, UUID entityId, String textSearch){
+        return userRolesDao.findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(userId, entityId, textSearch);
     }
 
 }

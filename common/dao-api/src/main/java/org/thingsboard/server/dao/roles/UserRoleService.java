@@ -20,10 +20,12 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.roles.UserRoles;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface UserRoleService {
     void assignRoleToUser(UUID userId, UUID roleId, UUID entityId, String entityType);
     void unassignRoleFromUser(UUID userId, UUID roleId, UUID entityId);
     PageData<UserPermission> findUserPermissionsWithRoleName(UUID userId, PageLink pageLink);
+    List<UserPermission> findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(UUID userId, UUID entityId, String textSearch);
 }

@@ -31,8 +31,7 @@ import org.thingsboard.server.dao.roles.UserPermissionDao;
 import org.thingsboard.server.dao.roles.UserRolesDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -102,4 +101,24 @@ public class JpaUserRolesDao implements UserRolesDao {
                 userPermissionPage.hasNext()
         );
     }
+
+    @Override
+    public List<UserPermission> findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(UUID userId, UUID entityId, String textSearch) {
+        List<UserPermission> rawPermissions = userPermissionRepository
+                .findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(
+                        userId,
+                        entityId,
+                        textSearch
+                );
+
+        return new ArrayList<>(rawPermissions.stream()
+                .collect(Collectors.toMap(
+                        p -> p.getRoleId() + "_" + (p.getEntityId() != null ? p.getEntityId().toString() : "null"),
+                        p -> p,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ))
+                .values());
+    }
+
 }
