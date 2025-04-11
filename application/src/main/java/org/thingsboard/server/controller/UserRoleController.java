@@ -30,6 +30,7 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.roles.RolesService;
 import org.thingsboard.server.service.roles.UserRolesService;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -147,4 +148,40 @@ public class UserRoleController extends BaseController {
         PageData<UserPermission> userPermissions = userRolesService.findUserPermissionsWithRoleName(userId, pageLink);
         return ResponseEntity.ok(userPermissions);
     }
+
+    /**
+     * API to change a user's role (unassign old role and assign a new one)
+     *
+     * @param userId The ID of the user
+     * @param oldRoleName The name of the old role to unassign
+     * @param newRoleName The name of the new role to assign
+     * @param entityId The ID of the associated entity
+     * @param entityType The type of the associated entity
+     * @return 200 OK if role is changed successfully
+     */
+    @PostMapping("/user-roles/change-role")
+    public ResponseEntity<Void> changeUserRole(
+            @RequestParam UUID userId,
+            @RequestParam String oldRoleName,
+            @RequestParam String newRoleName,
+            @RequestParam UUID entityId,
+            @RequestParam String entityType) throws ThingsboardException {
+
+        log.info("Changing role from '{}' to '{}' for user {} on entity {} ({})", oldRoleName, newRoleName, userId, entityId, entityType);
+
+        List<UserPermission> oldRole = userRolesService.findRoleByUserIdAndOptionalEntityIdAndRoleNameContaining(userId, entityId, oldRoleName);
+        if (oldRole.isEmpty()) {
+            throw new ThingsboardException("Old role '" + oldRoleName + "' not found",
+                    ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        Optional<Role> newRole = rolesService.findByTenantIdAndName(getTenantId().getId(), newRoleName);
+        if (newRole.isEmpty()) {
+            throw new ThingsboardException("New role '" + newRoleName + "' not found",
+                    ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        userRolesService.unassignRoleFromUser(userId, oldRole.get(0).getRoleId(), entityId);
+        userRolesService.assignRoleToUser(userId, newRole.get().getId(), entityId, entityType);
+        return ResponseEntity.ok().build();
+    }
+
 }

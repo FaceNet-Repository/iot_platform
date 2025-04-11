@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.EntitySubtype;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetInfo;
 import org.thingsboard.server.common.data.asset.AssetSearchQuery;
@@ -59,6 +60,7 @@ import org.thingsboard.server.service.security.permission.Resource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -185,6 +187,34 @@ public class AssetController extends BaseController {
         Customer customer = checkCustomerId(asset.getCustomerId(), Operation.READ);
         return tbAssetService.unassignAssetToCustomer(getTenantId(), assetId, customer, getCurrentUser());
     }
+    @ApiOperation(value = "Change customer assignment for asset (changeAssetCustomer)",
+            notes = "Unassigns asset from the current customer and assigns it to a new customer." + TENANT_AUTHORITY_PARAGRAPH)
+    //@PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    @RequestMapping(value = "/customer/change-asset-customer", method = RequestMethod.POST)
+    @ResponseBody
+    public Asset changeAssetCustomer(@RequestParam("assetId") String strAssetId,
+                                     @RequestParam("newCustomerId") String strNewCustomerId) throws ThingsboardException {
+        checkParameter("assetId", strAssetId);
+        checkParameter("newCustomerId", strNewCustomerId);
+
+        UUID assetUUID = toUUID(strAssetId);
+        UUID newCustomerUUID = toUUID(strNewCustomerId);
+        
+        AssetId assetId = new AssetId(assetUUID);
+        CustomerId newCustomerId = new CustomerId(newCustomerUUID);
+
+        // Unassign from current customer
+        Asset asset = checkAssetId(assetId, Operation.UNASSIGN_FROM_CUSTOMER);
+        if (asset.getCustomerId() != null && !asset.getCustomerId().getId().equals(ModelConstants.NULL_UUID)) {
+            Customer currentCustomer = checkCustomerId(asset.getCustomerId(), Operation.READ);
+            tbAssetService.unassignAssetToCustomer(getTenantId(), assetId, currentCustomer, getCurrentUser());
+        }
+
+        // Assign to new customer
+        Customer newCustomer = checkCustomerId(newCustomerId, Operation.READ);
+        return tbAssetService.assignAssetToCustomer(getTenantId(), assetId, newCustomer, getCurrentUser());
+    }
+
 
     @ApiOperation(value = "Make asset publicly available (assignAssetToPublicCustomer)",
             notes = "Asset will be available for non-authorized (not logged-in) users. " +

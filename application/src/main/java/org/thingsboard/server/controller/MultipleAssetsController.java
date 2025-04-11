@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.roles.Permission;
+import org.thingsboard.server.common.data.roles.Role;
 import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
@@ -62,11 +63,14 @@ import org.thingsboard.server.service.entitiy.device.TbDeviceService;
 import org.thingsboard.server.service.entitiy.entity.relation.TbEntityRelationService;
 import org.thingsboard.server.service.relation.AssetDeviceRelationService;
 import org.thingsboard.server.service.roles.PermissionsService;
+import org.thingsboard.server.service.roles.RolesService;
 import org.thingsboard.server.service.roles.UserPermissionsService;
+import org.thingsboard.server.service.roles.UserRolesService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Action;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
+import org.thingsboard.server.service.security.permission.Roles;
 
 import java.time.Instant;
 import java.util.*;
@@ -88,6 +92,8 @@ public class MultipleAssetsController extends BaseController {
     private final PermissionsService permissionsService;
     private final TbDeviceService tbDeviceService;
     private final UserPermissionsService userPermissionsService;
+    private final UserRolesService userRolesService;
+    private final RolesService rolesService;
     public static final String FROM_ID = "fromId";
     public static final String FROM_TYPE = "fromType";
 
@@ -292,17 +298,15 @@ public class MultipleAssetsController extends BaseController {
         // Lưu asset và nhận về asset đã được gán id
         checkEntity(asset.getId(), asset, Resource.ASSET);
         Asset savedAsset = tbAssetService.save(asset, user);
-//        savedAsset.setName(savedAsset.getId().toString());
-//        savedAsset = tbAssetService.save(savedAsset, getCurrentUser());
         savedAssets.add(savedAsset);
 
-        Permission permission = permissionsService.findByName(Action.ALL.name(), user.getTenantId().getId());
-        UserPermission userPermission = new UserPermission();
-        userPermission.setEntityName("ASSET");
-        userPermission.setUserId(user.getId().getId());
-        userPermission.setEntityId(savedAsset.getId().getId());
-        userPermission.setPermissionId(permission.getId());
-        userPermissionsService.saveRole(userPermission, user.getTenantId());
+        Optional<Role> roleOpt = rolesService.findByTenantIdAndName(getTenantId().getId(), Roles.Owner.name());
+        if (roleOpt.isEmpty()) {
+            throw new ThingsboardException("Role with name '" + Roles.Owner.name() + "' not found",
+                    ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        Role role = roleOpt.get();
+        userRolesService.assignRoleToUser(user.getId().getId(), role.getId(), savedAsset.getId().getId(), "ASSET");
 
         // Nếu có `parentAssetId`, thiết lập quan hệ cha-con
         if (parentAssetId != null) {
