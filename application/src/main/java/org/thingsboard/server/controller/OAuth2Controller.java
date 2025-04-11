@@ -180,6 +180,10 @@ public class OAuth2Controller extends BaseController {
         log.info("Fetching token for email: {} and nonce: {}", email, nonce);
 
         OAuth2TokenInfo oAuth2TokenInfo = tokenCache.getTokenInfo(email, nonce);
+        if (oAuth2TokenInfo == null) {
+            log.warn("No token info found for email: {} and nonce: {}", email, nonce);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Token info not found"));
+        }
         String idToken = oAuth2TokenInfo.getIdToken();
         String userId = oAuth2TokenInfo.getUserId();
         if (idToken == null) {
