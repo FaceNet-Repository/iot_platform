@@ -32,7 +32,7 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     UserEntity findByEmail(String email);
-
+    UserEntity findByPhone(String phone);
     UserEntity findByTenantIdAndEmail(UUID tenantId, String email);
 
     @Query("SELECT u FROM UserEntity u WHERE u.tenantId = :tenantId " +
