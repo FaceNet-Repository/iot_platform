@@ -128,6 +128,12 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     }
 
     @Override
+    public User findUserByPhone(TenantId tenantId, String phone) {
+        log.trace("Executing findUserByPhone [{}]", phone);
+        return userDao.findByPhone(tenantId, phone);
+    }
+
+    @Override
     public User findUserByTenantIdAndEmail(TenantId tenantId, String email) {
         log.trace("Executing findUserByTenantIdAndEmail [{}][{}]", tenantId, email);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);

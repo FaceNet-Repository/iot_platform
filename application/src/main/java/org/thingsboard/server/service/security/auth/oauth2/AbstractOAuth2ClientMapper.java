@@ -193,7 +193,21 @@ public abstract class AbstractOAuth2ClientMapper {
 
         UserPrincipal principal = new UserPrincipal(UserPrincipal.Type.USER_NAME, oauth2User.getEmail());
 
-        User user = userService.findUserByEmail(TenantId.SYS_TENANT_ID, oauth2User.getEmail());
+        String phone = null;
+        User user = null;
+
+        if (token.getPrincipal() instanceof OidcUser oidcUser) {
+            if (oidcUser.getUserInfo() != null && oidcUser.getUserInfo().getClaims() != null) {
+                phone = (String) oidcUser.getUserInfo().getClaims().get("phone_number");
+            }
+            if (!StringUtils.isEmpty(phone)) {
+                user = userService.findUserByPhone(TenantId.SYS_TENANT_ID, phone);
+            }
+        }
+
+        if (user == null) {
+            user = userService.findUserByEmail(TenantId.SYS_TENANT_ID, oauth2User.getEmail());
+        }
 
         if (user == null && !config.isAllowUserCreation()) {
             throw new UsernameNotFoundException("User not found: " + oauth2User.getEmail());
@@ -218,11 +232,7 @@ public abstract class AbstractOAuth2ClientMapper {
                     customer.setTenantId(user.getTenantId());
                     customer.setTitle(uniqueTitle);
                     customer.setEmail(user.getEmail());
-                    if (token.getPrincipal() instanceof OidcUser oidcUser) {
-                        Map<String, Object> claims = oidcUser.getIdToken().getClaims();
-                        String phone = claims.get("phone_number") != null ? claims.get("phone_number").toString() : null;
-                        customer.setPhone(phone);
-                    }
+                    customer.setPhone(phone);
                     CustomerId customerId = tbCustomerService.save(customer, user).getId();
                     user.setCustomerId(customerId);
 
