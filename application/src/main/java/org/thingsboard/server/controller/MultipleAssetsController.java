@@ -276,6 +276,9 @@ public class MultipleAssetsController extends BaseController {
         relation.setTypeGroup(RelationTypeGroup.COMMON); // Nhóm loại quan hệ
         try {
             tbEntityRelationService.save(getTenantId(), getCurrentUser().getCustomerId(), relation, getCurrentUser());
+            // Bắn telemetry cho app đồng bộ
+            String requestBody = "{\"UPDATED HCP: " + System.currentTimeMillis() + "\"}";
+            telemetryController.saveTelemetry(getTenantId(), homeAssetId, requestBody, 0L);
             return ResponseEntity.ok("Relation created successfully between home and device.");
         } catch (Exception e) {
             throw new ThingsboardException("Failed to save the relation!", ThingsboardErrorCode.GENERAL);
