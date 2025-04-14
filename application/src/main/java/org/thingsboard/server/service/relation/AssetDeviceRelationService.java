@@ -162,7 +162,8 @@ public class AssetDeviceRelationService {
             if (seenIds.contains(child.getId())) {
                 continue;
             }
-            seenIds.add(child.getId());
+//            seenIds.add(child.getId());
+
             // Tìm các con của "child"
             List<AssetDeviceRelationEntity> childEntities = assetDeviceRelationRepository.findByFromId(child.getId());
             if (!childEntities.isEmpty()) {
