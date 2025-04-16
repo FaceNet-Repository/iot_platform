@@ -57,6 +57,7 @@ import org.thingsboard.server.service.security.auth.oauth2.HttpCookieOAuth2Autho
 import org.thingsboard.server.service.security.auth.rest.RestAuthenticationProvider;
 import org.thingsboard.server.service.security.auth.rest.RestLoginProcessingFilter;
 import org.thingsboard.server.service.security.auth.rest.RestPublicLoginProcessingFilter;
+import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 import org.thingsboard.server.transport.http.config.PayloadSizeFilter;
 
 import java.util.ArrayList;
@@ -100,7 +101,8 @@ public class ThingsboardSecurityConfiguration {
 
     @Autowired(required = false)
     private HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
-
+    @Autowired
+    private JwtTokenFactory tokenFactory;
     @Autowired
     @Qualifier("defaultAuthenticationSuccessHandler")
     private AuthenticationSuccessHandler successHandler;
@@ -173,7 +175,7 @@ public class ThingsboardSecurityConfiguration {
 
     @Bean
     protected RefreshTokenProcessingFilter buildRefreshTokenProcessingFilter() throws Exception {
-        RefreshTokenProcessingFilter filter = new RefreshTokenProcessingFilter(TOKEN_REFRESH_ENTRY_POINT, successHandler, failureHandler);
+        RefreshTokenProcessingFilter filter = new RefreshTokenProcessingFilter(TOKEN_REFRESH_ENTRY_POINT, successHandler, failureHandler, tokenFactory);
         filter.setAuthenticationManager(this.authenticationManager);
         return filter;
     }

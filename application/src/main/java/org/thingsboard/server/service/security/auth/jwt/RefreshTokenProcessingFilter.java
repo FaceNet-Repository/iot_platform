@@ -32,6 +32,8 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.service.security.auth.RefreshAuthenticationToken;
 import org.thingsboard.server.service.security.exception.AuthMethodNotSupportedException;
+import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 import org.thingsboard.server.service.security.model.token.RawAccessJwtToken;
 
 import java.io.IOException;
@@ -41,20 +43,49 @@ public class RefreshTokenProcessingFilter extends AbstractAuthenticationProcessi
 
     private final AuthenticationSuccessHandler successHandler;
     private final AuthenticationFailureHandler failureHandler;
+    private final JwtTokenFactory tokenFactory;
 
 
     public RefreshTokenProcessingFilter(String defaultProcessUrl, AuthenticationSuccessHandler successHandler,
-                                        AuthenticationFailureHandler failureHandler) {
+                                        AuthenticationFailureHandler failureHandler, JwtTokenFactory tokenFactory) {
         super(defaultProcessUrl);
         this.successHandler = successHandler;
         this.failureHandler = failureHandler;
+        this.tokenFactory = tokenFactory;
     }
+
+//    @Override
+//    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+//            throws AuthenticationException, IOException, ServletException {
+//        if (!HttpMethod.POST.name().equals(request.getMethod())) {
+//            if(log.isDebugEnabled()) {
+//                log.debug("Authentication method not supported. Request method: " + request.getMethod());
+//            }
+//            throw new AuthMethodNotSupportedException("Authentication method not supported");
+//        }
+//
+//        RefreshTokenRequest refreshTokenRequest;
+//        try {
+//            refreshTokenRequest = JacksonUtil.fromReader(request.getReader(), RefreshTokenRequest.class);
+//        } catch (Exception e) {
+//            throw new AuthenticationServiceException("Invalid refresh token request payload");
+//        }
+//
+//        if (StringUtils.isBlank(refreshTokenRequest.getRefreshToken())) {
+//            throw new AuthenticationServiceException("Refresh token is not provided");
+//        }
+//
+//        RawAccessJwtToken token = new RawAccessJwtToken(refreshTokenRequest.getRefreshToken());
+//
+//        return this.getAuthenticationManager().authenticate(new RefreshAuthenticationToken(token));
+//    }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException, IOException, ServletException {
+
         if (!HttpMethod.POST.name().equals(request.getMethod())) {
-            if(log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {
                 log.debug("Authentication method not supported. Request method: " + request.getMethod());
             }
             throw new AuthMethodNotSupportedException("Authentication method not supported");
@@ -64,18 +95,29 @@ public class RefreshTokenProcessingFilter extends AbstractAuthenticationProcessi
         try {
             refreshTokenRequest = JacksonUtil.fromReader(request.getReader(), RefreshTokenRequest.class);
         } catch (Exception e) {
-            throw new AuthenticationServiceException("Invalid refresh token request payload");
+            throw new AuthenticationServiceException("Invalid refresh token request payload", e);
         }
 
-        if (StringUtils.isBlank(refreshTokenRequest.getRefreshToken())) {
+        String refreshTokenStr = refreshTokenRequest.getRefreshToken();
+        if (StringUtils.isBlank(refreshTokenStr)) {
             throw new AuthenticationServiceException("Refresh token is not provided");
         }
 
-        RawAccessJwtToken token = new RawAccessJwtToken(refreshTokenRequest.getRefreshToken());
+        RawAccessJwtToken rawToken = new RawAccessJwtToken(refreshTokenStr);
 
-        return this.getAuthenticationManager().authenticate(new RefreshAuthenticationToken(token));
+        SecurityUser parsedUser = tokenFactory.parseRefreshToken(refreshTokenStr);
+
+        RefreshAuthenticationToken authToken = new RefreshAuthenticationToken(rawToken);
+        if (parsedUser.getNonceOauth2() != null) {
+            authToken.setNonce(parsedUser.getNonceOauth2());
+        }
+        Authentication result = this.getAuthenticationManager().authenticate(authToken);
+        Object principal = result.getPrincipal();
+        if (principal instanceof SecurityUser) {
+            ((SecurityUser) principal).setNonceOauth2(parsedUser.getNonceOauth2());
+        }
+        return result;
     }
-
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
                                             Authentication authResult) throws IOException, ServletException {

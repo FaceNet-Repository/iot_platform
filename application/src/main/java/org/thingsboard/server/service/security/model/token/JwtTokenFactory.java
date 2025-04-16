@@ -206,11 +206,17 @@ public class JwtTokenFactory {
     public JwtToken createRefreshToken(SecurityUser securityUser) {
         UserPrincipal principal = securityUser.getUserPrincipal();
 
-        String token = setUpToken(securityUser, Collections.singletonList(Authority.REFRESH_TOKEN.name()), jwtSettingsService.getJwtSettings().getRefreshTokenExpTime())
+        JwtBuilder builder = setUpToken(securityUser,
+                Collections.singletonList(Authority.REFRESH_TOKEN.name()),
+                jwtSettingsService.getJwtSettings().getRefreshTokenExpTime())
                 .claim(IS_PUBLIC, principal.getType() == UserPrincipal.Type.PUBLIC_ID)
-                .id(UUID.randomUUID().toString()).compact();
+                .id(UUID.randomUUID().toString());
 
-        return new AccessJwtToken(token);
+        if (StringUtils.isNotBlank(securityUser.getNonceOauth2())) {
+            builder.claim("nonce", securityUser.getNonceOauth2());
+        }
+
+        return new AccessJwtToken(builder.compact());
     }
 
     public SecurityUser parseRefreshToken(String token) {
@@ -231,6 +237,10 @@ public class JwtTokenFactory {
         securityUser.setUserPrincipal(principal);
         if (claims.get(SESSION_ID, String.class) != null) {
             securityUser.setSessionId(claims.get(SESSION_ID, String.class));
+        }
+        String nonce = claims.get("nonce", String.class);
+        if (nonce != null) {
+            securityUser.setNonceOauth2(nonce);
         }
         return securityUser;
     }
