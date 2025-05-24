@@ -132,7 +132,7 @@ public class MultipleAssetsController extends BaseController {
         AssetId assetIdRoot = new AssetId(root);
         Asset asset = checkAssetId(assetIdCurrent, Operation.DELETE);
         tbAssetService.delete(asset, getCurrentUser());
-        String requestBody = "{\"UPDATED " + asset.getType() + "\": \"" + System.currentTimeMillis() + "\"}";
+        String requestBody = "{\"DELETED " + asset.getType() + "\": \"" + parentId + "\"}";
         telemetryController.saveTelemetry(getTenantId(), assetIdRoot, requestBody, 0L);
     }
 
@@ -153,6 +153,13 @@ public class MultipleAssetsController extends BaseController {
         List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(rootProfile, 0, tenantId.getId(), UUID.fromString(assetId), customerId.getId());
         assetDeviceRelationService.filter(assetDeviceRelationDTOS, result, profileName, seenIds);
         return result;
+    }
+
+    @GetMapping("/assets/detail-relation")
+    public List<AssetDeviceRelationDTO> getDetail(@RequestParam String rootProfile, @RequestParam String assetId) throws ThingsboardException {
+        TenantId tenantId = getCurrentUser().getTenantId();
+        CustomerId customerId = getCurrentUser().getCustomerId();
+        return assetDeviceRelationService.getAllRelations(rootProfile, 0, tenantId.getId(), UUID.fromString(assetId), customerId.getId());
     }
 
     @RequestMapping(value = "/assets/relations/info", method = RequestMethod.GET, params = {FROM_ID, FROM_TYPE})
