@@ -53,7 +53,11 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
                                                 Pageable pageable);
 
     @Query("SELECT u FROM UserEntity u WHERE u.tenantId = :tenantId " +
-            "AND (:searchText IS NULL OR ilike(u.email, CONCAT('%', :searchText, '%')) = true)")
+            "AND (:searchText IS NULL OR " +
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', :searchText, '%')) OR " +
+            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :searchText, '%')) OR " +
+            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :searchText, '%')) OR " +
+            "u.phone LIKE CONCAT('%', :searchText, '%'))")
     Page<UserEntity> findByTenantId(@Param("tenantId") UUID tenantId,
                                     @Param("searchText") String searchText,
                                     Pageable pageable);
