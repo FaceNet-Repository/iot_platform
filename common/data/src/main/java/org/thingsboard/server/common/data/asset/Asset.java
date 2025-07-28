@@ -58,6 +58,8 @@ public class Asset extends BaseDataWithAdditionalInfo<AssetId> implements HasLab
     @Getter @Setter
     private JsonNode attributes;
     @Getter @Setter
+    private JsonNode telemetry;
+    @Getter @Setter
     private AssetId externalId;
     @Getter @Setter
     private Long version;
