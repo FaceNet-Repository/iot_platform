@@ -110,6 +110,7 @@ public class AssetController extends BaseController {
         AssetId assetId = new AssetId(toUUID(strAssetId));
         Asset asset = checkAssetId(assetId, Operation.READ);
         asset.setAttributes(assetDeviceRelationService.getAllAttributes(getCurrentUser().getTenantId(), assetId));
+        asset.setTelemetry(assetDeviceRelationService.getTelemetry(getCurrentUser().getTenantId(), assetId));
         return asset;
     }
 
