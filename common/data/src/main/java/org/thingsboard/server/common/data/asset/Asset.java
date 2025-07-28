@@ -82,6 +82,7 @@ public class Asset extends BaseDataWithAdditionalInfo<AssetId> implements HasLab
         this.assetProfileId = asset.getAssetProfileId();
         this.externalId = asset.getExternalId();
         this.attributes = asset.getAttributes();
+        this.telemetry = asset.getTelemetry();
         this.version = asset.getVersion();
     }
 
