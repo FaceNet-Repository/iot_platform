@@ -132,13 +132,15 @@ public class AssetDeviceRelationService {
             }
         }
 
-        // Bước 5: Đệ quy tìm các con cho tất cả các tầng (giới hạn bởi level)
-        for (AssetDeviceRelationDTO dto : relationMap.values()) {
-            if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {
-                Set<UUID> seenIds = new HashSet<>();
-                seenIds.add(dto.getParentRelationId());
-                seenIds.add(dto.getId());
-                dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1, tenantId, seenIds)); // Truyền level - 1
+        if (level >= 0) {
+            // Bước 5: Đệ quy tìm các con cho tất cả các tầng (giới hạn bởi level)
+            for (AssetDeviceRelationDTO dto : relationMap.values()) {
+                if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {
+                    Set<UUID> seenIds = new HashSet<>();
+                    seenIds.add(dto.getParentRelationId());
+                    seenIds.add(dto.getId());
+                    dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1, tenantId, seenIds)); // Truyền level - 1
+                }
             }
         }
 
@@ -149,7 +151,7 @@ public class AssetDeviceRelationService {
     }
 
     private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level, UUID tenantId, Set<UUID> seenIds) {
-        if (level <= 0) { // Nếu đạt đến level giới hạn, không tiếp tục đệ quy
+        if (level == 0) { // Nếu đạt đến level giới hạn, không tiếp tục đệ quy
             return children;
         }
 
