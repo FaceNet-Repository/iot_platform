@@ -145,12 +145,17 @@ public class MultipleAssetsController extends BaseController {
     }
 
     @GetMapping("/assets/filter")
-    public List<AssetDeviceRelationDTO> getAllFilter(@RequestParam String rootProfile, @RequestParam String assetId, @RequestParam String profileName) throws ThingsboardException {
+    public List<AssetDeviceRelationDTO> getAllFilter(
+            @RequestParam String rootProfile,
+            @RequestParam String assetId,
+            @RequestParam String profileName,
+            @RequestParam(required = false, defaultValue = "0") int level
+    ) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
         CustomerId customerId = getCurrentUser().getCustomerId();
         List<AssetDeviceRelationDTO> result = new ArrayList<>();
         Set<UUID> seenIds = new HashSet<>();
-        List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(rootProfile, 0, tenantId.getId(), UUID.fromString(assetId), customerId.getId());
+        List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId(), UUID.fromString(assetId), customerId.getId());
         assetDeviceRelationService.filter(assetDeviceRelationDTOS, result, profileName, seenIds);
         return result;
     }

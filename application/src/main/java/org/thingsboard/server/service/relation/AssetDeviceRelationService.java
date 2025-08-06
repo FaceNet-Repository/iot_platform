@@ -149,7 +149,7 @@ public class AssetDeviceRelationService {
     }
 
     private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level, UUID tenantId, Set<UUID> seenIds) {
-        if (level == 0) { // Nếu đạt đến level giới hạn, không tiếp tục đệ quy
+        if (level <= 0) { // Nếu đạt đến level giới hạn, không tiếp tục đệ quy
             return children;
         }
 
