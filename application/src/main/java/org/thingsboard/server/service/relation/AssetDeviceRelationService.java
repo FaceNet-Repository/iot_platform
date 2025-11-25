@@ -24,8 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -37,14 +35,15 @@ import org.thingsboard.server.dao.model.sql.AssetDeviceRelationEntity;
 import org.thingsboard.server.dao.model.sql.AssetInfoEntity;
 import org.thingsboard.server.dao.model.sql.DeviceInfoEntity;
 import org.thingsboard.server.dao.sql.asset.AssetRepository;
+import org.thingsboard.server.dao.sql.asset.NativeAssetRepository;
 import org.thingsboard.server.dao.sql.attributes.AttributeKvRepository;
 import org.thingsboard.server.dao.sql.device.DeviceRepository;
+import org.thingsboard.server.dao.sql.device.NativeDeviceRepository;
 import org.thingsboard.server.dao.sql.relation.AssetDeviceRelationRepository;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 @Service
 public class AssetDeviceRelationService {
@@ -70,86 +69,104 @@ public class AssetDeviceRelationService {
     @Autowired
     private TimeseriesService tsService;
 
-    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, int level, UUID tenantId, UUID assetId, UUID customerId) {
-        // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
-        List<AssetDeviceRelationEntity> parentEntities = new ArrayList<>();
-        if(assetId == null) {
-            parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantIdAndCustomerId(profileFrom, tenantId, customerId);
-        } else {
-            parentEntities = assetDeviceRelationRepository.findByFromId(assetId);
+    @Autowired
+    private NativeDeviceRepository nativeDeviceRepository;
+
+    @Autowired
+    private NativeAssetRepository nativeAssetRepository;
+
+    public List<AssetDeviceRelationDTO> getAllRelations(String profileFrom, UUID fromId, String targetProfile, String targetType, UUID tenantId, UUID customerId) {
+        List<AssetDeviceRelationDTO> result = nativeDeviceRepository.getAllDevicesFromAssetRelation(profileFrom, fromId, targetProfile, targetType, tenantId, customerId);
+        if ("ASSET".equals(targetType)) {
+            return result;
         }
 
-        // Bước 2: Chuyển tất cả các `parentEntities` thành danh sách DTO ban đầu
-        Map<UUID, AssetDeviceRelationDTO> relationMap = new HashMap<>();
-        for (AssetDeviceRelationEntity parent : parentEntities) {
-            if (parent == null ) {
-                continue; // Bỏ qua các đối tượng null
-            }
-            AssetDeviceRelationDTO parentDTO = relationMap.computeIfAbsent(parent.getFromId(), id -> {
-                AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
-                dto.setId(parent.getFromId());
-                dto.setName(parent.getFromName());
-                dto.setProfile(parent.getAssetProfileFrom());
-                dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(parent.getFromId()), AttributeScope.SERVER_SCOPE));
-                dto.setChildren(new ArrayList<>());
-                return dto;
-            });
-        }
+        result.forEach(dto -> {
+            dto.setTelemetry(getTelemetry(new TenantId(tenantId), new DeviceId(dto.getId())));
+        });
+        return result;
 
-        // Bước 3: Tìm tất cả các `to_id` có `from_id` là các `from_id` đã tìm được ở bước 2
-        Set<UUID> uniqueFromIds = parentEntities.stream()
-                .filter(parent -> parent != null && parent.getFromId() != null)
-                .map(AssetDeviceRelationEntity::getFromId)
-                .collect(Collectors.toSet());
-        List<AssetDeviceRelationEntity> childEntities = assetDeviceRelationRepository.findByFromIdIn(new ArrayList<>(uniqueFromIds));
-
-        // Bước 4: Chuyển đổi các đối tượng con thành DTO và gán vào cha
-        for (AssetDeviceRelationEntity child : childEntities) {
-            if (child == null || child.getToId() == null) {
-                continue; // Bỏ qua các thực thể null hoặc không có to_id
-            }
-            AssetDeviceRelationDTO childDTO = relationMap.computeIfAbsent(child.getToId(), id -> {
-                AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
-                dto.setId(child.getToId());
-                dto.setParentRelationId(child.getFromId());
-                dto.setName(child.getToName());
-                dto.setProfile(child.getAssetProfileTo());
-                if ("DEVICE".equals(child.getToType())){
-                    dto.setAttributes(getAllAttributes(new TenantId(tenantId), new DeviceId(child.getToId())));
-                    dto.setTelemetry(getTelemetry(new TenantId(tenantId), new DeviceId(child.getToId())));
-                } else {
-                    dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
-                }
-                return dto;
-            });
-
-            AssetDeviceRelationDTO parentDTO = relationMap.get(child.getFromId());
-            if (parentDTO != null) {
-                if (parentDTO.getChildren() == null) {
-                    parentDTO.setChildren(new ArrayList<>());
-                }
-                parentDTO.getChildren().add(childDTO);
-            }
-        }
-
-        if (level >= 0) {
-            // Bước 5: Đệ quy tìm các con cho tất cả các tầng (giới hạn bởi level)
-            for (AssetDeviceRelationDTO dto : relationMap.values()) {
-                if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {
-                    Set<UUID> seenIds = new HashSet<>();
-                    seenIds.add(dto.getParentRelationId());
-                    seenIds.add(dto.getId());
-                    dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1, tenantId, seenIds)); // Truyền level - 1
-                }
-            }
-        }
-
-        // Bước 6: Trả về danh sách loại bỏ các bản sao
-        return relationMap.values().stream()
-                .filter(dto -> profileFrom.equals(dto.getProfile()))
-                .collect(Collectors.toList());
+//        // Bước 1: Lấy tất cả các `from_id` có `asset_profile_from` giống như đầu vào
+//        List<AssetDeviceRelationEntity> parentEntities = new ArrayList<>();
+//        if(assetId == null) {
+//            parentEntities = assetDeviceRelationRepository.findByAssetProfileFromAndTenantIdAndCustomerId(sprofileFrom, tenantId, customerId);
+//        } else {
+//            parentEntities = assetDeviceRelationRepository.findByFromId(assetId);
+//        }
+//
+//        // Bước 2: Chuyển tất cả các `parentEntities` thành danh sách DTO ban đầu
+//        Map<UUID, AssetDeviceRelationDTO> relationMap = new HashMap<>();
+//        for (AssetDeviceRelationEntity parent : parentEntities) {
+//            if (parent == null ) {
+//                continue; // Bỏ qua các đối tượng null
+//            }
+//            AssetDeviceRelationDTO parentDTO = relationMap.computeIfAbsent(parent.getFromId(), id -> {
+//                AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
+//                dto.setId(parent.getFromId());
+//                dto.setName(parent.getFromName());
+//                dto.setProfile(parent.getAssetProfileFrom());
+//                dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(parent.getFromId()), AttributeScope.SERVER_SCOPE));
+//                dto.setChildren(new ArrayList<>());
+//                return dto;
+//            });
+//        }
+//
+//        // Bước 3: Tìm tất cả các `to_id` có `from_id` là các `from_id` đã tìm được ở bước 2
+//        Set<UUID> uniqueFromIds = parentEntities.stream()
+//                .filter(parent -> parent != null && parent.getFromId() != null)
+//                .map(AssetDeviceRelationEntity::getFromId)
+//                .collect(Collectors.toSet());
+//        List<AssetDeviceRelationEntity> childEntities = assetDeviceRelationRepository.findByFromIdIn(new ArrayList<>(uniqueFromIds));
+//
+//        // Bước 4: Chuyển đổi các đối tượng con thành DTO và gán vào cha
+//        for (AssetDeviceRelationEntity child : childEntities) {
+//            if (child == null || child.getToId() == null) {
+//                continue; // Bỏ qua các thực thể null hoặc không có to_id
+//            }
+//            AssetDeviceRelationDTO childDTO = relationMap.computeIfAbsent(child.getToId(), id -> {
+//                AssetDeviceRelationDTO dto = new AssetDeviceRelationDTO();
+//                dto.setId(child.getToId());
+//                dto.setParentRelationId(child.getFromId());
+//                dto.setName(child.getToName());
+//                dto.setProfile(child.getAssetProfileTo());
+////                if ("DEVICE".equals(child.getToType())){
+////                    dto.setAttributes(getAllAttributes(new TenantId(tenantId), new DeviceId(child.getToId())));
+////                    dto.setTelemetry(getTelemetry(new TenantId(tenantId), new DeviceId(child.getToId())));
+////                } else {
+////                    dto.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(child.getToId()), AttributeScope.SERVER_SCOPE));
+////                }
+//                return dto;
+//            });
+//
+//            AssetDeviceRelationDTO parentDTO = relationMap.get(child.getFromId());
+//            if (parentDTO != null) {
+//                if (parentDTO.getChildren() == null) {
+//                    parentDTO.setChildren(new ArrayList<>());
+//                }
+//                parentDTO.getChildren().add(childDTO);
+//            }
+//        }
+//
+//        if (level >= 0) {
+//            // Bước 5: Đệ quy tìm các con cho tất cả các tầng (giới hạn bởi level)
+//            for (AssetDeviceRelationDTO dto : relationMap.values()) {
+//                if (dto.getChildren() != null && !dto.getChildren().isEmpty()) {
+//                    Set<UUID> seenIds = new HashSet<>();
+//                    seenIds.add(dto.getParentRelationId());
+//                    seenIds.add(dto.getId());
+//                    dto.setChildren(findChildrenRecursively(dto.getChildren(), level - 1, tenantId, seenIds)); // Truyền level - 1
+//                }
+//            }
+//        }
+//
+//        // Bước 6: Trả về danh sách loại bỏ các bản sao
+//        return relationMap.values().stream()
+//                .filter(dto -> profileFrom.equals(dto.getProfile()))
+//                .collect(Collectors.toList());
     }
 
+    // Old method
+    @Deprecated
     private List<AssetDeviceRelationDTO> findChildrenRecursively(List<AssetDeviceRelationDTO> children, int level, UUID tenantId, Set<UUID> seenIds) {
         if (level == 0) { // Nếu đạt đến level giới hạn, không tiếp tục đệ quy
             return children;
@@ -179,12 +196,12 @@ public class AssetDeviceRelationService {
                     subChildDTO.setParentRelationId(entity.getFromId());
                     subChildDTO.setName(entity.getToName());
                     subChildDTO.setProfile(entity.getAssetProfileTo());
-                    if ("DEVICE".equals(entity.getToType())){
-                        subChildDTO.setAttributes(getAllAttributes(new TenantId(tenantId), new DeviceId(entity.getToId())));
-                        subChildDTO.setTelemetry(getTelemetry(new TenantId(tenantId), new DeviceId(entity.getToId())));
-                    } else {
-                        subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
-                    }
+//                    if ("DEVICE".equals(entity.getToType())){
+//                        subChildDTO.setAttributes(getAllAttributes(new TenantId(tenantId), new DeviceId(entity.getToId())));
+//                        subChildDTO.setTelemetry(getTelemetry(new TenantId(tenantId), new DeviceId(entity.getToId())));
+//                    } else {
+//                        subChildDTO.setAttributes(getAttributesAsJson(new TenantId(tenantId), new AssetId(entity.getToId()), AttributeScope.SERVER_SCOPE));
+//                    }
                     subChildren.add(subChildDTO);
                 }
                 // Đệ quy để tìm tiếp các con của "subChild"
@@ -193,6 +210,10 @@ public class AssetDeviceRelationService {
             result.add(child);
         }
         return result;
+    }
+
+    public List<AssetDeviceRelationDTO> getAllAssetByProfile(String profileName, UUID tenantId, UUID customerId) {
+        return nativeAssetRepository.getAllAssetByProfile(profileName, tenantId, customerId);
     }
 
     public List<UUID> getIdHCPByMac(String mac, int type){
@@ -336,5 +357,4 @@ public class AssetDeviceRelationService {
         }
         return null;
     }
-
 }

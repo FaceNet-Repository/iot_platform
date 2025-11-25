@@ -18,28 +18,21 @@ package org.thingsboard.server.controller;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.thingsboard.server.common.data.AttributeScope;
-import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -49,9 +42,7 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
-import org.thingsboard.server.common.data.roles.Permission;
 import org.thingsboard.server.common.data.roles.Role;
-import org.thingsboard.server.common.data.roles.UserPermission;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
 import org.thingsboard.server.dao.dto.AssetHierarchyRequest;
@@ -67,7 +58,6 @@ import org.thingsboard.server.service.roles.RolesService;
 import org.thingsboard.server.service.roles.UserPermissionsService;
 import org.thingsboard.server.service.roles.UserRolesService;
 import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.permission.Action;
 import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.service.security.permission.Resource;
 import org.thingsboard.server.service.security.permission.Roles;
@@ -98,7 +88,11 @@ public class MultipleAssetsController extends BaseController {
     public static final String FROM_TYPE = "fromType";
 
     @GetMapping("/assets/asset-device-relations")
-    public List<AssetDeviceRelationDTO> getAssetDeviceRelations(@RequestParam String rootProfile, @RequestParam int level) throws ThingsboardException {
+    public List<AssetDeviceRelationDTO> getAssetDeviceRelations(
+            @RequestParam String rootProfile,
+            @RequestParam(required = false) String profileName,
+            @RequestParam(required = false, defaultValue = "DEVICE") String type,
+            @RequestParam int level) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
         CustomerId customerId = getCurrentUser().getCustomerId();
 //        UUID userId = getCurrentUser().getId().getId();
@@ -110,7 +104,15 @@ public class MultipleAssetsController extends BaseController {
 //            throw new ThingsboardException(e.getMessage(), ThingsboardErrorCode.PERMISSION_DENIED);
 //        }
 
-        return assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId(), null, customerId.getId());
+        return assetDeviceRelationService.getAllRelations(rootProfile, null, profileName, type, tenantId.getId(), customerId.getId());
+    }
+
+    @GetMapping("/assets/all")
+    public List<AssetDeviceRelationDTO> getAssetDeviceRelations(           @RequestParam String profileName) throws ThingsboardException {
+        TenantId tenantId = getCurrentUser().getTenantId();
+        CustomerId customerId = getCurrentUser().getCustomerId();
+
+        return assetDeviceRelationService.getAllAssetByProfile(profileName, tenantId.getId(), customerId.getId());
     }
 
     @DeleteMapping("/assets/delete-parent-child/{id}")
@@ -149,13 +151,19 @@ public class MultipleAssetsController extends BaseController {
             @RequestParam String rootProfile,
             @RequestParam String assetId,
             @RequestParam String profileName,
-            @RequestParam(required = false, defaultValue = "0") int level
+            @RequestParam(required = false, defaultValue = "0") int level,
+            @RequestParam(required = false, defaultValue = "DEVICE") String type
     ) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
         CustomerId customerId = getCurrentUser().getCustomerId();
         List<AssetDeviceRelationDTO> result = new ArrayList<>();
         Set<UUID> seenIds = new HashSet<>();
-        List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(rootProfile, level, tenantId.getId(), UUID.fromString(assetId), customerId.getId());
+        List<AssetDeviceRelationDTO> assetDeviceRelationDTOS = assetDeviceRelationService.getAllRelations(
+                // From
+                rootProfile, UUID.fromString(assetId),
+                // Target
+                profileName, type,
+                tenantId.getId(), null);
         assetDeviceRelationService.filter(assetDeviceRelationDTOS, result, profileName, seenIds);
         return result;
     }
@@ -164,7 +172,11 @@ public class MultipleAssetsController extends BaseController {
     public List<AssetDeviceRelationDTO> getDetail(@RequestParam String rootProfile, @RequestParam String assetId) throws ThingsboardException {
         TenantId tenantId = getCurrentUser().getTenantId();
         CustomerId customerId = getCurrentUser().getCustomerId();
-        return assetDeviceRelationService.getAllRelations(rootProfile, 0, tenantId.getId(), UUID.fromString(assetId), customerId.getId());
+        return assetDeviceRelationService.getAllRelations(
+                rootProfile,  UUID.fromString(assetId),
+                null, "DEVICE",
+                tenantId.getId(),
+                null);
     }
 
     @RequestMapping(value = "/assets/relations/info", method = RequestMethod.GET, params = {FROM_ID, FROM_TYPE})
