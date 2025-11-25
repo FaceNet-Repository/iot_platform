@@ -18,9 +18,14 @@ package org.thingsboard.server.dao.sql.device;
 import org.springframework.data.domain.Pageable;
 import org.thingsboard.server.common.data.DeviceIdInfo;
 import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.dao.dto.AssetDeviceRelationDTO;
+
+import java.util.List;
+import java.util.UUID;
 
 public interface NativeDeviceRepository {
 
     PageData<DeviceIdInfo> findDeviceIdInfos(Pageable pageable);
 
+    List<AssetDeviceRelationDTO> getAllDevicesFromAssetRelation(String profileFrom, UUID fromId, String targetProfile, String targetType, UUID tenantId, UUID customerId);
 }
