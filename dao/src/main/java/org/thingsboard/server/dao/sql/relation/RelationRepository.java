@@ -22,6 +22,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.dao.model.sql.RelationCompositeKey;
 import org.thingsboard.server.dao.model.sql.RelationEntity;
@@ -84,4 +86,16 @@ public interface RelationRepository
     @Query("DELETE FROM RelationEntity r where r.fromId = :fromId and r.fromType = :fromType and r.relationTypeGroup in :relationTypeGroups")
     void deleteByFromIdAndFromTypeAndRelationTypeGroupIn(@Param("fromId") UUID fromId, @Param("fromType") String fromType, @Param("relationTypeGroups") List<String> relationTypeGroups);
 
+    @Query(value = "with recursive all_relation as ( " +
+            "    select from_id, from_type, to_id, to_type, 0 as level " +
+            "    from relation r " +
+            "    where r.to_id = :device_id " +
+            "    union all " +
+            "    select r1.from_id, r1.from_type, r1.to_id, r1.to_type, r2.level + 1 " +
+            "    from relation r1 " +
+            "        join all_relation r2 on (r2.to_type = r1.from_type and r2.from_id = r1.to_id)) " +
+            "select exists(select 1 " +
+            "              from all_relation r " +
+            "              where r.from_id in (select entity_id from tb_user_permission where user_id = :user_id))", nativeQuery = true)
+    boolean checkRelationWithRootAsset(@Param("user_id") UUID userId, @Param("device_id") UUID deviceId);
 }

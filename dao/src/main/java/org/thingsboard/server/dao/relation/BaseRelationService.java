@@ -35,6 +35,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.server.cache.TbTransactionalCache;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -52,6 +53,7 @@ import org.thingsboard.server.dao.exception.DataValidationException;
 import org.thingsboard.server.dao.service.ConstraintValidator;
 import org.thingsboard.server.dao.sql.JpaExecutorService;
 import org.thingsboard.server.dao.sql.relation.JpaRelationQueryExecutorService;
+import org.thingsboard.server.dao.sql.relation.RelationRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,6 +84,7 @@ public class BaseRelationService implements RelationService {
     private final ApplicationEventPublisher eventPublisher;
     private final JpaExecutorService executor;
     private final JpaRelationQueryExecutorService relationsExecutor;
+    private final RelationRepository relationRepository;
     protected ScheduledExecutorService timeoutExecutorService;
 
     @Value("${sql.relations.query_timeout:20}")
@@ -90,13 +93,14 @@ public class BaseRelationService implements RelationService {
     public BaseRelationService(RelationDao relationDao, @Lazy EntityService entityService,
                                TbTransactionalCache<RelationCacheKey, RelationCacheValue> cache,
                                ApplicationEventPublisher eventPublisher, JpaExecutorService executor,
-                               JpaRelationQueryExecutorService relationsExecutor) {
+                               JpaRelationQueryExecutorService relationsExecutor, RelationRepository relationRepository) {
         this.relationDao = relationDao;
         this.entityService = entityService;
         this.cache = cache;
         this.eventPublisher = eventPublisher;
         this.executor = executor;
         this.relationsExecutor = relationsExecutor;
+        this.relationRepository = relationRepository;
     }
 
     @PostConstruct
@@ -491,6 +495,11 @@ public class BaseRelationService implements RelationService {
         log.trace("Executing findRuleNodeToRuleChainRelations, tenantId [{}], ruleChainType {} and limit {}", tenantId, ruleChainType, limit);
         validateId(tenantId, id -> "Invalid tenant id: " + id);
         return relationDao.findRuleNodeToRuleChainRelations(ruleChainType, limit);
+    }
+
+    @Override
+    public boolean checkRelationOwnership(User user, EntityId deviceId) {
+        return relationRepository.checkRelationWithRootAsset(user.getId().getId(), deviceId.getId());
     }
 
     protected void validate(EntityRelation relation) {
