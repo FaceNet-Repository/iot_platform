@@ -16,6 +16,7 @@
 package org.thingsboard.server.dao.relation;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
@@ -86,4 +87,5 @@ public interface RelationService {
 //    TODO: This method may be useful for some validations in the future
 //    ListenableFuture<Boolean> checkRecursiveRelation(EntityId from, EntityId to);
 
+    boolean checkRelationOwnership(User user, EntityId deviceId);
 }

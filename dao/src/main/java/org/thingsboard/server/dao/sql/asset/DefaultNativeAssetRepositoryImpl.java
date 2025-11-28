@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2016-2024 The Thingsboard Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.thingsboard.server.dao.sql.asset;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +33,7 @@ public class DefaultNativeAssetRepositoryImpl implements NativeAssetRepository {
     private final String ALL_ASSET_QUERY = "select d.id as id,d.name as name, p.name as profile_name, k.key as key, a.bool_v as bool_v, a.dbl_v as dbl_v, a.long_v as long_v, a.str_v as str_v, a.json_v as json_v " +
             "from asset d " +
             "join asset_profile p on d.asset_profile_id = p.id " +
-            "join attribute_kv a on d.id = a.entity_id " +
+            "left join attribute_kv a on d.id = a.entity_id " +
             "join key_dictionary k on a.attribute_key = k.key_id " +
             "where p.name = :target_profile " +
             "and d.tenant_id = :tenant_id and d.customer_id = :customer_id";

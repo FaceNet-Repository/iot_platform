@@ -30,12 +30,12 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 
 @Component(value = "customerUserPermissions")
 public class CustomerUserPermissions extends AbstractPermissions {
-
-    public CustomerUserPermissions() {
+    public CustomerUserPermissions(CustomerDevicePermissionChecker customerDevicePermissionChecker) {
         super();
         put(Resource.ALARM, customerAlarmPermissionChecker);
         put(Resource.ASSET, customerEntityPermissionChecker);
-        put(Resource.DEVICE, customerEntityPermissionChecker);
+//        put(Resource.DEVICE, customerDevicePermissionChecker);
+        put(Resource.DEVICE, customerDevicePermissionChecker);
         put(Resource.CUSTOMER, customerPermissionChecker);
         put(Resource.DASHBOARD, customerDashboardPermissionChecker);
         put(Resource.ENTITY_VIEW, customerEntityPermissionChecker);

@@ -57,7 +57,7 @@ public class DefaultNativeDeviceRepository implements NativeDeviceRepository {
     private final String ALL_DEVICES_SELECT = "select d.id as id,d.name as name, p.name as profile_name, k.key as key, a.bool_v as bool_v, a.dbl_v as dbl_v, a.long_v as long_v, a.str_v as str_v, a.json_v as json_v " +
             "from device d " +
             "join device_profile p on d.device_profile_id = p.id " +
-            "join attribute_kv a on d.id = a.entity_id " +
+            "left join attribute_kv a on d.id = a.entity_id " +
             "join key_dictionary k on a.attribute_key = k.key_id " +
             "where exists(select 1 from all_relation r where r.to_id = d.id or r.from_id = d.id) " +
             "and d.tenant_id = :tenant_id";
@@ -65,7 +65,7 @@ public class DefaultNativeDeviceRepository implements NativeDeviceRepository {
     private final String ALL_ASSET_SELECT = "select d.id as id,d.name as name, p.name as profile_name, k.key as key, a.bool_v as bool_v, a.dbl_v as dbl_v, a.long_v as long_v, a.str_v as str_v, a.json_v as json_v " +
             "from asset d " +
             "join asset_profile p on d.asset_profile_id = p.id " +
-            "join attribute_kv a on d.id = a.entity_id " +
+            "left join attribute_kv a on d.id = a.entity_id " +
             "join key_dictionary k on a.attribute_key = k.key_id " +
             "where exists(select 1 from all_relation r where r.to_id = d.id or r.from_id = d.id) " +
             "and d.tenant_id = :tenant_id";
