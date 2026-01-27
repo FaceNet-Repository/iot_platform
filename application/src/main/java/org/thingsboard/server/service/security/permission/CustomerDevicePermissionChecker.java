@@ -35,6 +35,6 @@ public class CustomerDevicePermissionChecker implements PermissionChecker<Entity
         if (!user.getTenantId().equals(entity.getTenantId())) {
             return false;
         }
-        return user.getCustomerId().equals(entity.getCustomerId()) || relationService.checkRelationOwnership(user, entityId);
+        return entity.getCustomerId().isNullUid() || user.getCustomerId().equals(entity.getCustomerId()) || relationService.checkRelationOwnership(user, entityId);
     }
 }
